@@ -131,8 +131,8 @@ export default {
             titleClass: 'text-lg',
             message: `
             <img src="/images/integrations/slack-bot.png" class="mb-6" alt="slack bot installation" />
-            To fetch data from Slack, you need to install the gitmesh.dev Slack bot and add it to all channels you want to track. <br><br>
-            You can either add the Slack bot directly from a channel, or add the app via channel Integrations.`,
+            To fetch data from Slack, install the GitMesh Slack bot and add it to all channels you want to track. <br><br>
+            You can add the Slack bot directly from a channel or install the app through the channel's Integrations settings.`,
             confirmButtonText: 'How to connect Slack bot',
             showCancelButton: false,
             messageClass: 'text-xs !leading-5 !mt-1 text-gray-300',

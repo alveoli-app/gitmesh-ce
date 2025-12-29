@@ -182,8 +182,12 @@ export default class ActivityService extends LoggerBase {
       await SequelizeRepository.commitTransaction(transaction)
 
       if (fireSync) {
-        await searchSyncService.triggerMemberSync(this.options.currentTenant.id, record.memberId)
-        await searchSyncService.triggerActivitySync(this.options.currentTenant.id, record.id)
+        try {
+          await searchSyncService.triggerMemberSync(this.options.currentTenant.id, record.memberId)
+          await searchSyncService.triggerActivitySync(this.options.currentTenant.id, record.id)
+        } catch (syncError) {
+          this.log.warn(syncError, { activityId: record.id, memberId: record.memberId }, 'Failed to sync activity/member to OpenSearch, continuing anyway')
+        }
       }
 
       if (!existing && fireGitmeshWebhooks) {

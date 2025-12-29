@@ -733,7 +733,13 @@ class SegmentRepository extends RepositoryBase<
   }
 
   static getActivityTypes(options: IRepositoryOptions): ActivityTypeSettings {
-    return options.currentSegments.reduce((acc, s) => lodash.merge(acc, s.activityTypes), {})
+    return options.currentSegments.reduce((acc, s) => {
+      // Only merge if activityTypes is not null/undefined
+      if (s.activityTypes) {
+        return lodash.merge(acc, s.activityTypes)
+      }
+      return acc
+    }, {})
   }
 
   static async fetchTenantActivityTypes(options: IRepositoryOptions) {

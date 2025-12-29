@@ -114,7 +114,6 @@ celerybeat.pid
 # Environments
 **/.env*
 !.env.test
-!.env.dist
 analyse.html
 .venv
 env/

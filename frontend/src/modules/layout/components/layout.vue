@@ -1,12 +1,10 @@
 <template>
   <div class="flex flex-col h-screen bg-black overflow-hidden">
-    <!-- Top Bar (Full Width, High Z-Index) -->
-    <div class="relative z-[3000] shrink-0">
-      <tab-bar />
-    </div>
+    <!-- Top Bar (Fixed Position) -->
+    <tab-bar />
 
-    <!-- Main Content Area -->
-    <el-container class="flex-1 overflow-hidden bg-black relative">
+    <!-- Main Content Area with top padding to account for fixed tab bar -->
+    <el-container class="flex-1 overflow-hidden bg-black relative pt-[45px]">
       <!-- Mobile Overlay -->
       <div 
         v-if="isMobile && !collapsed" 

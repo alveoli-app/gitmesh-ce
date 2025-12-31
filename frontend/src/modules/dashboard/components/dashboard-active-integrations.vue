@@ -161,7 +161,7 @@
     <div v-if="!loadingFetch" class="pt-3">
       <router-link :to="{ name: 'integration' }" route>
         <el-button
-          class="btn btn-brand--transparent btn--sm w-full leading-5"
+          class="btn btn-brand--transparent btn--sm w-full leading-5 hover:bg-zinc-950"
         >
           <span
             v-if="activeIntegrations.length > 0"

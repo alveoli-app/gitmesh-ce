@@ -15,7 +15,7 @@ export default ({
   customClass = 'terminal-dialog', 
   cancelButtonText = 'CANCEL',
   // Default Terminal Cancel Button
-  cancelButtonClass = 'h-10 px-4 bg-black border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white font-mono text-xs uppercase tracking-wider transition-colors w-full rounded-none',
+  cancelButtonClass = 'h-10 px-4 bg-black hover:bg-black border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white font-mono text-xs uppercase tracking-wider transition-colors w-full rounded-none',
   confirmButtonText = 'CONFIRM',
   // Default Terminal Confirm Button
   confirmButtonClass = 'h-10 px-4 bg-orange-600 hover:bg-orange-500 text-black font-mono text-xs font-bold uppercase tracking-wider border-none w-full rounded-none',
@@ -47,7 +47,7 @@ export default ({
     iconBgColorClass = 'bg-emerald-950/30 border border-emerald-900';
   } else if (type === 'notification') {
     iconColorClass = 'text-blue-500';
-    iconBgColorClass = 'bg-blue-950/30 border border-blue-900';
+    iconBgColorClass = 'bg-blue-950/30';
   }
 
   // 2. Icon Render Function (Sharp corners, dark bg)

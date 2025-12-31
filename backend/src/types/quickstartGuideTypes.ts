@@ -64,7 +64,7 @@ const enrichMemberGuide: QuickstartGuide = {
 }
 
 const viewReportGuide: QuickstartGuide = {
-  title: 'Look into reports',
+  title: 'Look into DevTel reports',
   body: 'Explore ready-made reports for deeper community insights.',
   videoLink: '', // Video to be added later
   learnMoreLink: '', // Video to be added later

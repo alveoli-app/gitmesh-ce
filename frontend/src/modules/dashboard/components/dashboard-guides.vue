@@ -121,10 +121,15 @@ const dismissGuides = () => {
     title:
       'Do you really want to dismiss our Quickstart Guide?',
     message:
-      'Users that follow our Quickstart Guide are 80% more likely to successfully set-up gitmesh.dev.',
+      'Users that follow our Quickstart Guide are more likely to successfully set-up GitMesh.',
     icon: 'ri-information-line',
-    confirmButtonText: 'Dismiss quickstart guide',
+    confirmButtonText: 'Dismiss',
     cancelButtonText: 'Cancel',
+    // Use vertical layout so content, icon and buttons stack nicely
+    vertical: true,
+    // Improve typography inside the terminal dialog
+    titleClass: 'text-white font-mono text-sm font-bold uppercase tracking-wider pt-2',
+    messageClass: 'text-zinc-300 font-mono text-xs leading-relaxed mt-1',
   }).then(() => {
     TenantEventService.event({
       name: 'Onboarding Guide dismissed',

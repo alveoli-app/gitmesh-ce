@@ -48,6 +48,7 @@ import {
   GroupsioGetToken,
   GroupsioVerifyGroup,
 } from '@/serverless/integrations/usecases/groupsio/types'
+import { encrypt, decrypt } from '../utils/crypto'
 import SearchSyncService from './searchSyncService'
 
 const discordToken = DISCORD_CONFIG.token || DISCORD_CONFIG.token2
@@ -1507,20 +1508,51 @@ export default class IntegrationService {
 
     // integration data should have the following fields
     // email, token, array of groups
-    // we shouldn't store password and 2FA token in the database
-    // user should update them every time thety change something
+    // password is optional - if provided, will be encrypted and stored for automatic cookie refresh
 
     try {
       this.options.log.info('Creating Groups.io integration!')
+
+      // Try to get existing integration to preserve encrypted password
+      let existingSettings: any = {}
+      try {
+        const existingIntegration = await IntegrationRepository.findByPlatform(PlatformType.GROUPSIO, {
+          ...this.options,
+          transaction,
+        })
+        existingSettings = existingIntegration?.settings || {}
+      } catch (err) {
+        // Integration doesn't exist yet, that's fine
+      }
+
+      // Prepare settings
+      const settings: any = {
+        email: integrationData.email,
+        token: integrationData.token,
+        groups: integrationData.groupNames,
+        updateMemberAttributes: true,
+        lastTokenRefresh: Date.now(),
+      }
+
+      // Encrypt and store password if provided
+      if (integrationData.password) {
+        const encryptionKey = process.env.GROUPSIO_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY || 'default-key-change-in-production'
+        try {
+          settings.encryptedPassword = encrypt(integrationData.password, encryptionKey)
+          this.options.log.info('Password encrypted and stored for Groups.io integration')
+        } catch (encryptErr) {
+          this.options.log.error(encryptErr, 'Failed to encrypt password for Groups.io integration')
+          // Continue without storing password - user will need to re-authenticate manually
+        }
+      } else if (existingSettings?.encryptedPassword) {
+        // Preserve existing encrypted password if not updating
+        settings.encryptedPassword = existingSettings.encryptedPassword
+      }
+
       integration = await this.createOrUpdate(
         {
           platform: PlatformType.GROUPSIO,
-          settings: {
-            email: integrationData.email,
-            token: integrationData.token,
-            groups: integrationData.groupNames,
-            updateMemberAttributes: true,
-          },
+          settings,
           status: 'in-progress',
         },
         transaction,
@@ -1567,16 +1599,47 @@ export default class IntegrationService {
       response = await axios(config)
 
       // we need to get cookie from the response
+      if (!response.headers['set-cookie'] || !response.headers['set-cookie'][0]) {
+        this.options.log.error({ email: data.email }, 'No set-cookie header in Groups.io login response')
+        throw new Error400(this.options.language, 'errors.groupsio.invalidCredentials')
+      }
 
       const cookie = response.headers['set-cookie'][0].split(';')[0]
+
+      if (!cookie) {
+        this.options.log.error({ email: data.email }, 'Invalid cookie format in Groups.io login response')
+        throw new Error400(this.options.language, 'errors.groupsio.invalidCredentials')
+      }
 
       return {
         groupsioCookie: cookie,
       }
     } catch (err) {
-      if ('two_factor_required' in response.data) {
-        throw new Error400(this.options.language, 'errors.groupsio.twoFactorRequired')
+      // Check if it's an axios error with response data
+      if (err.response && err.response.data) {
+        if ('two_factor_required' in err.response.data) {
+          throw new Error400(this.options.language, 'errors.groupsio.twoFactorRequired')
+        }
+        // Check for other specific error messages
+        if (err.response.status === 401 || err.response.status === 403) {
+          this.options.log.error(
+            { email: data.email, status: err.response.status },
+            'Authentication failed for Groups.io login',
+          )
+          throw new Error400(this.options.language, 'errors.groupsio.invalidCredentials')
+        }
       }
+
+      // If it's already an Error400, re-throw it
+      if (err instanceof Error400) {
+        throw err
+      }
+
+      // For network errors or other unexpected errors
+      this.options.log.error(
+        { email: data.email, error: err.message },
+        'Unexpected error during Groups.io login',
+      )
       throw new Error400(this.options.language, 'errors.groupsio.invalidCredentials')
     }
   }
@@ -1604,5 +1667,115 @@ export default class IntegrationService {
     } catch (err) {
       throw new Error400(this.options.language, 'errors.groupsio.invalidGroup')
     }
+  }
+
+  /**
+   * Refreshes the Groups.io cookie for an integration using stored credentials
+   * @param integrationId - The integration ID to refresh the cookie for
+   * @returns The new cookie string
+   * @throws Error400 if credentials are missing, decryption fails, or authentication fails
+   */
+  async refreshGroupsioCookie(integrationId: string): Promise<string> {
+    this.options.log.info({ integrationId }, 'Refreshing Groups.io cookie')
+
+    // Get the integration
+    const integration = await IntegrationRepository.findById(integrationId, this.options)
+    if (!integration) {
+      throw new Error404(this.options.language, 'errors.integration.notFound')
+    }
+
+    const settings = integration.settings as any
+    if (!settings) {
+      throw new Error400(this.options.language, 'errors.groupsio.invalidSettings')
+    }
+
+    // Check if we have encrypted password
+    if (!settings.encryptedPassword) {
+      this.options.log.error(
+        { integrationId },
+        'Cannot refresh Groups.io cookie: no encrypted password stored',
+      )
+      throw new Error400(
+        this.options.language,
+        'errors.groupsio.noStoredCredentials',
+        'No stored credentials available. Please reconnect the integration.',
+      )
+    }
+
+    if (!settings.email) {
+      throw new Error400(this.options.language, 'errors.groupsio.missingEmail')
+    }
+
+    // Decrypt password
+    const encryptionKey = process.env.GROUPSIO_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY || 'default-key-change-in-production'
+    let password: string
+    try {
+      password = decrypt(settings.encryptedPassword, encryptionKey)
+    } catch (decryptErr) {
+      this.options.log.error(decryptErr, { integrationId }, 'Failed to decrypt Groups.io password')
+      throw new Error400(
+        this.options.language,
+        'errors.groupsio.decryptionFailed',
+        'Failed to decrypt stored credentials. Please reconnect the integration.',
+      )
+    }
+
+    // Get new token
+    let newCookie: string
+    try {
+      const tokenResult = await this.groupsioGetToken({
+        email: settings.email,
+        password,
+      })
+      newCookie = tokenResult.groupsioCookie
+    } catch (err) {
+      // Check if it's a 2FA error
+      if (err instanceof Error400 && err.message?.includes('twoFactorRequired')) {
+        this.options.log.warn(
+          { integrationId },
+          'Groups.io cookie refresh failed: 2FA required. Integration needs manual update.',
+        )
+        throw new Error400(
+          this.options.language,
+          'errors.groupsio.twoFactorRequired',
+          'Two-factor authentication is required. Please reconnect the integration with your 2FA code.',
+        )
+      }
+
+      this.options.log.error(err, { integrationId }, 'Failed to refresh Groups.io cookie')
+      throw new Error400(
+        this.options.language,
+        'errors.groupsio.refreshFailed',
+        'Failed to refresh authentication. Please check your credentials and reconnect the integration.',
+      )
+    }
+
+    // Update integration settings with new cookie
+    const transaction = await SequelizeRepository.createTransaction(this.options)
+    try {
+      await this.update(
+        integrationId,
+        {
+          settings: {
+            ...settings,
+            token: newCookie,
+            lastTokenRefresh: Date.now(),
+          },
+        },
+        transaction,
+      )
+      await SequelizeRepository.commitTransaction(transaction)
+
+      this.options.log.info(
+        { integrationId, refreshTime: new Date().toISOString() },
+        'Groups.io cookie refreshed successfully',
+      )
+    } catch (updateErr) {
+      await SequelizeRepository.rollbackTransaction(transaction)
+      this.options.log.error(updateErr, { integrationId }, 'Failed to update integration with new cookie')
+      throw updateErr
+    }
+
+    return newCookie
   }
 }

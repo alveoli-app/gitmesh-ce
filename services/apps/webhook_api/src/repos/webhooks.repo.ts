@@ -57,10 +57,10 @@ export class WebhooksRepository extends RepositoryBase<WebhooksRepository> {
 
   public async findGroupsIoIntegrationByGroupName(
     groupName: string,
-  ): Promise<IDbIntegrationData | null> {
+  ): Promise<(IDbIntegrationData & { settings?: any }) | null> {
     const result = await this.db().oneOrNone(
       `
-      select id, "tenantId", platform from integrations
+      select id, "tenantId", platform, settings from integrations
       where platform = $(platform) and "deletedAt" is null
       and settings -> 'groups' ? $(groupName)
       `,

@@ -5,6 +5,18 @@ export enum GroupsioActivityType {
   MEMBER_LEAVE = 'member_leave',
 }
 
+export class GroupsioCookieExpiredError extends Error {
+  constructor(
+    public readonly groupName?: string,
+    public readonly operation?: string,
+    message: string = 'Groups.io cookie has expired',
+  ) {
+    super(message)
+    this.name = 'GroupsioCookieExpiredError'
+    Object.setPrototypeOf(this, GroupsioCookieExpiredError.prototype)
+  }
+}
+
 export type GroupName = string
 
 export enum GroupsioStreamType {
@@ -69,6 +81,9 @@ export interface GroupsioIntegrationSettings {
   email: string
   token: string
   groups: GroupName[]
+  encryptedPassword?: string // Encrypted password for automatic cookie refresh
+  lastTokenRefresh?: number // Timestamp of last token refresh
+  webhookSecret?: string // Webhook secret for signature validation
 }
 
 export interface Topic {

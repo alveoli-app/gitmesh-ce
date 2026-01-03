@@ -2,6 +2,7 @@ export interface GroupsioIntegrationData {
   email: string
   token: string
   groupNames: GroupName[]
+  password?: string // Optional: if provided, will be encrypted and stored for cookie refresh
 }
 
 export interface GroupsioGetToken {

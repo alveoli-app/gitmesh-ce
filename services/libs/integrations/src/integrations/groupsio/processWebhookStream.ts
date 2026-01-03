@@ -43,11 +43,15 @@ const processWebhookLeft: ProcessWebhookStreamHandler = async (ctx) => {
 const handler: ProcessWebhookStreamHandler = async (ctx) => {
   const { event } = ctx.stream.data as GroupsioWebhookPayload<unknown>
 
-  //verifyWebhookSignature(data as string, data as string, ctx)
+  ctx.log.info(
+    { event, integrationId: ctx.integration.id },
+    'Processing Groups.io webhook event',
+  )
 
   switch (event) {
     case GroupsioWebhookEventType.JOINED: {
       await processWebhookJoin(ctx)
+      ctx.log.debug({ event }, 'Processed Groups.io member join webhook')
       break
     }
 
@@ -58,11 +62,15 @@ const handler: ProcessWebhookStreamHandler = async (ctx) => {
 
     case GroupsioWebhookEventType.LEFT: {
       await processWebhookLeft(ctx)
+      ctx.log.debug({ event }, 'Processed Groups.io member left webhook')
       break
     }
 
     default: {
-      ctx.log.warn({ event }, `Unsupported Groupsio webhook type, skipping it`)
+      ctx.log.warn(
+        { event, integrationId: ctx.integration.id },
+        'Unsupported Groups.io webhook event type, skipping',
+      )
     }
   }
 }

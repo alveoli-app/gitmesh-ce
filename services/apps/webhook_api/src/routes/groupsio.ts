@@ -5,6 +5,7 @@ import { getServiceTracer } from '@gitmesh/tracing'
 import { IntegrationStreamWorkerEmitter } from '@gitmesh/sqs'
 import { WebhookType } from '@gitmesh/types'
 import express from 'express'
+import { verifyWebhookSignature } from '../utils/crypto'
 
 const tracer = getServiceTracer()
 
@@ -13,11 +14,10 @@ export const installGroupsIoRoutes = async (app: express.Express) => {
   app.post(
     '/groupsio',
     asyncWrap(async (req, res) => {
-      const signature = req.headers['x-groupsio-signature']
-      const event = req.headers['x-groupsio-action']
+      const signature = req.headers['x-groupsio-signature'] as string
+      const event = req.headers['x-groupsio-action'] as string
       const data = req.body
 
-      // TODO: Validate signature - need to get secret from groups io for Linux
       const groupName = data?.group?.name
 
       if (!groupName) {
@@ -29,7 +29,46 @@ export const installGroupsIoRoutes = async (app: express.Express) => {
       const integration = await repo.findGroupsIoIntegrationByGroupName(groupName)
 
       if (integration) {
-        req.log.info({ integrationId: integration.id }, 'Incoming Groups.io Webhook!')
+        // Validate webhook signature if webhook secret is configured
+        const settings = integration.settings as any
+        const webhookSecret = settings?.webhookSecret
+
+        if (webhookSecret) {
+          if (!signature) {
+            req.log.warn(
+              { integrationId: integration.id, groupName },
+              'Groups.io webhook rejected: missing signature header',
+            )
+            res.status(401).send({
+              message: 'Missing webhook signature',
+            })
+            return
+          }
+
+          // Verify signature
+          const payload = JSON.stringify(data)
+          const isValid = verifyWebhookSignature(payload, webhookSecret, signature)
+
+          if (!isValid) {
+            req.log.warn(
+              { integrationId: integration.id, groupName },
+              'Groups.io webhook rejected: invalid signature',
+            )
+            res.status(401).send({
+              message: 'Invalid webhook signature',
+            })
+            return
+          }
+
+          req.log.debug({ integrationId: integration.id }, 'Groups.io webhook signature validated')
+        } else {
+          req.log.warn(
+            { integrationId: integration.id },
+            'Groups.io webhook received but no webhook secret configured - accepting without validation',
+          )
+        }
+
+        req.log.info({ integrationId: integration.id, event }, 'Incoming Groups.io Webhook!')
 
         const result = await repo.createIncomingWebhook(
           integration.tenantId,

@@ -1,0 +1,50 @@
+# Docker Compose Override Example for Chat Orchestrator
+# Copy this to docker-compose.override.yaml and customize
+
+version: '3.8'
+
+services:
+  chat-orchestrator:
+    environment:
+      # =============================================================================
+      # Option 1: Use OpenAI
+      # =============================================================================
+      # - AI_PROVIDER=openai
+      # - OPENAI_API_KEY=sk-your-api-key-here
+      # - OPENAI_MODEL=gpt-4o
+      
+      # =============================================================================
+      # Option 2: Use Anthropic Claude
+      # =============================================================================
+      # - AI_PROVIDER=anthropic
+      # - ANTHROPIC_API_KEY=sk-ant-your-key-here
+      # - ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+      
+      # =============================================================================
+      # Option 3: Use Google Gemini
+      # =============================================================================
+      # - AI_PROVIDER=google
+      # - GOOGLE_AI_API_KEY=your-key-here
+      # - GOOGLE_AI_MODEL=gemini-2.0-flash-exp
+      
+      # =============================================================================
+      # Option 4: Use Groq
+      # =============================================================================
+      # - AI_PROVIDER=groq
+      # - GROQ_API_KEY=gsk_your-key-here
+      # - GROQ_MODEL=llama-3.3-70b-versatile
+      
+      # =============================================================================
+      # Option 5: Use Together AI
+      # =============================================================================
+      # - AI_PROVIDER=together
+      # - TOGETHER_API_KEY=your-key-here
+      # - TOGETHER_MODEL=meta-llama/Llama-3.3-70B-Instruct-Turbo
+      
+      # =============================================================================
+      # Option 6: Keep using Ollama (Default - No changes needed)
+      # =============================================================================
+      # Ollama is enabled by default. Just make sure it's running:
+      # 1. Install from https://ollama.com
+      # 2. Run: ollama pull llama3.2:3b
+      # 3. Ollama should be accessible at http://localhost:11434

@@ -1,5 +1,5 @@
 <template>
-  <div class="specs-page">
+  <div class="specs-page devspace-page">
     <div class="page-header">
       <h1>Specs & Documentation</h1>
       <div class="header-actions">
@@ -72,11 +72,10 @@
           </el-select>
         </el-form-item>
         <el-form-item label="Content">
-          <el-input 
-            v-model="newSpec.contentText" 
-            type="textarea" 
-            :rows="10"
+          <rich-text-editor
+            v-model="newSpec.contentText"
             placeholder="Write your spec content here..."
+            :min-height="'200px'"
           />
         </el-form-item>
       </el-form>
@@ -87,38 +86,70 @@
     </el-dialog>
 
     <!-- Spec Detail Drawer -->
-    <el-drawer v-model="showSpecDrawer" :title="selectedSpec?.title" size="50%">
-      <template v-if="selectedSpec">
-        <div class="spec-detail">
+    <el-drawer 
+        v-model="showSpecDrawer" 
+        :title="selectedSpec?.title" 
+        size="80%" 
+        :before-close="closeSpecDrawer"
+        destroy-on-close
+    >
+      <div v-if="selectedSpec" class="spec-drawer-content">
+        <div class="spec-main">
           <div class="detail-meta">
             <el-tag :type="getStatusType(selectedSpec.status)">{{ selectedSpec.status }}</el-tag>
             <span>by {{ selectedSpec.author?.name }}</span>
             <span>•</span>
             <span>Updated {{ formatDate(selectedSpec.updatedAt) }}</span>
+            <div class="viewers-list" v-if="viewers.length > 0">
+                <el-tooltip v-for="viewer in viewers" :key="viewer.socketId" :content="viewer.name">
+                    <el-avatar :size="24" class="viewer-avatar">{{ viewer.name.charAt(0) }}</el-avatar>
+                </el-tooltip>
+            </div>
           </div>
-          <div class="detail-content" v-html="renderContent(selectedSpec.content)"></div>
           
-          <div class="comments-section">
-            <h4>Comments ({{ specComments.length }})</h4>
-            <div v-for="comment in specComments" :key="comment.id" class="comment">
-              <el-avatar :size="32">{{ comment.author?.name?.charAt(0) }}</el-avatar>
-              <div class="comment-body">
-                <div class="comment-header">
-                  <span class="comment-author">{{ comment.author?.name }}</span>
-                  <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
-                </div>
-                <p class="comment-text">{{ comment.content }}</p>
-              </div>
-            </div>
-            <div class="add-comment">
-              <el-input v-model="newComment" type="textarea" :rows="2" placeholder="Add comment..." />
-              <el-button type="primary" size="small" @click="addComment" :disabled="!newComment.trim()">
-                Comment
-              </el-button>
-            </div>
-          </div>
+          <rich-text-editor 
+            v-model="selectedSpec.content" 
+            :editable="true"
+            @blur="updateSpecContent"
+            placeholder="Start writing spec..."
+          />
         </div>
-      </template>
+        
+        <div class="spec-sidebar">
+           <el-tabs type="border-card" class="sidebar-tabs">
+             <el-tab-pane label="Comments">
+                <div class="comments-list">
+                    <div v-for="comment in specComments" :key="comment.id" class="comment">
+                      <el-avatar :size="32">{{ comment.author?.name?.charAt(0) }}</el-avatar>
+                      <div class="comment-body">
+                        <div class="comment-header">
+                          <span class="comment-author">{{ comment.author?.name }}</span>
+                          <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+                        </div>
+                        <p class="comment-text">{{ comment.content }}</p>
+                      </div>
+                    </div>
+                </div>
+                <div class="add-comment">
+                  <el-input v-model="newComment" type="textarea" :rows="2" placeholder="Add comment..." />
+                  <el-button type="primary" size="small" @click="addComment" :disabled="!newComment.trim()">
+                    Comment
+                  </el-button>
+                </div>
+             </el-tab-pane>
+             
+             <el-tab-pane label="Versions">
+                 <div class="versions-list">
+                     <div v-for="v in versions" :key="v.id" class="version-item">
+                         <div class="version-date">{{ formatDate(v.createdAt) }}</div>
+                         <div class="version-author">{{ v.author?.name }}</div>
+                     </div>
+                     <div v-if="versions.length === 0" class="empty-text">No history yet</div>
+                 </div>
+             </el-tab-pane>
+           </el-tabs>
+        </div>
+      </div>
     </el-drawer>
   </div>
 </template>
@@ -127,10 +158,11 @@
 import { Document, Plus, Search } from '@element-plus/icons-vue';
 import { useProject } from '@/modules/devspace/composables/useProject';
 import DevtelService from '@/modules/devspace/services/devtel-api';
+import RichTextEditor from '../components/RichTextEditor.vue';
 
 export default {
   name: 'SpecsPage',
-  components: { Document, Plus, Search },
+  components: { Document, Plus, Search, RichTextEditor },
   setup() {
     const { activeProjectId } = useProject();
     return { activeProjectId };
@@ -145,6 +177,8 @@ export default {
       creating: false,
       selectedSpec: null,
       specComments: [],
+      versions: [],
+      viewers: [],
       newComment: '',
       newSpec: {
         title: '',
@@ -184,7 +218,7 @@ export default {
         const spec = await DevtelService.createSpec(this.projectId, {
           title: this.newSpec.title,
           status: this.newSpec.status,
-          content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: this.newSpec.contentText }] }] },
+          content: this.newSpec.contentText, // RichTextEditor returns HTML string or JSON
         });
         this.specs.unshift(spec);
         this.showCreateModal = false;
@@ -195,16 +229,71 @@ export default {
         this.creating = false;
       }
     },
-    async openSpec(spec) {
+    openSpec(spec) {
       this.selectedSpec = spec;
       this.showSpecDrawer = true;
       this.specComments = [];
-      // Fetch comments if needed
+      this.versions = [];
+      this.viewers = []; // Reset viewers
+      this.fetchSpecVersions(spec.id);
+      
+      // Join presence room
+      if (this.$devtelSocket) {
+          this.$devtelSocket.joinSpec(spec.id);
+          this.$devtelSocket.on('spec:viewer-joined', this.handleViewerJoined);
+          this.$devtelSocket.on('spec:viewer-left', this.handleViewerLeft);
+      }
+    },
+    handleViewerJoined(data) {
+        // Prevent duplicate
+        if (!this.viewers.find(v => v.userId === data.userId)) {
+            this.viewers.push({ userId: data.userId, socketId: data.socketId, name: 'User ' + data.userId.slice(0, 4) }); 
+            // Name is placeholder as we don't have full user details from socket event yet without lookup
+        }
+    },
+    handleViewerLeft(data) {
+        this.viewers = this.viewers.filter(v => v.socketId !== data.socketId);
+    },
+    closeSpecDrawer() {
+        if (this.selectedSpec && this.$devtelSocket) {
+            this.$devtelSocket.leaveSpec(this.selectedSpec.id);
+            this.$devtelSocket.off('spec:viewer-joined', this.handleViewerJoined);
+            this.$devtelSocket.off('spec:viewer-left', this.handleViewerLeft);
+        }
+        this.showSpecDrawer = false;
+        this.selectedSpec = null;
+    },
+    async updateSpecContent(content) {
+        if (!this.selectedSpec || content === this.selectedSpec.content) return;
+        try {
+            await DevtelService.updateSpec(this.projectId, this.selectedSpec.id, { content });
+            this.selectedSpec.content = content;
+        } catch (e) {
+            console.error('Failed to update spec', e);
+        }
+    },
+    async fetchSpecVersions(specId) {
+        try {
+            // Mock or fetch
+            this.versions = await DevtelService.listSpecVersions(this.projectId, specId);
+        } catch (e) {
+            this.versions = [];
+        }
     },
     async addComment() {
       if (!this.newComment.trim() || !this.selectedSpec) return;
-      // TODO: Add comment API call
-      this.newComment = '';
+      try {
+          await DevtelService.createSpecComment(this.projectId, this.selectedSpec.id, this.newComment);
+          this.specComments.push({
+              id: Date.now(),
+              content: this.newComment,
+              author: { name: 'Me' }, // Replace with current user
+              createdAt: new Date()
+          });
+          this.newComment = '';
+      } catch (e) {
+          console.error('Failed to add comment', e);
+      }
     },
     handleSearch() {
       this.fetchSpecs();
@@ -215,20 +304,13 @@ export default {
     },
     getPreview(content) {
       if (!content) return '';
-      if (typeof content === 'string') return content.substring(0, 150);
-      // Extract text from Tiptap JSON
-      const texts = [];
-      const extract = (node) => {
-        if (node.text) texts.push(node.text);
-        if (node.content) node.content.forEach(extract);
-      };
-      extract(content);
-      return texts.join(' ').substring(0, 150) + '...';
+      // Simple HTML tag strip
+      const tmp = document.createElement("DIV");
+      tmp.innerHTML = content;
+      return tmp.textContent || tmp.innerText || "";
     },
     renderContent(content) {
-      if (!content) return '';
-      if (typeof content === 'string') return content.replace(/\n/g, '<br>');
-      return this.getPreview(content);
+      return content;
     },
     formatDate(date) {
       if (!date) return '';
@@ -239,6 +321,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../styles/devspace-common.css';
+
 .specs-page {
   padding: 24px;
 }
@@ -312,8 +396,27 @@ export default {
   align-items: center;
   gap: 6px;
 }
-.spec-detail {
-  padding: 0 16px;
+.spec-drawer-content {
+  display: flex;
+  height: 100%;
+}
+.spec-main {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    border-right: 1px solid var(--el-border-color-light);
+}
+.spec-sidebar {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    background: var(--el-bg-color-page);
+}
+.sidebar-tabs {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 .detail-meta {
   display: flex;
@@ -323,12 +426,22 @@ export default {
   font-size: 13px;
   color: var(--el-text-color-secondary);
 }
-.detail-content {
-  line-height: 1.8;
-  margin-bottom: 32px;
+.viewers-list {
+    display: flex;
+    margin-left: auto;
+    gap: -8px; 
 }
-.comments-section h4 {
-  margin-bottom: 16px;
+.viewer-avatar {
+    border: 2px solid var(--el-bg-color);
+    margin-left: -8px;
+}
+.viewer-avatar:first-child {
+    margin-left: 0;
+}
+.comments-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
 }
 .comment {
   display: flex;
@@ -355,13 +468,35 @@ export default {
   font-size: 14px;
 }
 .add-comment {
+  padding: 16px;
+  border-top: 1px solid var(--el-border-color-light);
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 16px;
 }
 .add-comment .el-button {
   align-self: flex-end;
+}
+.versions-list {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+}
+.version-item {
+    padding: 12px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    cursor: pointer;
+}
+.version-item:hover {
+    background: var(--el-fill-color-light);
+}
+.version-date {
+    font-size: 13px;
+    font-weight: 500;
+}
+.version-author {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
 }
 .empty-state {
   padding: 60px 0;

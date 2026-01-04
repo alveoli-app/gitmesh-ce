@@ -55,6 +55,23 @@ export default class DevtelWebSocketNamespace {
                 this.log.info({ socketId: socket.id, jobId, roomSize }, 'Joined agent job room')
             })
 
+            // Join spec room (for presence)
+            socket.on('join:spec', (specId: string) => {
+                const room = `spec:${specId}`;
+                socket.join(room);
+                // Broadcast presence to others in the room
+                socket.to(room).emit('spec:viewer-joined', { userId: socket.userId, socketId: socket.id });
+                this.log.info({ socketId: socket.id, specId }, 'Joined spec room');
+            });
+
+            // Leave spec room
+            socket.on('leave:spec', (specId: string) => {
+                const room = `spec:${specId}`;
+                socket.leave(room);
+                socket.to(room).emit('spec:viewer-left', { userId: socket.userId, socketId: socket.id });
+                this.log.info({ socketId: socket.id, specId }, 'Left spec room');
+            });
+
             socket.on('disconnect', () => {
                 this.log.info({ socketId: socket.id }, 'DevTel client disconnected')
             })

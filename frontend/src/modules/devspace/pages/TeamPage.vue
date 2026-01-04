@@ -1,5 +1,5 @@
 <template>
-  <div class="team-page">
+  <div class="team-page devspace-page">
     <div class="page-header">
       <h1>Team</h1>
       <div class="header-actions">
@@ -43,10 +43,10 @@
       <div class="team-grid">
         <div v-for="member in filteredMembers" :key="member.id" class="member-card">
           <div class="member-avatar">
-            <el-avatar :size="64">{{ member.name?.charAt(0) || 'U' }}</el-avatar>
+            <el-avatar :size="64">{{ (member.fullName || member.name || 'U').charAt(0) }}</el-avatar>
           </div>
           <div class="member-info">
-            <h3 class="member-name">{{ member.name || 'Unknown' }}</h3>
+            <h3 class="member-name">{{ member.fullName || member.name || 'Unknown' }}</h3>
             <p class="member-email">{{ member.email }}</p>
           </div>
           
@@ -81,6 +81,9 @@
 
           <div class="member-actions">
             <el-button size="small" @click="viewProfile(member)">View Profile</el-button>
+            <router-link :to="{ name: 'member', params: { id: member.id } }">
+              <el-button size="small" type="primary" plain>View in Contacts</el-button>
+            </router-link>
           </div>
         </div>
       </div>
@@ -95,10 +98,13 @@
       <template v-if="selectedMember">
         <div class="profile-content">
           <div class="profile-header">
-            <el-avatar :size="80">{{ selectedMember.name?.charAt(0) }}</el-avatar>
+            <el-avatar :size="80">{{ (selectedMember.fullName || selectedMember.name)?.charAt(0) }}</el-avatar>
             <div class="profile-info">
-              <h3>{{ selectedMember.name }}</h3>
+              <h3>{{ selectedMember.fullName || selectedMember.name }}</h3>
               <p>{{ selectedMember.email }}</p>
+              <router-link :to="{ name: 'member', params: { id: selectedMember.id } }" class="contact-link">
+                <el-button size="small" type="primary" plain>View in Contacts</el-button>
+              </router-link>
             </div>
           </div>
 
@@ -110,9 +116,22 @@
                 :key="skill.id"
                 size="default"
                 :type="getLevelType(skill.level)"
+                closable
+                @close="removeSkill(skill)"
               >
                 {{ skill.skill }} ({{ skill.level }})
               </el-tag>
+              <el-input 
+                  v-if="addingSkill" 
+                  v-model="newSkillName" 
+                  class="new-skill-input" 
+                  size="small" 
+                  placeholder="New Skill" 
+                  @keyup.enter="addSkill"
+                  @blur="addingSkill = false"
+                  ref="skillInput"
+              />
+              <el-button v-else size="small" class="button-new-tag" @click="startAddSkill">+ New Skill</el-button>
             </div>
           </div>
 
@@ -153,10 +172,14 @@ export default {
     return {
       loading: true,
       teamMembers: [],
-      analytics: {},
+      analytics: {
+          completionsByUser: [], // Initialize
+      },
       searchQuery: '',
       showProfileDrawer: false,
       selectedMember: null,
+      addingSkill: false,
+      newSkillName: '',
     };
   },
   computed: {
@@ -167,9 +190,18 @@ export default {
       if (!this.searchQuery) return this.teamMembers;
       const q = this.searchQuery.toLowerCase();
       return this.teamMembers.filter(m => 
+        m.fullName?.toLowerCase().includes(q) || 
         m.name?.toLowerCase().includes(q) || 
         m.email?.toLowerCase().includes(q)
       );
+    },
+    sortedContributors() {
+        if (!this.analytics.completionsByUser) return [];
+        return [...this.analytics.completionsByUser].sort((a, b) => b.storyPoints - a.storyPoints).slice(0, 5);
+    },
+    maxPoints() {
+        if (this.sortedContributors.length === 0) return 0;
+        return Math.max(...this.sortedContributors.map(c => c.storyPoints));
     },
   },
   mounted() {
@@ -195,6 +227,7 @@ export default {
           issuesCompleted: analyticsData.totalCompleted || 0,
           avgVelocity: Math.round(analyticsData.totalPoints / 4) || 0, // Avg per week
           avgCycleTime: 5, // TODO: Calculate from actual data when available
+          completionsByUser: analyticsData.completionsByUser || [],
         };
       } catch (e) {
         console.error('Failed to fetch team', e);
@@ -214,11 +247,43 @@ export default {
       const types = { beginner: 'info', intermediate: '', advanced: 'success', expert: 'warning' };
       return types[level] || '';
     },
+    startAddSkill() {
+        this.addingSkill = true;
+        this.$nextTick(() => {
+            if (this.$refs.skillInput) this.$refs.skillInput.focus();
+        });
+    },
+    async addSkill() {
+        if (!this.newSkillName.trim() || !this.selectedMember) return;
+        try {
+            const skill = await DevtelService.addMemberSkill(this.projectId, this.selectedMember.id, {
+                skill: this.newSkillName,
+                level: 'intermediate' // Default
+            });
+            if (!this.selectedMember.skills) this.selectedMember.skills = [];
+            this.selectedMember.skills.push(skill);
+            this.newSkillName = '';
+            this.addingSkill = false;
+        } catch (e) {
+            this.$message.error('Failed to add skill');
+        }
+    },
+    async removeSkill(skill) {
+        if (!this.selectedMember) return;
+        try {
+            await DevtelService.removeMemberSkill(this.projectId, this.selectedMember.id, skill.id);
+            this.selectedMember.skills = this.selectedMember.skills.filter(s => s.id !== skill.id);
+        } catch (e) {
+            this.$message.error('Failed to remove skill');
+        }
+    },
   },
 };
 </script>
 
 <style scoped>
+@import '../styles/devspace-common.css';
+
 .team-page {
   padding: 24px;
 }
@@ -316,6 +381,10 @@ export default {
 }
 .member-actions {
   margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .profile-content {
   padding: 0 16px;
@@ -334,8 +403,11 @@ export default {
   margin: 0 0 4px;
 }
 .profile-info p {
-  margin: 0;
+  margin: 0 0 8px;
   color: var(--el-text-color-secondary);
+}
+.contact-link {
+  display: inline-block;
 }
 .profile-section {
   margin-bottom: 24px;
@@ -369,5 +441,70 @@ export default {
 }
 .empty-state, .loading-state {
   padding: 60px 0;
+}
+.team-analytics-section {
+    margin-bottom: 32px;
+}
+.team-analytics-section h3 {
+    margin: 0 0 16px;
+    font-size: 18px;
+}
+.contributors-chart {
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 8px;
+    padding: 20px;
+}
+.contributor-bar-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.contributor-bar-row:last-child {
+    margin-bottom: 0;
+}
+.user-info {
+    display: flex;
+    align-items: center;
+    width: 200px;
+    gap: 8px;
+}
+.user-info .name {
+    font-size: 14px;
+    font-weight: 500;
+}
+.bar-container {
+    flex: 1;
+    background: var(--el-fill-color-light);
+    height: 8px;
+    border-radius: 4px;
+    margin: 0 16px;
+    overflow: hidden;
+}
+.bar {
+    height: 100%;
+    background: var(--el-color-primary);
+    border-radius: 4px;
+}
+.stats {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+    min-width: 150px;
+    justify-content: flex-end;
+}
+/* Existing styles */
+.new-skill-input {
+    width: 100px;
+    margin-left: 8px;
+    vertical-align: bottom;
+}
+.button-new-tag {
+    margin-left: 8px;
+    height: 32px;
+    line-height: 30px;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 </style>

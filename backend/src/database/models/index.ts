@@ -134,6 +134,12 @@ function models(queryTimeoutMilliseconds: number) {
     database[modelName] = devtelModels[modelName]
   })
 
+  // Load Chat models
+  const chatModels = require('./chat').default(sequelize)
+  Object.keys(chatModels).forEach((modelName) => {
+    database[modelName] = chatModels[modelName]
+  })
+
   Object.keys(database).forEach((modelName) => {
     if (database[modelName].associate) {
       database[modelName].associate(database)

@@ -4,16 +4,17 @@ RUN apk add --update --no-cache bash python3 build-base py3-pip && ln -sf python
 
 WORKDIR /usr/gitmesh/app
 
+# install pnpm first (needed for library dependencies)
+RUN npm install -g pnpm
+
 # install library dependencies
 COPY ./services/scripts ./services/scripts
 COPY ./services/libs ./services/libs
 RUN cd services/scripts && ./install_lib_packages.sh
 
 # install backend dependencies
-COPY ./backend/package.json ./backend/package-lock.json ./backend/
-RUN cd backend && npm ci
+COPY ./backend/package.json ./backend/pnpm-lock.yaml ./backend/
+RUN cd backend && pnpm install --frozen-lockfile
 
 # copy backend source code
 COPY ./backend ./backend
-
-RUN npm cache clean --force

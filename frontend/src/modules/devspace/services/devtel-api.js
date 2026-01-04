@@ -4,13 +4,27 @@
  */
 import authAxios from '@/shared/axios/auth-axios';
 import { store } from '@/store';
+import { withErrorHandling } from '../utils/errorHandler';
 
 const getTenantId = () => {
     const tenant = store.getters['auth/currentTenant'];
-    return tenant ? tenant.id : null;
+    if (!tenant || !tenant.id) {
+        console.error('DevtelService: No tenant found or tenant has no ID');
+        throw new Error('No tenant context available. Please ensure you are logged in and have selected a tenant.');
+    }
+    return tenant.id;
 };
 
 export default class DevtelService {
+    // ============================================
+    // Health Check
+    // ============================================
+    static async healthCheck() {
+        const tenantId = getTenantId();
+        const response = await authAxios.get(`/tenant/${tenantId}/devtel/health`);
+        return response.data;
+    }
+
     // ============================================
     // Workspace
     // ============================================
@@ -42,15 +56,19 @@ export default class DevtelService {
     }
 
     static async createProject(data) {
-        const tenantId = getTenantId();
-        const response = await authAxios.post(`/tenant/${tenantId}/devtel/projects`, data);
-        return response.data;
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const response = await authAxios.post(`/tenant/${tenantId}/devtel/projects`, data);
+            return response.data;
+        }, 'Create Project');
     }
 
     static async updateProject(projectId, data) {
-        const tenantId = getTenantId();
-        const response = await authAxios.put(`/tenant/${tenantId}/devtel/projects/${projectId}`, data);
-        return response.data;
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const response = await authAxios.put(`/tenant/${tenantId}/devtel/projects/${projectId}`, data);
+            return response.data;
+        }, 'Update Project');
     }
 
     static async deleteProject(projectId) {
@@ -63,25 +81,27 @@ export default class DevtelService {
     // Issues
     // ============================================
     static async listIssues(projectId, params = {}) {
-        const tenantId = getTenantId();
-        const queryParams = { ...params };
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const queryParams = { ...params };
 
-        // Convert arrays to comma-separated strings
-        if (Array.isArray(queryParams.status)) {
-            queryParams.status = queryParams.status.join(',');
-        }
-        if (Array.isArray(queryParams.priority)) {
-            queryParams.priority = queryParams.priority.join(',');
-        }
-        if (Array.isArray(queryParams.assigneeIds)) {
-            queryParams.assigneeIds = queryParams.assigneeIds.join(',');
-        }
+            // Convert arrays to comma-separated strings
+            if (Array.isArray(queryParams.status)) {
+                queryParams.status = queryParams.status.join(',');
+            }
+            if (Array.isArray(queryParams.priority)) {
+                queryParams.priority = queryParams.priority.join(',');
+            }
+            if (Array.isArray(queryParams.assigneeIds)) {
+                queryParams.assigneeIds = queryParams.assigneeIds.join(',');
+            }
 
-        const response = await authAxios.get(
-            `/tenant/${tenantId}/devtel/projects/${projectId}/issues`,
-            { params: queryParams }
-        );
-        return response.data;
+            const response = await authAxios.get(
+                `/tenant/${tenantId}/devtel/projects/${projectId}/issues`,
+                { params: queryParams }
+            );
+            return response.data;
+        }, 'Load Issues');
     }
 
     static async getIssue(projectId, issueId) {
@@ -93,29 +113,35 @@ export default class DevtelService {
     }
 
     static async createIssue(projectId, data) {
-        const tenantId = getTenantId();
-        const response = await authAxios.post(
-            `/tenant/${tenantId}/devtel/projects/${projectId}/issues`,
-            data
-        );
-        return response.data;
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const response = await authAxios.post(
+                `/tenant/${tenantId}/devtel/projects/${projectId}/issues`,
+                data
+            );
+            return response.data;
+        }, 'Create Issue');
     }
 
     static async updateIssue(projectId, issueId, data) {
-        const tenantId = getTenantId();
-        const response = await authAxios.put(
-            `/tenant/${tenantId}/devtel/projects/${projectId}/issues/${issueId}`,
-            data
-        );
-        return response.data;
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const response = await authAxios.put(
+                `/tenant/${tenantId}/devtel/projects/${projectId}/issues/${issueId}`,
+                data
+            );
+            return response.data;
+        }, 'Update Issue');
     }
 
     static async deleteIssue(projectId, issueId) {
-        const tenantId = getTenantId();
-        const response = await authAxios.delete(
-            `/tenant/${tenantId}/devtel/projects/${projectId}/issues/${issueId}`
-        );
-        return response.data;
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const response = await authAxios.delete(
+                `/tenant/${tenantId}/devtel/projects/${projectId}/issues/${issueId}`
+            );
+            return response.data;
+        }, 'Delete Issue');
     }
 
     static async bulkUpdateIssues(projectId, issueIds, data) {
@@ -156,6 +182,14 @@ export default class DevtelService {
         return response.data;
     }
 
+    static async getIssueExternalLinks(issueId) {
+        const tenantId = getTenantId();
+        const response = await authAxios.get(
+            `/tenant/${tenantId}/devtel/issues/${issueId}/external-links`
+        );
+        return response.data;
+    }
+
     // ============================================
     // Cycles
     // ============================================
@@ -177,21 +211,25 @@ export default class DevtelService {
     }
 
     static async createCycle(projectId, data) {
-        const tenantId = getTenantId();
-        const response = await authAxios.post(
-            `/tenant/${tenantId}/devtel/projects/${projectId}/cycles`,
-            data
-        );
-        return response.data;
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const response = await authAxios.post(
+                `/tenant/${tenantId}/devtel/projects/${projectId}/cycles`,
+                data
+            );
+            return response.data;
+        }, 'Create Cycle');
     }
 
     static async updateCycle(projectId, cycleId, data) {
-        const tenantId = getTenantId();
-        const response = await authAxios.put(
-            `/tenant/${tenantId}/devtel/projects/${projectId}/cycles/${cycleId}`,
-            data
-        );
-        return response.data;
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const response = await authAxios.put(
+                `/tenant/${tenantId}/devtel/projects/${projectId}/cycles/${cycleId}`,
+                data
+            );
+            return response.data;
+        }, 'Update Cycle');
     }
 
     static async deleteCycle(projectId, cycleId) {
@@ -353,6 +391,27 @@ export default class DevtelService {
         return response.data;
     }
 
+    static async listSpecVersions(projectId, specId) {
+        const tenantId = getTenantId();
+        const response = await authAxios.get(
+            `/tenant/${tenantId}/devtel/projects/${projectId}/specs/${specId}/versions`
+        );
+        return response.data;
+    }
+
+    static async createSpecVersion(projectId, specId, data) {
+        // Typically created automatically on update, but if manual snapshot needed
+    }
+
+    static async createSpecComment(projectId, specId, content, textReference = null) {
+        const tenantId = getTenantId();
+        const response = await authAxios.post(
+            `/tenant/${tenantId}/devtel/projects/${projectId}/specs/${specId}/comments`,
+            { content, textReference }
+        );
+        return response.data;
+    }
+
     // ============================================
     // Team
     // ============================================
@@ -370,6 +429,52 @@ export default class DevtelService {
         const response = await authAxios.get(
             `/tenant/${tenantId}/devtel/team/analytics`,
             { params }
+        );
+        return response.data;
+    }
+
+    static async updateTeamMember(projectId, userId, data) {
+        const tenantId = getTenantId();
+        const response = await authAxios.put(
+            `/tenant/${tenantId}/devtel/team/${userId}`,
+            data
+        );
+        return response.data;
+    }
+
+    static async addMemberSkill(projectId, userId, skillData) {
+        const tenantId = getTenantId();
+        const response = await authAxios.post(
+            `/tenant/${tenantId}/devtel/team/${userId}/skills`,
+            skillData
+        );
+        return response.data;
+    }
+
+    static async removeMemberSkill(projectId, userId, skillId) {
+        const tenantId = getTenantId();
+        const response = await authAxios.delete(
+            `/tenant/${tenantId}/devtel/team/${userId}/skills/${skillId}`
+        );
+        return response.data;
+    }
+
+    // ============================================
+    // Settings - General
+    // ============================================
+    static async getGeneralSettings(workspaceId) {
+        const tenantId = getTenantId();
+        const response = await authAxios.get(
+            `/tenant/${tenantId}/devtel/settings`
+        );
+        return response.data;
+    }
+
+    static async updateGeneralSettings(workspaceId, data) {
+        const tenantId = getTenantId();
+        const response = await authAxios.put(
+            `/tenant/${tenantId}/devtel/settings`,
+            data
         );
         return response.data;
     }

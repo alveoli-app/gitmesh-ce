@@ -50,13 +50,18 @@ function databaseInit(queryTimeoutMilliseconds, forceNewInstance) {
     if (forceNewInstance === void 0) { forceNewInstance = false; }
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
-            if (forceNewInstance) {
-                return [2 /*return*/, (0, models_1["default"])(queryTimeoutMilliseconds)];
+            try {
+                if (forceNewInstance) {
+                    return [2 /*return*/, (0, models_1["default"])(queryTimeoutMilliseconds)];
+                }
+                if (!cached) {
+                    cached = (0, models_1["default"])(queryTimeoutMilliseconds);
+                }
+                return [2 /*return*/, cached];
+            } catch (error) {
+                console.error('Database initialization failed:', error);
+                throw new Error('Failed to initialize database connection: ' + (error.message || error));
             }
-            if (!cached) {
-                cached = (0, models_1["default"])(queryTimeoutMilliseconds);
-            }
-            return [2 /*return*/, cached];
         });
     });
 }

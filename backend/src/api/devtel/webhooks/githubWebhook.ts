@@ -64,8 +64,8 @@ export default async (req, res) => {
         }
         req.log.info({ workspaceId, event }, 'Webhook signature validated successfully')
     } else {
-        req.log.warn({ workspaceId, event, hasSecret: !!webhookSecret, hasSignature: !!signature }, 
-                 'Webhook signature validation skipped')
+        req.log.warn({ workspaceId, event, hasSecret: !!webhookSecret, hasSignature: !!signature },
+            'Webhook signature validation skipped')
     }
 
     // Log the webhook
@@ -114,11 +114,11 @@ export default async (req, res) => {
 async function handleIssuesEvent(req: any, workspace: any, integration: any, payload: any) {
     const { action, issue, repository } = payload
 
-    req.log.info({ 
-        workspaceId: workspace.id, 
-        action, 
+    req.log.info({
+        workspaceId: workspace.id,
+        action,
         issueNumber: issue.number,
-        repository: repository.full_name 
+        repository: repository.full_name
     }, 'Processing GitHub issues event')
 
     // Create external link for tracking
@@ -153,43 +153,143 @@ async function handleIssuesEvent(req: any, workspace: any, integration: any, pay
 async function handlePullRequestEvent(req: any, workspace: any, integration: any, payload: any) {
     const { action, pull_request, repository } = payload
 
-    req.log.info({ 
-        workspaceId: workspace.id, 
-        action, 
+    req.log.info({
+        workspaceId: workspace.id,
+        action,
         prNumber: pull_request.number,
-        repository: repository.full_name 
+        repository: repository.full_name
     }, 'Processing GitHub pull request event')
 
-    if (action === 'opened' || action === 'closed' || action === 'merged') {
-        req.log.info({ 
-            prUrl: pull_request.html_url, 
-            prTitle: pull_request.title,
-            merged: pull_request.merged 
-        }, `PR ${action}`)
-        // TODO: Could update linked DevTel issues when PR references them
-        // Parse PR body for issue references like "Fixes #123"
-        // Update those DevTel issues with PR link and status
+    // Parse PR body and title for issue references
+    const issueRefs = parseIssueReferences(pull_request.body || '', pull_request.title || '')
+
+    if (issueRefs.length > 0) {
+        req.log.info({ issueRefs, prNumber: pull_request.number }, 'Found issue references in PR')
+
+        for (const issueKey of issueRefs) {
+            // Find DevTel issue by key (assuming format: PROJ-123)
+            const devtelIssue = await req.database.devtelIssues.findOne({
+                include: [{
+                    model: req.database.devtelProjects,
+                    as: 'project',
+                    where: { workspaceId: workspace.id },
+                }],
+                where: req.database.sequelize.where(
+                    req.database.sequelize.fn('CONCAT',
+                        req.database.sequelize.col('project.prefix'),
+                        '-',
+                        req.database.sequelize.col('devtelIssues.sequenceNumber')
+                    ),
+                    issueKey
+                ),
+            })
+
+            if (!devtelIssue) {
+                req.log.warn({ issueKey }, 'DevTel issue not found for reference')
+                continue
+            }
+
+            req.log.info({ issueId: devtelIssue.id, issueKey }, 'Linking PR to DevTel issue')
+
+            // Create or update external link
+            const [link, created] = await req.database.devtelExternalLinks.findOrCreate({
+                where: {
+                    linkableType: 'issue',
+                    linkableId: devtelIssue.id,
+                    externalType: 'github_pr',
+                    externalId: pull_request.number.toString()
+                },
+                defaults: {
+                    url: pull_request.html_url,
+                    metadata: {
+                        status: pull_request.state,
+                        merged: pull_request.merged || false,
+                        author: pull_request.user.login,
+                        title: pull_request.title,
+                        createdAt: pull_request.created_at,
+                        updatedAt: pull_request.updated_at,
+                        repository: repository.full_name,
+                    },
+                },
+            })
+
+            if (!created) {
+                await link.update({
+                    metadata: {
+                        status: pull_request.state,
+                        merged: pull_request.merged || false,
+                        author: pull_request.user.login,
+                        title: pull_request.title,
+                        createdAt: pull_request.created_at,
+                        updatedAt: pull_request.updated_at,
+                        repository: repository.full_name,
+                    },
+                    lastSyncedAt: new Date(),
+                })
+            }
+
+            // Auto-close issue when PR is merged
+            if (action === 'closed' && pull_request.merged) {
+                if (['in_progress', 'review', 'todo'].includes(devtelIssue.status)) {
+                    req.log.info({ issueId: devtelIssue.id, prNumber: pull_request.number },
+                        'Auto-closing issue due to merged PR')
+
+                    await devtelIssue.update({ status: 'done' })
+
+                    // Broadcast via Socket.IO
+                    if (req.io) {
+                        req.io.to(`workspace:${workspace.id}`).emit('issue:updated', {
+                            id: devtelIssue.id,
+                            status: 'done',
+                            updatedAt: new Date(),
+                        })
+                    }
+                }
+            }
+        }
     } else {
-        req.log.info({ action }, 'Unhandled PR action')
+        req.log.info({ action, prNumber: pull_request.number }, 'No issue references found in PR')
     }
+}
+
+// Helper function to parse issue references from text
+function parseIssueReferences(body: string, title: string): string[] {
+    const text = `${title} ${body}`
+    const refs = new Set<string>()
+
+    // Match patterns like: #123, PROJ-123, fixes #123, closes PROJ-123
+    const patterns = [
+        /#([A-Z]+-\d+)/gi,           // #PROJ-123
+        /([A-Z]+-\d+)/g,              // PROJ-123
+        /#(\d+(?=\s|$|\.|,|;))/g,    // #123 (standalone number)
+    ]
+
+    patterns.forEach(pattern => {
+        const matches = text.matchAll(pattern)
+        for (const match of matches) {
+            refs.add(match[1])
+        }
+    })
+
+    return Array.from(refs)
 }
 
 async function handlePushEvent(req: any, workspace: any, integration: any, payload: any) {
     const { commits, ref, repository } = payload
 
-    req.log.info({ 
-        workspaceId: workspace.id, 
-        ref, 
+    req.log.info({
+        workspaceId: workspace.id,
+        ref,
         commitCount: commits?.length || 0,
-        repository: repository.full_name 
+        repository: repository.full_name
     }, 'Processing GitHub push event')
 
     // Track commits for velocity/activity metrics
     if (commits && commits.length > 0) {
-        req.log.info({ 
+        req.log.info({
             commitCount: commits.length,
             firstCommit: commits[0]?.message,
-            author: commits[0]?.author?.name 
+            author: commits[0]?.author?.name
         }, 'Push contains commits')
         // TODO: Create activity entries for DevTel analytics
         // Track commit velocity, code changes, author activity

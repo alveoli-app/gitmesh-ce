@@ -37,7 +37,10 @@ export default async (req, res) => {
         ],
     })
 
-    // TODO: Broadcast via Socket.IO
+    // Broadcast via Socket.IO
+    if (req.io?.devtel) {
+        req.io.devtel.emitCommentAdded(req.params.projectId, req.params.issueId, comment)
+    }
 
-    await req.responseHandler.success(req, res, result)
+    await req.responseHandler.success(req, res, comment)
 }

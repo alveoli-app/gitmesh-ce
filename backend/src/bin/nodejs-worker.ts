@@ -17,6 +17,7 @@ import { NodeWorkerMessageType } from '../serverless/types/workerTypes'
 import { sendNodeWorkerMessage } from '../serverless/utils/nodeWorkerSQS'
 import { NodeWorkerMessageBase } from '../types/mq/nodeWorkerMessageBase'
 import { processIntegration, processWebhook } from './worker/integrations'
+import { processGenerateInsights } from '../serverless/microservices/nodejs/analytics/insightGenerator'
 import { SQS_CLIENT } from '@/serverless/utils/serviceSQS'
 
 /* eslint-disable no-constant-condition */
@@ -183,6 +184,9 @@ async function handleMessages() {
           case NodeWorkerMessageType.PROCESS_WEBHOOK:
             processFunction = processWebhook
             break
+          case NodeWorkerMessageType.GENERATE_INSIGHTS:
+            processFunction = processGenerateInsights
+            break
 
           default:
             messageLogger.error('Error while parsing queue message! Invalid type.')
@@ -240,7 +244,7 @@ async function handleMessages() {
 
   // mark in flight messages as exiting
   for (const msg of messagesInProgress.values()) {
-    ;(msg as any).exiting = true
+    ; (msg as any).exiting = true
   }
 
   while (messagesInProgress.size !== 0) {

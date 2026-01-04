@@ -169,6 +169,18 @@ const mutations = {
         state.total = 0;
     },
 
+    UPDATE_COLUMN_ISSUES(state, { status, issues }) {
+        if (state.issuesByStatus[status]) {
+            state.issuesByStatus[status] = issues;
+            // Ensure all issues in this column have the correct status
+            issues.forEach(issue => {
+                if (issue.status !== status) {
+                    issue.status = status;
+                }
+            });
+        }
+    },
+
     // Optimistic update for drag-drop
     MOVE_ISSUE_STATUS(state, { issueId, newStatus, targetIndex }) {
         const issue = state.issues.find((i) => i.id === issueId);
@@ -236,7 +248,7 @@ const actions = {
     // Update Socket.IO room when project changes
     updateSocketRoom({ commit, rootState }, projectId) {
         if (projectId) {
-             devtelSocket.joinProject(projectId);
+            devtelSocket.joinProject(projectId);
         }
     },
 
@@ -278,7 +290,7 @@ const actions = {
         commit('SET_LOADING', true);
         try {
             const { rows, count } = await DevtelService.listIssues(projectId, state.filters);
-            
+
             // Race condition check: ensure we are still on the requested project
             const currentActiveId = rootState.devspace?.activeProject?.id;
             if (currentActiveId && currentActiveId !== requestedProjectId) {
@@ -292,11 +304,11 @@ const actions = {
             console.error('[Issues] Failed to fetch issues:', error);
             throw error;
         } finally {
-             // Only turn off loading if we are still on the same project
-             const currentActiveId = rootState.devspace?.activeProject?.id;
-             if (!currentActiveId || currentActiveId === requestedProjectId) {
+            // Only turn off loading if we are still on the same project
+            const currentActiveId = rootState.devspace?.activeProject?.id;
+            if (!currentActiveId || currentActiveId === requestedProjectId) {
                 commit('SET_LOADING', false);
-             }
+            }
         }
     },
 
@@ -306,11 +318,11 @@ const actions = {
 
         const issueData = payload.data || payload;
         const issue = await DevtelService.createIssue(projectId, issueData);
-        
+
         // Check if still on same project
         const currentActiveId = rootState.devspace?.activeProject?.id;
         if (currentActiveId && currentActiveId !== projectId) {
-             return issue;
+            return issue;
         }
 
         commit('ADD_ISSUE', issue);
@@ -322,10 +334,10 @@ const actions = {
         if (!targetProjectId) throw new Error('No active project');
 
         const issue = await DevtelService.updateIssue(targetProjectId, issueId, data);
-        
+
         const currentActiveId = rootState.devspace?.activeProject?.id;
         if (currentActiveId && currentActiveId !== targetProjectId) {
-             return issue;
+            return issue;
         }
 
         commit('UPDATE_ISSUE', issue);
@@ -337,10 +349,10 @@ const actions = {
         if (!projectId) throw new Error('No active project');
 
         await DevtelService.deleteIssue(projectId, issueId);
-        
+
         const currentActiveId = rootState.devspace?.activeProject?.id;
         if (currentActiveId && currentActiveId !== projectId) {
-             return;
+            return;
         }
 
         commit('REMOVE_ISSUE', issueId);
@@ -360,10 +372,10 @@ const actions = {
         if (!projectId) return;
 
         const issue = await DevtelService.getIssue(projectId, issueId);
-        
+
         const currentActiveId = rootState.devspace?.activeProject?.id;
         if (currentActiveId && currentActiveId !== projectId) {
-             return;
+            return;
         }
 
         commit('SET_SELECTED_ISSUE', issue);

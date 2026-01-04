@@ -1,5 +1,5 @@
 <template>
-  <div class="cycles-page">
+  <div class="cycles-page devspace-page">
     <div class="page-header">
       <h1>Cycles</h1>
       <el-button type="primary" size="small" @click="showCreateCycleModal = true">
@@ -49,9 +49,14 @@
           <p class="cycle-dates">
             {{ formatDate(cycle.startDate) }} - {{ formatDate(cycle.endDate) }}
           </p>
-          <el-button size="small" type="primary" @click="startCycle(cycle.id)">
-            Start Sprint
-          </el-button>
+          <div class="cycle-actions">
+            <el-button size="small" @click="openPlanning(cycle)">
+              Plan Sprint
+            </el-button>
+            <el-button size="small" type="primary" @click="startCycle(cycle.id)">
+              Start Sprint
+            </el-button>
+          </div>
         </div>
         <div class="empty-state" v-if="plannedCycles.length === 0">
           No planned cycles
@@ -124,25 +129,39 @@
         <el-button type="primary" @click="createCycle">Create</el-button>
       </template>
     </el-dialog>
+
+    <!-- Sprint Planning Modal -->
+    <sprint-planning-modal
+        v-if="planningCycle"
+        v-model="showPlanningModal"
+        :cycle="planningCycle"
+        :project-id="activeProjectId"
+        @saved="handlePlanSaved"
+    />
   </div>
 </template>
 
 <script>
-import { computed, ref, watch, onMounted } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useStore } from 'vuex';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
+import { devtelSocket } from '../services/devtel-socket';
+import DevtelService from '../services/devtel-api';
 import { format } from 'date-fns';
 import { useProject } from '@/modules/devspace/composables/useProject';
 import BurndownChart from '@/modules/devspace/components/BurndownChart.vue';
 import VelocityChart from '@/modules/devspace/components/VelocityChart.vue';
+import SprintPlanningModal from '@/modules/devspace/components/SprintPlanningModal.vue';
 
 export default {
   name: 'CyclesPage',
-  components: { BurndownChart, VelocityChart },
+  components: { BurndownChart, VelocityChart, SprintPlanningModal },
   setup() {
     const store = useStore();
     const { activeProjectId, hasActiveProject } = useProject();
     const showCreateCycleModal = ref(false);
+    const showPlanningModal = ref(false);
+    const planningCycle = ref(null);
     const newCycle = ref({ name: '', goal: '', startDate: null, endDate: null });
 
     const activeCycle = computed(() => store.getters['cycles/activeCycle']);
@@ -164,7 +183,66 @@ export default {
       if (hasActiveProject.value) {
         await store.dispatch('cycles/fetchCycles', activeProjectId.value);
       }
+      
+      // Setup Socket.IO event listeners
+      setupSocketListeners();
     });
+    
+    onUnmounted(() => {
+      // Remove Socket.IO event listeners
+      devtelSocket.off('cycle:created', handleCycleCreated);
+      devtelSocket.off('cycle:updated', handleCycleUpdated);
+      devtelSocket.off('cycle:started', handleCycleStarted);
+      devtelSocket.off('cycle:completed', handleCycleCompleted);
+    });
+    
+    // Socket.IO Event Handlers
+    const handleCycleCreated = (cycle) => {
+      store.commit('cycles/ADD_CYCLE', cycle);
+      ElNotification({
+        title: 'New Cycle',
+        message: `Cycle "${cycle.name}" created`,
+        type: 'info',
+        duration: 3000,
+      });
+    };
+    
+    const handleCycleUpdated = (cycle) => {
+      store.commit('cycles/UPDATE_CYCLE', cycle);
+      ElNotification({
+        title: 'Cycle Updated',
+        message: `Cycle "${cycle.name}" was updated`,
+        type: 'info',
+        duration: 2000,
+      });
+    };
+    
+    const handleCycleStarted = (cycle) => {
+      store.commit('cycles/UPDATE_CYCLE', cycle);
+      ElNotification({
+        title: 'Sprint Started',
+        message: `Sprint "${cycle.name}" has started`,
+        type: 'success',
+        duration: 3000,
+      });
+    };
+    
+    const handleCycleCompleted = (cycle) => {
+      store.commit('cycles/UPDATE_CYCLE', cycle);
+      ElNotification({
+        title: 'Sprint Completed',
+        message: `Sprint "${cycle.name}" has been completed`,
+        type: 'success',
+        duration: 3000,
+      });
+    };
+    
+    const setupSocketListeners = () => {
+      devtelSocket.on('cycle:created', handleCycleCreated);
+      devtelSocket.on('cycle:updated', handleCycleUpdated);
+      devtelSocket.on('cycle:started', handleCycleStarted);
+      devtelSocket.on('cycle:completed', handleCycleCompleted);
+    };
 
     const createCycle = async () => {
       try {
@@ -195,25 +273,42 @@ export default {
       }
     };
 
+    const openPlanning = (cycle) => {
+        planningCycle.value = cycle;
+        showPlanningModal.value = true;
+    };
+
+    const handlePlanSaved = async () => {
+        // Refresh cycles to update stats
+        await store.dispatch('cycles/fetchCycles', activeProjectId.value);
+    };
+
     return {
       showCreateCycleModal,
+      showPlanningModal,
+      planningCycle,
       newCycle,
       activeCycle,
       plannedCycles,
       completedCycles,
       burndownData,
       velocityData,
+      activeProjectId,
       formatDate,
       createCycle,
       startCycle,
       completeCycle,
+      openPlanning,
+      handlePlanSaved
     };
   },
 };
 </script>
 
 <style scoped>
-.cycles-page { height: 100%; }
+@import '../styles/devspace-common.css';
+
+.cycles-page { height: 100%; overflow-y: auto; padding-right: 16px; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .page-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
 .cycle-section { margin-bottom: 32px; }
@@ -225,12 +320,13 @@ export default {
 .cycle-header h3 { margin: 0; font-size: 16px; }
 .cycle-goal { color: var(--el-text-color-secondary); margin-bottom: 12px; }
 .cycle-dates { color: var(--el-text-color-secondary); font-size: 14px; margin-bottom: 12px; }
+.cycle-actions { display: flex; gap: 8px; margin-top: 12px; }
 .cycle-stats { display: flex; gap: 16px; margin-bottom: 12px; }
 .stat { text-align: center; }
 .stat-value { font-size: 24px; font-weight: 600; display: block; }
 .stat-label { font-size: 12px; color: var(--el-text-color-secondary); }
 .empty-state { color: var(--el-text-color-placeholder); padding: 24px; text-align: center; }
-.charts-section { margin-top: 32px; }
+.charts-section { margin-top: 32px; padding-bottom: 40px; }
 .charts-section h2 { font-size: 18px; font-weight: 500; margin-bottom: 16px; }
 .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
 </style>

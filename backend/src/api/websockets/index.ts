@@ -26,11 +26,16 @@ export default class WebSockets {
 
   public static async initialize(
     server: Server,
-  ): Promise<{ userNamespace: WebSocketNamespace<IAuthenticatedSocket>; devtel: DevtelWebSocketNamespace }> {
+  ): Promise<{ 
+    userNamespace: WebSocketNamespace<IAuthenticatedSocket>; 
+    devtel: DevtelWebSocketNamespace;
+    socketIo: SocketServer;
+  }> {
     const websockets = new WebSockets(server)
     return {
       userNamespace: websockets.authenticatedNamespace('/user'),
       devtel: websockets.devtel,
+      socketIo: websockets.socketIo,
     }
   }
 }

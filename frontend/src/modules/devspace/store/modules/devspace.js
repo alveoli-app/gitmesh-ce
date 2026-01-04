@@ -6,6 +6,7 @@ import DevtelService from '@/modules/devspace/services/devtel-api';
 
 const state = () => ({
     workspace: null,
+    teamMembers: [],
     projects: [],
     activeProject: null,
     loading: false,
@@ -15,6 +16,7 @@ const state = () => ({
 const getters = {
     workspace: (state) => state.workspace,
     activeWorkspace: (state) => state.workspace,
+    teamMembers: (state) => state.teamMembers,
     projects: (state) => state.projects,
     activeProject: (state) => state.activeProject,
     activeProjectId: (state) => state.activeProject?.id,
@@ -25,6 +27,9 @@ const getters = {
 const mutations = {
     SET_WORKSPACE(state, workspace) {
         state.workspace = workspace;
+    },
+    SET_TEAM_MEMBERS(state, teamMembers) {
+        state.teamMembers = teamMembers;
     },
     SET_PROJECTS(state, projects) {
         state.projects = projects;
@@ -103,6 +108,18 @@ const actions = {
             throw error;
         } finally {
             commit('SET_LOADING', false);
+        }
+    },
+
+    async fetchTeamMembers({ commit }, projectId) {
+        if (!projectId) return;
+        try {
+            const { team } = await DevtelService.listTeamMembers(projectId);
+            commit('SET_TEAM_MEMBERS', team);
+            return team;
+        } catch (error) {
+            console.error('Failed to fetch team members', error);
+            throw error;
         }
     },
 

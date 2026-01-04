@@ -1,0 +1,59 @@
+services:
+  chat-orchestrator:
+    build:
+      context: ../../chat-orchestrator
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    env_file:
+      - ../../chat-orchestrator/.env.dist.local
+      - ../../chat-orchestrator/.env.dist.composed
+      - ../../chat-orchestrator/.env.override.local
+      - ../../chat-orchestrator/.env.override.composed
+    environment:
+      - BACKEND_URL=http://api:8080
+      - SERVICE_TOKEN=${CREWAI_SERVICE_TOKEN:-dev-token}
+      - OLLAMA_URL=http://ollama:11434
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8001/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - gitmesh-bridge
+    volumes:
+      - chat-orchestrator-storage:/app/storage
+
+  chat-orchestrator-dev:
+    build:
+      context: ../../chat-orchestrator
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    env_file:
+      - ../../chat-orchestrator/.env.dist.local
+      - ../../chat-orchestrator/.env.dist.composed
+      - ../../chat-orchestrator/.env.override.local
+      - ../../chat-orchestrator/.env.override.composed
+    environment:
+      - BACKEND_URL=http://api:8080
+      - SERVICE_TOKEN=${CREWAI_SERVICE_TOKEN:-dev-token}
+      - DEBUG=true
+      - OLLAMA_URL=http://ollama:11434
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8001/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - gitmesh-bridge
+    volumes:
+      - ../../chat-orchestrator/app:/app/app
+      - chat-orchestrator-storage:/app/storage
+
+networks:
+  gitmesh-bridge:
+    external: true
+
+volumes:
+  chat-orchestrator-storage:

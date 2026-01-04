@@ -1,5 +1,5 @@
 <template>
-  <div class="settings-page">
+  <div class="settings-page devspace-page">
     <div class="page-header">
       <h1>Settings</h1>
     </div>
@@ -133,6 +133,24 @@
             </div>
           </div>
         </div>
+
+        <!-- Access Control (Placeholder) -->
+        <div v-show="activeSection === 'access'" class="settings-section">
+            <h2>Access Control</h2>
+            <div class="access-placeholder">
+                <el-empty description="Access Control">
+                    <template #image>
+                        <el-icon :size="60" color="#909399"><Lock /></el-icon>
+                    </template>
+                    <template #description>
+                        <p>Project access and permissions are currently managed at the Workspace level.</p>
+                        <router-link to="/workspace/settings/members">
+                            <el-button type="primary">Manage Workspace Members</el-button>
+                        </router-link>
+                    </template>
+                </el-empty>
+            </div>
+        </div>
       </div>
     </div>
 
@@ -180,12 +198,12 @@
 </template>
 
 <script>
-import { Setting, Link, Cpu, Connection, Plus } from '@element-plus/icons-vue';
+import { Setting, Link, Cpu, Connection, Plus, Lock } from '@element-plus/icons-vue';
 import DevtelService from '@/modules/devspace/services/devtel-api';
 
 export default {
   name: 'SettingsPage',
-  components: { Setting, Link, Cpu, Connection, Plus },
+  components: { Setting, Link, Cpu, Connection, Plus, Lock },
   data() {
     return {
       activeSection: 'general',
@@ -194,6 +212,7 @@ export default {
         { id: 'integrations', label: 'Integrations', icon: 'Link' },
         { id: 'ai', label: 'AI Agents', icon: 'Cpu' },
         { id: 'webhooks', label: 'Webhooks', icon: 'Connection' },
+        { id: 'access', label: 'Access Control', icon: 'Lock' },
       ],
       settings: {
         projectName: '',
@@ -244,12 +263,23 @@ export default {
         if (aiSettings) {
           this.aiSettings = { ...this.aiSettings, ...aiSettings };
         }
+
+        // Fetch General Settings
+        const generalSettings = await DevtelService.getGeneralSettings(this.workspaceId);
+        if (generalSettings) {
+            this.settings = { ...this.settings, ...generalSettings };
+        }
       } catch (e) {
         console.error('Failed to fetch settings', e);
       }
     },
     async saveGeneralSettings() {
-      this.$message.success('Settings saved');
+        try {
+            await DevtelService.updateGeneralSettings(this.workspaceId, this.settings);
+            this.$message.success('Settings saved');
+        } catch (e) {
+            this.$message.error('Failed to save settings');
+        }
     },
     async saveAiSettings() {
       try {
@@ -322,6 +352,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../styles/devspace-common.css';
+
 .settings-page {
   padding: 24px;
 }

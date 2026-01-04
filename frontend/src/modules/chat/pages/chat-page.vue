@@ -33,7 +33,7 @@
           </div>
 
           <div class="w-full relative group mb-6">
-            <div class="absolute inset-0 bg-gradient-to-r from-brand-500/10 to-purple-500/10 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <div class="relative bg-zinc-900 border border-zinc-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 group-hover:border-zinc-700 focus-within:border-zinc-600 focus-within:ring-1 focus-within:ring-zinc-600/50">
               <div class="flex items-start p-3">
                 <div class="flex-grow">
@@ -47,7 +47,7 @@
                 <div class="flex-shrink-0 ml-3 pt-1">
                   <button
                     class="h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-200"
-                    :class="query ? 'bg-brand-500 text-white hover:bg-brand-600' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'"
+                    :class="query ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'"
                     :disabled="!query"
                     @click="handleSearch"
                   >

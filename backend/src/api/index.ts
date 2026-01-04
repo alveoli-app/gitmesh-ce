@@ -36,10 +36,11 @@ import authSocial from './auth/authSocial'
 import WebSockets from './websockets'
 import DevtelWebSocketNamespace from './websockets/devtel'
 import { databaseInit } from '@/database/databaseConnection'
+import { initChatSocket, setChatSocket } from '../websocket/chatSocket'
 
 // Declare global for DevTel WebSocket namespace
 declare global {
-  var devtelWebSocket: DevtelWebSocketNamespace
+  var devtelWebSocket: ReturnType<typeof initChatSocket>
 }
 
 const serviceLogger = getServiceLogger()
@@ -55,10 +56,14 @@ setImmediate(async () => {
   const opensearch = getOpensearchClient(OPENSEARCH_CONFIG)
 
   const redisPubSubPair = await getRedisPubSubPair(REDIS_CONFIG)
-  const { userNamespace, devtel: devtelNamespace } = await WebSockets.initialize(server)
+  const { userNamespace, devtel: devtelNamespace, socketIo } = await WebSockets.initialize(server)
 
-  // Store devtel namespace globally for service access
-  global.devtelWebSocket = devtelNamespace
+  // Initialize chat websocket
+  const chatSocketInstance = initChatSocket(socketIo)
+  setChatSocket(chatSocketInstance)
+
+  // Store chat socket globally for service access
+  global.devtelWebSocket = chatSocketInstance
 
   const pubSubReceiver = new RedisPubSubReceiver(
     'api-pubsub',
@@ -212,19 +217,62 @@ setImmediate(async () => {
     './customViews',
     './premium/enrichment',
     './devtel',
+    './chat',
+    './agent-bridge',
   ]
+
+  console.log('[API] ===========>  About to load', apiModules.length, 'API modules')
 
   for (const mod of apiModules) {
     try {
+      if (mod === './devtel') {
+        console.log('[DEBUG] About to require devtel module')
+      }
       // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
       const loader = require(mod)
+      if (mod === './devtel') {
+        console.log('[DEBUG] Devtel module required successfully, loader:', typeof loader, 'default:', typeof loader?.default)
+      }
       if (loader && typeof loader.default === 'function') {
-        loader.default(routes)
+        if (mod === './devtel') {
+          console.log('[DEBUG] About to call devtel loader function')
+        }
+        try {
+          loader.default(routes)
+          if (mod === './devtel') {
+            console.log('[DEBUG] DevTel loader function completed successfully')
+          }
+        } catch (execErr) {
+          console.log(`\n=== Module Execution Error for ${mod} ===`)
+          console.log('Execution error object:', execErr)
+          console.log('Execution error message:', execErr?.message)
+          console.log('Execution error stack:', execErr?.stack)
+          console.log('============================================\n')
+          throw execErr
+        }
       } else if (typeof loader === 'function') {
         loader(routes)
+      } else {
+        console.log(`Module ${mod} loaded but no function found. loader:`, loader, 'typeof default:', typeof loader?.default)
       }
     } catch (err) {
-      serviceLogger.error({ err, module: mod }, `Failed to load API module ${mod}. Continuing without it.`)
+      console.log(`\n=== Module Load Error for ${mod} ===`)
+      console.log('Error object:', err)
+      console.log('Error message:', err?.message)
+      console.log('Error stack:', err?.stack)
+      console.log('Error name:', err?.name)
+      console.log('Error constructor:', err?.constructor?.name)
+      console.log('===================================\n')
+      serviceLogger.error(
+        { 
+          err, 
+          module: mod, 
+          errorMessage: err?.message, 
+          errorStack: err?.stack,
+          errorName: err?.name 
+        }, 
+        `Failed to load API module ${mod}. Continuing without it.`
+      )
     }
   }
   // Loads the Tenant if the :tenantId param is passed

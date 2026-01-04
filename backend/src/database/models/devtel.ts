@@ -533,6 +533,8 @@ export default (sequelize) => {
         {
             tableName: 'devtelUserSkills',
             timestamps: true,
+            createdAt: 'createdAt',
+            updatedAt: false,
         },
     )
 
@@ -827,6 +829,61 @@ export default (sequelize) => {
     )
 
     // ================================================
+    // DevTel GitHub Commits
+    // ================================================
+    const devtelGithubCommits = sequelize.define(
+        'devtelGithubCommits',
+        {
+            id: {
+                type: DataTypes.UUID,
+                defaultValue: DataTypes.UUIDV4,
+                primaryKey: true,
+            },
+            workspaceId: {
+                type: DataTypes.UUID,
+                allowNull: false,
+            },
+            repoName: {
+                type: DataTypes.STRING(255),
+                allowNull: false,
+            },
+            commitSha: {
+                type: DataTypes.STRING(40),
+                allowNull: false,
+                unique: true,
+            },
+            authorEmail: {
+                type: DataTypes.STRING(255),
+            },
+            authorName: {
+                type: DataTypes.STRING(255),
+            },
+            authorGithubUsername: {
+                type: DataTypes.STRING(255),
+            },
+            committedDate: {
+                type: DataTypes.DATE,
+                allowNull: false,
+            },
+            message: {
+                type: DataTypes.TEXT,
+            },
+            additions: {
+                type: DataTypes.INTEGER,
+                defaultValue: 0,
+            },
+            deletions: {
+                type: DataTypes.INTEGER,
+                defaultValue: 0,
+            },
+        },
+        {
+            tableName: 'devtelGithubCommits',
+            timestamps: true,
+        },
+    )
+
+    // ================================================
     // Define Associations
     // ================================================
     devtelWorkspaces.associate = (models) => {
@@ -1012,5 +1069,6 @@ export default (sequelize) => {
         devtelWebhooks,
         devtelAgentSettings,
         devtelGithubWebhookLogs,
+        devtelGithubCommits,
     }
 }

@@ -424,13 +424,17 @@ export default class IntegrationService {
         { tenantId: integration.tenantId },
         'Sending GitHub message to int-run-worker!',
       )
-      const emitter = await getIntegrationRunWorkerEmitter()
-      await emitter.triggerIntegrationRun(
-        integration.tenantId,
-        integration.platform,
-        integration.id,
-        true,
-      )
+      try {
+        const emitter = await getIntegrationRunWorkerEmitter()
+        await emitter.triggerIntegrationRun(
+          integration.tenantId,
+          integration.platform,
+          integration.id,
+          true,
+        )
+      } catch (err) {
+        this.options.log.error(err, 'Failed to trigger integration run worker')
+      }
 
       await SequelizeRepository.commitTransaction(transaction)
     } catch (err) {
@@ -491,13 +495,17 @@ export default class IntegrationService {
       { tenantId: integration.tenantId },
       'Sending Discord message to int-run-worker!',
     )
-    const emitter = await getIntegrationRunWorkerEmitter()
-    await emitter.triggerIntegrationRun(
-      integration.tenantId,
-      integration.platform,
-      integration.id,
-      true,
-    )
+    try {
+      const emitter = await getIntegrationRunWorkerEmitter()
+      await emitter.triggerIntegrationRun(
+        integration.tenantId,
+        integration.platform,
+        integration.id,
+        true,
+      )
+    } catch (err) {
+      this.options.log.error(err, 'Failed to trigger integration run worker')
+    }
 
     return integration
   }
@@ -546,13 +554,17 @@ export default class IntegrationService {
         throw err
       }
 
-      const emitter = await getIntegrationRunWorkerEmitter()
-      await emitter.triggerIntegrationRun(
-        integration.tenantId,
-        integration.platform,
-        integration.id,
-        true,
-      )
+      try {
+        const emitter = await getIntegrationRunWorkerEmitter()
+        await emitter.triggerIntegrationRun(
+          integration.tenantId,
+          integration.platform,
+          integration.id,
+          true,
+        )
+      } catch (err) {
+        this.options.log.error(err, 'Failed to trigger integration run worker')
+      }
 
       return integration
     }
@@ -852,13 +864,17 @@ export default class IntegrationService {
     }
 
     // Send queue message that starts the hubspot integration
-    const emitter = await getIntegrationRunWorkerEmitter()
-    await emitter.triggerIntegrationRun(
-      integration.tenantId,
-      integration.platform,
-      integration.id,
-      true,
-    )
+    try {
+      const emitter = await getIntegrationRunWorkerEmitter()
+      await emitter.triggerIntegrationRun(
+        integration.tenantId,
+        integration.platform,
+        integration.id,
+        true,
+      )
+    } catch (err) {
+      this.options.log.error(err, 'Failed to trigger integration run worker')
+    }
   }
 
   async hubspotGetLists() {
@@ -1117,13 +1133,17 @@ export default class IntegrationService {
     }
 
     if (status === 'in-progress') {
-      const emitter = await getIntegrationRunWorkerEmitter()
-      await emitter.triggerIntegrationRun(
-        integration.tenantId,
-        integration.platform,
-        integration.id,
-        true,
-      )
+      try {
+        const emitter = await getIntegrationRunWorkerEmitter()
+        await emitter.triggerIntegrationRun(
+          integration.tenantId,
+          integration.platform,
+          integration.id,
+          true,
+        )
+      } catch (err) {
+        this.options.log.error(err, 'Failed to trigger integration run worker')
+      }
     }
 
     return integration
@@ -1160,13 +1180,17 @@ export default class IntegrationService {
       { tenantId: integration.tenantId },
       'Sending reddit message to int-run-worker!',
     )
-    const emitter = await getIntegrationRunWorkerEmitter()
-    await emitter.triggerIntegrationRun(
-      integration.tenantId,
-      integration.platform,
-      integration.id,
-      true,
-    )
+    try {
+      const emitter = await getIntegrationRunWorkerEmitter()
+      await emitter.triggerIntegrationRun(
+        integration.tenantId,
+        integration.platform,
+        integration.id,
+        true,
+      )
+    } catch (err) {
+      this.options.log.error(err, 'Failed to trigger integration run worker')
+    }
 
     return integration
   }
@@ -1206,13 +1230,17 @@ export default class IntegrationService {
       { tenantId: integration.tenantId },
       'Sending devto message to int-run-worker!',
     )
-    const emitter = await getIntegrationRunWorkerEmitter()
-    await emitter.triggerIntegrationRun(
-      integration.tenantId,
-      integration.platform,
-      integration.id,
-      true,
-    )
+    try {
+      const emitter = await getIntegrationRunWorkerEmitter()
+      await emitter.triggerIntegrationRun(
+        integration.tenantId,
+        integration.platform,
+        integration.id,
+        true,
+      )
+    } catch (err) {
+      this.options.log.error(err, 'Failed to trigger integration run worker')
+    }
 
     return integration
   }
@@ -1299,13 +1327,17 @@ export default class IntegrationService {
       { tenantId: integration.tenantId },
       'Sending HackerNews message to int-run-worker!',
     )
-    const emitter = await getIntegrationRunWorkerEmitter()
-    await emitter.triggerIntegrationRun(
-      integration.tenantId,
-      integration.platform,
-      integration.id,
-      true,
-    )
+    try {
+      const emitter = await getIntegrationRunWorkerEmitter()
+      await emitter.triggerIntegrationRun(
+        integration.tenantId,
+        integration.platform,
+        integration.id,
+        true,
+      )
+    } catch (err) {
+      this.options.log.error(err, 'Failed to trigger integration run worker')
+    }
 
     return integration
   }
@@ -1345,13 +1377,17 @@ export default class IntegrationService {
     )
 
     const isOnboarding: boolean = !('channels' in integration.settings)
-    const emitter = await getIntegrationRunWorkerEmitter()
-    await emitter.triggerIntegrationRun(
-      integration.tenantId,
-      integration.platform,
-      integration.id,
-      isOnboarding,
-    )
+    try {
+      const emitter = await getIntegrationRunWorkerEmitter()
+      await emitter.triggerIntegrationRun(
+        integration.tenantId,
+        integration.platform,
+        integration.id,
+        isOnboarding,
+      )
+    } catch (err) {
+      this.options.log.error(err, 'Failed to trigger integration run worker')
+    }
 
     return integration
   }
@@ -1398,13 +1434,17 @@ export default class IntegrationService {
       { tenantId: integration.tenantId },
       'Sending Twitter message to int-run-worker!',
     )
-    const emitter = await getIntegrationRunWorkerEmitter()
-    await emitter.triggerIntegrationRun(
-      integration.tenantId,
-      integration.platform,
-      integration.id,
-      true,
-    )
+    try {
+      const emitter = await getIntegrationRunWorkerEmitter()
+      await emitter.triggerIntegrationRun(
+        integration.tenantId,
+        integration.platform,
+        integration.id,
+        true,
+      )
+    } catch (err) {
+      this.options.log.error(err, 'Failed to trigger integration run worker')
+    }
 
     return integration
   }
@@ -1443,13 +1483,17 @@ export default class IntegrationService {
       { tenantId: integration.tenantId },
       'Sending StackOverflow message to int-run-worker!',
     )
-    const emitter = await getIntegrationRunWorkerEmitter()
-    await emitter.triggerIntegrationRun(
-      integration.tenantId,
-      integration.platform,
-      integration.id,
-      true,
-    )
+    try {
+      const emitter = await getIntegrationRunWorkerEmitter()
+      await emitter.triggerIntegrationRun(
+        integration.tenantId,
+        integration.platform,
+        integration.id,
+        true,
+      )
+    } catch (err) {
+      this.options.log.error(err, 'Failed to trigger integration run worker')
+    }
 
     return integration
   }
@@ -1490,13 +1534,17 @@ export default class IntegrationService {
       'Sending Discourse message to int-run-worker!',
     )
 
-    const emitter = await getIntegrationRunWorkerEmitter()
-    await emitter.triggerIntegrationRun(
-      integration.tenantId,
-      integration.platform,
-      integration.id,
-      true,
-    )
+    try {
+      const emitter = await getIntegrationRunWorkerEmitter()
+      await emitter.triggerIntegrationRun(
+        integration.tenantId,
+        integration.platform,
+        integration.id,
+        true,
+      )
+    } catch (err) {
+      this.options.log.error(err, 'Failed to trigger integration run worker')
+    }
 
     return integration
   }
@@ -1536,13 +1584,17 @@ export default class IntegrationService {
       { tenantId: integration.tenantId },
       'Sending Groups.io message to int-run-worker!',
     )
-    const emitter = await getIntegrationRunWorkerEmitter()
-    await emitter.triggerIntegrationRun(
-      integration.tenantId,
-      integration.platform,
-      integration.id,
-      true,
-    )
+    try {
+      const emitter = await getIntegrationRunWorkerEmitter()
+      await emitter.triggerIntegrationRun(
+        integration.tenantId,
+        integration.platform,
+        integration.id,
+        true,
+      )
+    } catch (err) {
+      this.options.log.error(err, 'Failed to trigger integration run worker')
+    }
 
     return integration
   }

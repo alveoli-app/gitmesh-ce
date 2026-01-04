@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  # Node.js Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - NODE_ENV=development
+      - PORT=8081
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CREWAI_SERVICE_URL=http://chat-orchestrator:8001
+      - CREWAI_SERVICE_TOKEN=${CREWAI_SERVICE_TOKEN:-dev-token}
+    depends_on:
+      - postgres
+      - redis
+      - chat-orchestrator
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - devspace-network
+
+  # Python Chat Orchestrator (CrewAI)
+  chat-orchestrator:
+    build:
+      context: ./chat-orchestrator
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      # AI Provider Selection
+      - AI_PROVIDER=${AI_PROVIDER:-auto}
+      
+      # Ollama (Local LLM - Preferred)
+      - OLLAMA_ENABLED=${OLLAMA_ENABLED:-true}
+      - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2:3b}
+      
+      # Cloud LLM Providers (Fallback)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-3-5-sonnet-20241022}
+      
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
+      - GOOGLE_AI_MODEL=${GOOGLE_AI_MODEL:-gemini-2.0-flash-exp}
+      
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GROQ_MODEL=${GROQ_MODEL:-llama-3.3-70b-versatile}
+      
+      - TOGETHER_API_KEY=${TOGETHER_API_KEY:-}
+      - TOGETHER_MODEL=${TOGETHER_MODEL:-meta-llama/Llama-3.3-70B-Instruct-Turbo}
+      
+      # Backend connection
+      - BACKEND_URL=http://backend:8081
+      - SERVICE_TOKEN=${CREWAI_SERVICE_TOKEN:-dev-token}
+      - LOG_LEVEL=INFO
+      - DEBUG=false
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8001/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - devspace-network
+
+  # Vue.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
+    environment:
+      - VITE_API_URL=http://localhost:8081
+      - VITE_WS_URL=ws://localhost:8081
+    depends_on:
+      - backend
+    networks:
+      - devspace-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-devspace}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-devspace}
+      - POSTGRES_DB=${POSTGRES_DB:-devspace}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U devspace" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devspace-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devspace-network
+
+networks:
+  devspace-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

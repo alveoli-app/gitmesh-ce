@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import moment from 'moment'
 import { Error400, Error401 } from '@gitmesh/common'

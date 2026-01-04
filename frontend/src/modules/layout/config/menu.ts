@@ -4,7 +4,6 @@ import contacts from './links/contacts';
 import organizations from './links/organizations';
 import activities from './links/activities';
 import reports from './links/reports';
-import chat from './links/chat';
 import automations from './links/automations';
 import integrations from './links/integrations';
 import shareFeedback from './links/share-feedback';
@@ -15,6 +14,7 @@ import usersPermissions from './links/users-permissions';
 import apiKeys from './links/api-keys';
 import plansBilling from './links/plans-billing';
 
+import * as chatLinks from './links/chat-links';
 import * as devspaceLinks from './links/devspace-links';
 
 // Signals (default) main menu: everything except DevTel
@@ -33,7 +33,10 @@ export const signalsBottomMenu: MenuLink[] = [
 
 // Chat-only menu
 export const chatMenu: MenuLink[] = [
-  chat,
+  chatLinks.conversations,
+  chatLinks.agents,
+  chatLinks.actions,
+  chatLinks.insights,
 ];
 
 // DevSpace menu (project management + devtel reports)

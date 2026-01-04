@@ -113,16 +113,30 @@ var TenantRepository = /** @class */ (function () {
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
-                        currentUser = sequelizeRepository_1["default"].getCurrentUser(options);
-                        transaction = sequelizeRepository_1["default"].getTransaction(options);
-                        // name is required
-                        if (!data.name) {
-                            throw new common_1.Error400(options.language, 'tenant.errors.nameRequiredOnCreate');
+                        try {
+                            if (!options) {
+                                throw new Error('Options are required for tenant creation');
+                            }
+                            if (!options.database) {
+                                throw new Error('Database connection is required in options');
+                            }
+                            currentUser = sequelizeRepository_1["default"].getCurrentUser(options);
+                            transaction = sequelizeRepository_1["default"].getTransaction(options);
+                            // name is required
+                            if (!data || !data.name) {
+                                throw new common_1.Error400(options.language, 'tenant.errors.nameRequiredOnCreate');
+                            }
+                            if (typeof data.name !== 'string' || data.name.trim().length === 0) {
+                                throw new common_1.Error400(options.language, 'tenant.errors.nameRequiredOnCreate');
+                            }
+                            _a = data;
+                            _b = data.url;
+                            if (_b) return [3 /*break*/, 2];
+                            return [4 /*yield*/, TenantRepository.generateTenantUrl(data.name, options)];
+                        } catch (error) {
+                            console.error('Tenant creation failed:', error);
+                            throw error;
                         }
-                        _a = data;
-                        _b = data.url;
-                        if (_b) return [3 /*break*/, 2];
-                        return [4 /*yield*/, TenantRepository.generateTenantUrl(data.name, options)];
                     case 1:
                         _b = (_d.sent());
                         _d.label = 2;
@@ -200,13 +214,36 @@ var TenantRepository = /** @class */ (function () {
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
-                        currentUser = sequelizeRepository_1["default"].getCurrentUser(options);
-                        transaction = sequelizeRepository_1["default"].getTransaction(options);
+                        try {
+                            if (!id) {
+                                throw new Error('ID is required for tenant update');
+                            }
+                            if (!data) {
+                                throw new Error('Data is required for tenant update');
+                            }
+                            if (!options) {
+                                throw new Error('Options are required for tenant update');
+                            }
+                            if (!options.database) {
+                                throw new Error('Database connection is required in options');
+                            }
+                            currentUser = sequelizeRepository_1["default"].getCurrentUser(options);
+                            transaction = sequelizeRepository_1["default"].getTransaction(options);
+                            _c.label = 1;
+                        } catch (error) {
+                            console.error('Tenant update validation failed:', error);
+                            throw error;
+                        }
+                    case 1:
+                        _c.trys.push([1, 6, , 7]);
                         return [4 /*yield*/, options.database.tenant.findByPk(id, {
                                 transaction: transaction
                             })];
-                    case 1:
+                    case 2:
                         record = _c.sent();
+                        if (!record) {
+                            throw new common_1.Error404();
+                        }
                         if (!force && !(0, userTenantUtils_1.isUserInTenant)(currentUser, record)) {
                             throw new common_1.Error404();
                         }
@@ -223,7 +260,7 @@ var TenantRepository = /** @class */ (function () {
                                 },
                                 transaction: transaction
                             })];
-                    case 2:
+                    case 3:
                         existsUrl = _a.apply(void 0, [_c.sent()]);
                         if (forbiddenTenantUrls.includes(data.url) || existsUrl) {
                             throw new common_1.Error400(options.language, 'tenant.url.exists');
@@ -244,12 +281,17 @@ var TenantRepository = /** @class */ (function () {
                             ])), { updatedById: currentUser.id }), {
                                 transaction: transaction
                             })];
-                    case 3:
+                    case 4:
                         record = _c.sent();
                         return [4 /*yield*/, this._createAuditLog(auditLogRepository_1["default"].UPDATE, record, data, options)];
-                    case 4:
+                    case 5:
                         _c.sent();
                         return [2 /*return*/, this.findById(record.id, options)];
+                    case 6:
+                        error_1 = _c.sent();
+                        console.error('Tenant update operation failed:', error_1);
+                        throw error_1;
+                    case 7: return [2 /*return*/];
                 }
             });
         });

@@ -1,16 +1,19 @@
-FROM node:16-bookworm
+FROM node:20-alpine
 
 WORKDIR /usr/gitmesh/app
+
+# Install bash and build dependencies
+RUN apk add --update --no-cache bash python3 build-base
+
+RUN npm install -g pnpm
 
 COPY ./services/scripts ./services/scripts
 COPY ./services/archetypes/ ./services/archetypes/
 COPY ./services/libs/ ./services/libs/
 RUN cd services/scripts && ./install_lib_packages.sh
 
-COPY ./services/apps/automations_worker/package.json ./services/apps/automations_worker/package-lock.json ./services/apps/automations_worker/tsconfig.json  ./services/apps/automations_worker/
+COPY ./services/apps/automations_worker/package.json ./services/apps/automations_worker/pnpm-lock.yaml ./services/apps/automations_worker/tsconfig.json  ./services/apps/automations_worker/
 # COPY ./services/apps/automations_worker/config ./services/apps/automations_worker/config
 COPY ./services/apps/automations_worker/src ./services/apps/automations_worker/src
 
-RUN cd services/apps/automations_worker && npm ci
-
-RUN npm cache clean --force
+RUN cd services/apps/automations_worker && pnpm install --frozen-lockfile

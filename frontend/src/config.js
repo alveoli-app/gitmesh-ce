@@ -4,7 +4,7 @@
  * multi-with-subdomain: Same as multi, but enable access to the tenant via subdomain.
  * single: One tenant, the first user to register will be the admin.
  */
-const tenantMode = 'multi';
+const tenantMode = import.meta.env.VUE_APP_TENANT_MODE || 'multi';
 
 /**
  * Plan payments configuration.
@@ -68,7 +68,7 @@ const composedConfig = {
   },
   backendUrl: 'VUE_APP_BACKEND_URL',
   websocketsUrl: 'VUE_APP_WEBSOCKETS_URL',
-  tenantMode,
+  tenantMode: 'VUE_APP_TENANT_MODE',
   isPlanEnabled,
   gitHubInstallationUrl:
     'VUE_APP_GITHUB_INSTALLATION_URL',

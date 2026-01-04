@@ -12,6 +12,7 @@ import refreshSampleData from './refreshSampleData'
 import cleanUp from './cleanUp'
 import checkStuckIntegrationRuns from './checkStuckIntegrationRuns'
 import enrichOrganizations from './organizationEnricher'
+import generateInsights from './generateInsights'
 import { WEEKLY_EMAILS_CONFIG } from '../../conf'
 
 const EMAILS_ENABLED = WEEKLY_EMAILS_CONFIG.enabled === 'true'
@@ -29,6 +30,7 @@ const jobs: GitmeshJob[] = [
   cleanUp,
   checkStuckIntegrationRuns,
   enrichOrganizations,
+  generateInsights,
 ]
 
 if (EMAILS_ENABLED) {

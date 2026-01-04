@@ -18,6 +18,8 @@ services:
       - ../../backend/.env.override.composed
     environment:
       <<: *env-args
+      CREWAI_SERVICE_URL: http://chat-orchestrator:8001
+      CREWAI_SERVICE_TOKEN: ${CREWAI_SERVICE_TOKEN:-dev-token}
     ports:
       - '8080:8080'
     restart: always
@@ -38,6 +40,8 @@ services:
       - ../../backend/.env.override.composed
     environment:
       <<: *env-args
+      CREWAI_SERVICE_URL: http://chat-orchestrator-dev:8001
+      CREWAI_SERVICE_TOKEN: ${CREWAI_SERVICE_TOKEN:-dev-token}
     hostname: api
     ports:
       - '8080:8080'

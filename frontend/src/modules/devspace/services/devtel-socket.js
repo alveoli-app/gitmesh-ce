@@ -70,7 +70,7 @@ class DevtelSocketService {
             console.warn(`[DevTel WS] Cannot join project ${projectId}: socket not connected`)
             return
         }
-        
+
         // Leave previous project room if different
         if (this.projectId && this.projectId !== projectId) {
             this.leaveProject(this.projectId)
@@ -116,6 +116,27 @@ class DevtelSocketService {
         }
         this.socket.emit('join:agent', jobId)
         console.log(`[DevTel WS] ✓ Joined agent job room: ${jobId}`)
+    }
+
+    /**
+     * Join spec room
+     */
+    joinSpec(specId) {
+        if (!this.socket?.connected) {
+            console.warn(`[DevTel WS] Cannot join spec ${specId}: socket not connected`)
+            return
+        }
+        this.socket.emit('join:spec', specId)
+        console.log(`[DevTel WS] ✓ Joined spec room: ${specId}`)
+    }
+
+    /**
+     * Leave spec room
+     */
+    leaveSpec(specId) {
+        if (!this.socket?.connected) return
+        this.socket.emit('leave:spec', specId)
+        console.log(`[DevTel WS] ✗ Left spec room: ${specId}`)
     }
 
     /**

@@ -1,6 +1,6 @@
 import moment from 'moment'
 import jwt from 'jsonwebtoken'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import { getServiceLogger } from '@gitmesh/logging'
 import { getRedisClient } from '@gitmesh/redis'
 import { SegmentStatus } from '@gitmesh/types'

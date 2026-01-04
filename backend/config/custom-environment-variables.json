@@ -19,6 +19,11 @@
     "nodejsWorkerQueue": "SQS_NODEJS_WORKER_QUEUE",
     "nodejsWorkerDelayableQueue": "SQS_NODEJS_WORKER_DELAYABLE_QUEUE",
     "integrationRunWorkerQueue": "SQS_INTEGRATION_RUN_WORKER_QUEUE",
+    "integrationStreamWorkerQueue": "SQS_INTEGRATION_STREAM_WORKER_QUEUE",
+    "integrationDataWorkerQueue": "SQS_INTEGRATION_DATA_WORKER_QUEUE",
+    "integrationSyncWorkerQueue": "SQS_INTEGRATION_SYNC_WORKER_QUEUE",
+    "dataSinkWorkerQueue": "SQS_DATA_SINK_WORKER_QUEUE",
+    "searchSyncWorkerQueue": "SQS_SEARCH_SYNC_WORKER_QUEUE",
     "pythonWorkerQueue": "SQS_PYTHON_WORKER_QUEUE",
     "aws": {
       "accountId": "SQS_AWS_ACCOUNT_ID",

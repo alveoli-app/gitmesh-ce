@@ -94,7 +94,16 @@ const handleSubmit = async () => {
         emit('success');
         emit('update:modelValue', false);
       } catch (error) {
-        ElMessage.error(error.message || 'Failed to create issue');
+        console.error('Failed to create issue:', error);
+        
+        // Provide more specific error messages
+        if (error.response?.status === 404) {
+          ElMessage.error('Issue creation service not available. Please check your tenant configuration.');
+        } else if (error.message?.includes('tenant context')) {
+          ElMessage.error('Please ensure you are logged in and have selected a workspace.');
+        } else {
+          ElMessage.error(error.message || 'Failed to create issue');
+        }
       } finally {
         loading.value = false;
       }

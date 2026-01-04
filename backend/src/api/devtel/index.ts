@@ -6,6 +6,18 @@ import { safeWrap } from '../../middlewares/errorMiddleware'
  */
 export default (app) => {
     // ============================================
+    // Health Check Route
+    // ============================================
+    try {
+        app.get(
+            `/tenant/:tenantId/devtel/health`,
+            safeWrap(require('./health/healthCheck').default),
+        )
+    } catch (err) {
+        console.error('[DevTel] Failed to load health check route:', err?.message)
+    }
+
+    // ============================================
     // Workspace Routes
     // ============================================
     app.get(
@@ -44,6 +56,7 @@ export default (app) => {
     // ============================================
     // Issue Routes
     // ============================================
+    console.log('[DevTel] Registering issue routes...')
     app.get(
         `/tenant/:tenantId/devtel/projects/:projectId/issues`,
         safeWrap(require('./issues/issueList').default),
@@ -52,6 +65,7 @@ export default (app) => {
         `/tenant/:tenantId/devtel/projects/:projectId/issues`,
         safeWrap(require('./issues/issueCreate').default),
     )
+    console.log('[DevTel] Issue POST route registered at /tenant/:tenantId/devtel/projects/:projectId/issues')
     app.get(
         `/tenant/:tenantId/devtel/projects/:projectId/issues/:issueId`,
         safeWrap(require('./issues/issueFind').default),
@@ -79,6 +93,10 @@ export default (app) => {
     app.get(
         `/tenant/:tenantId/devtel/projects/:projectId/issues/:issueId/comments`,
         safeWrap(require('./issues/issueCommentList').default),
+    )
+    app.get(
+        `/tenant/:tenantId/devtel/issues/:issueId/external-links`,
+        safeWrap(require('./issues/issueExternalLinks').default),
     )
 
     // ============================================

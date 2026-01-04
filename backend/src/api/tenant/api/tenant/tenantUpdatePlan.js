@@ -67,27 +67,44 @@ exports["default"] = (function (req, res) { return __awaiter(void 0, void 0, voi
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                id = req.params.id;
-                plan = req.body.plan;
-                return [4 /*yield*/, sequelizeRepository_1["default"].createTransaction(req)];
+                try {
+                    if (!req || !req.params) {
+                        return [2 /*return*/, res.status(400).json({ error: 'Invalid request' })];
+                    }
+                    id = req.params.id;
+                    plan = req.body.plan;
+                    if (!id) {
+                        return [2 /*return*/, res.status(400).json({ error: 'Tenant ID is required' })];
+                    }
+                    if (!plan) {
+                        return [2 /*return*/, res.status(400).json({ error: 'Plan is required' })];
+                    }
+                    _a.label = 1;
+                } catch (error) {
+                    console.error('Request validation failed:', error);
+                    return [2 /*return*/, res.status(400).json({ error: 'Invalid request format' })];
+                }
             case 1:
-                transaction = _a.sent();
-                _a.label = 2;
+                _a.trys.push([1, 14, , 15]);
+                return [4 /*yield*/, sequelizeRepository_1["default"].createTransaction(req)];
             case 2:
-                _a.trys.push([2, 10, , 12]);
-                return [4 /*yield*/, tenantRepository_1["default"].update(id, { plan: plan }, __assign(__assign({}, req), { transaction: transaction, currentTenant: { id: id }, bypassPermissionValidation: true }))];
+                transaction = _a.sent();
+                _a.label = 3;
             case 3:
+                _a.trys.push([3, 11, , 13]);
+                return [4 /*yield*/, tenantRepository_1["default"].update(id, { plan: plan }, __assign(__assign({}, req), { transaction: transaction, currentTenant: { id: id }, bypassPermissionValidation: true }))];
+            case 4:
                 tenant = _a.sent();
                 return [4 /*yield*/, sequelizeRepository_1["default"].commitTransaction(transaction)
                     // Emit websocket notification (same as Stripe webhook does)
                 ];
-            case 4:
-                _a.sent();
-                _a.label = 5;
             case 5:
-                _a.trys.push([5, 7, , 8]);
-                return [4 /*yield*/, (0, redis_1.getRedisClient)(conf_1.REDIS_CONFIG, true)];
+                _a.sent();
+                _a.label = 6;
             case 6:
+                _a.trys.push([6, 8, , 9]);
+                return [4 /*yield*/, (0, redis_1.getRedisClient)(conf_1.REDIS_CONFIG, true)];
+            case 7:
                 redis = _a.sent();
                 apiPubSubEmitter = new redis_1.RedisPubSubEmitter('api-pubsub', redis, function (err) {
                     req.log.error({ err: err }, 'Error in api-ws emitter!');
@@ -97,26 +114,35 @@ exports["default"] = (function (req, res) { return __awaiter(void 0, void 0, voi
                     updatedBy: 'admin'
                 }), undefined, id));
                 req.log.info({ tenantId: id, plan: plan }, 'Sent tenant-plan-upgraded websocket notification');
-                return [3 /*break*/, 8];
-            case 7:
+                return [3 /*break*/, 9];
+            case 8:
                 error_1 = _a.sent();
                 req.log.error({ error: error_1 }, 'Failed to send websocket notification');
-                return [3 /*break*/, 8];
-            case 8: return [4 /*yield*/, req.responseHandler.success(req, res, {
+                return [3 /*break*/, 9];
+            case 9: return [4 /*yield*/, req.responseHandler.success(req, res, {
                     success: true,
                     tenant: tenant,
                     message: "Plan updated to ".concat(plan, ". Users will be notified automatically.")
                 })];
-            case 9:
-                _a.sent();
-                return [3 /*break*/, 12];
             case 10:
-                error_2 = _a.sent();
-                return [4 /*yield*/, sequelizeRepository_1["default"].rollbackTransaction(transaction)];
+                _a.sent();
+                return [3 /*break*/, 13];
             case 11:
+                error_2 = _a.sent();
+                console.error('Tenant plan update failed:', error_2);
+                return [4 /*yield*/, sequelizeRepository_1["default"].rollbackTransaction(transaction)];
+            case 12:
                 _a.sent();
                 throw error_2;
-            case 12: return [2 /*return*/];
+            case 13: return [3 /*break*/, 15];
+            case 14:
+                error_3 = _a.sent();
+                console.error('Unexpected error in tenant plan update:', error_3);
+                if (!res.headersSent) {
+                    return [2 /*return*/, res.status(500).json({ error: 'Internal server error' })];
+                }
+                throw error_3;
+            case 15: return [2 /*return*/];
         }
     });
 }); });

@@ -78,10 +78,21 @@ var SequelizeRepository = /** @class */ (function () {
                         if (!conf_1.IS_TEST_ENV) {
                             throw new Error('Clean database only allowed for test!');
                         }
-                        return [4 /*yield*/, database.sequelize.sync({ force: true })];
+                        if (!database || !database.sequelize) {
+                            throw new Error('Valid database instance with sequelize is required');
+                        }
+                        _a.label = 1;
                     case 1:
+                        _a.trys.push([1, , 3, 4]);
+                        return [4 /*yield*/, database.sequelize.sync({ force: true })];
+                    case 2:
                         _a.sent();
-                        return [2 /*return*/];
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_1 = _a.sent();
+                        console.error('Database cleaning failed:', error_1);
+                        throw new Error('Failed to clean database: ' + (error_1.message || error_1));
+                    case 4: return [2 /*return*/];
                 }
             });
         });
@@ -162,16 +173,24 @@ var SequelizeRepository = /** @class */ (function () {
     SequelizeRepository.createTransaction = function (options) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                if (options.transaction) {
-                    if (options.transaction.gitmeshNestedTransactions !== undefined) {
-                        options.transaction.gitmeshNestedTransactions++;
+                try {
+                    if (!options || !options.database || !options.database.sequelize) {
+                        throw new Error('Valid options with database.sequelize is required');
                     }
-                    else {
-                        options.transaction.gitmeshNestedTransactions = 1;
+                    if (options.transaction) {
+                        if (options.transaction.gitmeshNestedTransactions !== undefined) {
+                            options.transaction.gitmeshNestedTransactions++;
+                        }
+                        else {
+                            options.transaction.gitmeshNestedTransactions = 1;
+                        }
+                        return [2 /*return*/, options.transaction];
                     }
-                    return [2 /*return*/, options.transaction];
+                    return [2 /*return*/, options.database.sequelize.transaction()];
+                } catch (error) {
+                    console.error('Transaction creation failed:', error);
+                    throw new Error('Failed to create transaction: ' + (error.message || error));
                 }
-                return [2 /*return*/, options.database.sequelize.transaction()];
             });
         });
     };
@@ -197,12 +216,20 @@ var SequelizeRepository = /** @class */ (function () {
     SequelizeRepository.commitTransaction = function (transaction) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                if (transaction.gitmeshNestedTransactions !== undefined &&
-                    transaction.gitmeshNestedTransactions > 0) {
-                    transaction.gitmeshNestedTransactions--;
-                    return [2 /*return*/, Promise.resolve()];
+                try {
+                    if (!transaction) {
+                        throw new Error('Transaction is required for commit');
+                    }
+                    if (transaction.gitmeshNestedTransactions !== undefined &&
+                        transaction.gitmeshNestedTransactions > 0) {
+                        transaction.gitmeshNestedTransactions--;
+                        return [2 /*return*/, Promise.resolve()];
+                    }
+                    return [2 /*return*/, transaction.commit()];
+                } catch (error) {
+                    console.error('Transaction commit failed:', error);
+                    throw new Error('Failed to commit transaction: ' + (error.message || error));
                 }
-                return [2 /*return*/, transaction.commit()];
             });
         });
     };
@@ -212,12 +239,20 @@ var SequelizeRepository = /** @class */ (function () {
     SequelizeRepository.rollbackTransaction = function (transaction) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                if (transaction.gitmeshNestedTransactions !== undefined &&
-                    transaction.gitmeshNestedTransactions > 0) {
-                    transaction.gitmeshNestedTransactions--;
-                    return [2 /*return*/, Promise.resolve()];
+                try {
+                    if (!transaction) {
+                        throw new Error('Transaction is required for rollback');
+                    }
+                    if (transaction.gitmeshNestedTransactions !== undefined &&
+                        transaction.gitmeshNestedTransactions > 0) {
+                        transaction.gitmeshNestedTransactions--;
+                        return [2 /*return*/, Promise.resolve()];
+                    }
+                    return [2 /*return*/, transaction.rollback()];
+                } catch (error) {
+                    console.error('Transaction rollback failed:', error);
+                    throw new Error('Failed to rollback transaction: ' + (error.message || error));
                 }
-                return [2 /*return*/, transaction.rollback()];
             });
         });
     };

@@ -4,6 +4,7 @@ export enum NodeWorkerMessageType {
   NODE_MICROSERVICE = 'node_microservice',
   DB_OPERATIONS = 'db_operations',
   PROCESS_WEBHOOK = 'process_webhook',
+  GENERATE_INSIGHTS = 'generate_insights',
 }
 
 export enum PythonWorkerMessageType {

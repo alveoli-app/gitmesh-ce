@@ -96,10 +96,30 @@ var IntegrationRepository = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        currentUser = sequelizeRepository_1["default"].getCurrentUser(options);
-                        tenant = sequelizeRepository_1["default"].getCurrentTenant(options);
-                        transaction = sequelizeRepository_1["default"].getTransaction(options);
-                        segment = sequelizeRepository_1["default"].getStrictlySingleActiveSegment(options);
+                        try {
+                            if (!data) {
+                                throw new Error('Data is required for integration creation');
+                            }
+                            if (!options) {
+                                throw new Error('Options are required for integration creation');
+                            }
+                            if (!options.database) {
+                                throw new Error('Database connection is required in options');
+                            }
+                            if (!data.platform) {
+                                throw new Error('Platform is required for integration creation');
+                            }
+                            currentUser = sequelizeRepository_1["default"].getCurrentUser(options);
+                            tenant = sequelizeRepository_1["default"].getCurrentTenant(options);
+                            transaction = sequelizeRepository_1["default"].getTransaction(options);
+                            segment = sequelizeRepository_1["default"].getStrictlySingleActiveSegment(options);
+                            _a.label = 1;
+                        } catch (error) {
+                            console.error('Integration creation validation failed:', error);
+                            throw error;
+                        }
+                    case 1:
+                        _a.trys.push([1, 4, , 5]);
                         return [4 /*yield*/, options.database.integration.create(__assign(__assign({}, lodash_1["default"].pick(data, [
                                 'platform',
                                 'status',
@@ -114,12 +134,17 @@ var IntegrationRepository = /** @class */ (function () {
                             ])), { segmentId: segment.id, tenantId: tenant.id, createdById: currentUser.id, updatedById: currentUser.id }), {
                                 transaction: transaction
                             })];
-                    case 1:
+                    case 2:
                         record = _a.sent();
                         return [4 /*yield*/, this._createAuditLog(auditLogRepository_1["default"].CREATE, record, data, options)];
-                    case 2:
+                    case 3:
                         _a.sent();
                         return [2 /*return*/, this.findById(record.id, options)];
+                    case 4:
+                        error_1 = _a.sent();
+                        console.error('Integration creation operation failed:', error_1);
+                        throw error_1;
+                    case 5: return [2 /*return*/];
                 }
             });
         });
@@ -130,9 +155,29 @@ var IntegrationRepository = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        currentUser = sequelizeRepository_1["default"].getCurrentUser(options);
-                        transaction = sequelizeRepository_1["default"].getTransaction(options);
-                        currentTenant = sequelizeRepository_1["default"].getCurrentTenant(options);
+                        try {
+                            if (!id) {
+                                throw new Error('ID is required for integration update');
+                            }
+                            if (!data) {
+                                throw new Error('Data is required for integration update');
+                            }
+                            if (!options) {
+                                throw new Error('Options are required for integration update');
+                            }
+                            if (!options.database) {
+                                throw new Error('Database connection is required in options');
+                            }
+                            currentUser = sequelizeRepository_1["default"].getCurrentUser(options);
+                            transaction = sequelizeRepository_1["default"].getTransaction(options);
+                            currentTenant = sequelizeRepository_1["default"].getCurrentTenant(options);
+                            _a.label = 1;
+                        } catch (error) {
+                            console.error('Integration update validation failed:', error);
+                            throw error;
+                        }
+                    case 1:
+                        _a.trys.push([1, 4, , 5]);
                         return [4 /*yield*/, options.database.integration.findOne({
                                 where: {
                                     id: id,
@@ -141,7 +186,7 @@ var IntegrationRepository = /** @class */ (function () {
                                 },
                                 transaction: transaction
                             })];
-                    case 1:
+                    case 2:
                         record = _a.sent();
                         if (!record) {
                             throw new common_1.Error404();
@@ -160,12 +205,17 @@ var IntegrationRepository = /** @class */ (function () {
                             ])), { updatedById: currentUser.id }), {
                                 transaction: transaction
                             })];
-                    case 2:
+                    case 3:
                         record = _a.sent();
                         return [4 /*yield*/, this._createAuditLog(auditLogRepository_1["default"].UPDATE, record, data, options)];
-                    case 3:
+                    case 4:
                         _a.sent();
                         return [2 /*return*/, this.findById(record.id, options)];
+                    case 5:
+                        error_1 = _a.sent();
+                        console.error('Integration update operation failed:', error_1);
+                        throw error_1;
+                    case 6: return [2 /*return*/];
                 }
             });
         });

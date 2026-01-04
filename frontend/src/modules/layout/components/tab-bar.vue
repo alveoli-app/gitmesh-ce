@@ -180,6 +180,28 @@
                 </div>
               </div>
 
+              <!-- Insights Alert -->
+              <div
+                v-if="activeInsightsCount > 0"
+                class="p-3 mb-2 bg-purple-500/10 border border-purple-500/20 rounded text-sm"
+              >
+                <div class="flex items-start">
+                  <i class="ri-lightbulb-line text-purple-500 mr-2 mt-0.5" />
+                  <div class="flex-1">
+                    <div class="text-zinc-200 mb-2">
+                      You have <b>{{ activeInsightsCount }}</b> active AI insights waiting for your review.
+                    </div>
+                    <el-button 
+                      size="small" 
+                      class="bg-purple-500 hover:bg-purple-600 border-purple-500 text-white"
+                      @click="router.push({ name: 'chat-insights' })"
+                    >
+                      View Insights
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+
               <!-- No Notifications -->
               <div
                 v-if="!hasNotifications"
@@ -226,6 +248,8 @@ const badge = computed(() => {
 
 // Check if container needs minor update on mount
 onMounted(() => {
+  store.dispatch('chat/chat/fetchActiveInsightsCount');
+  
   nextTick(() => {
     if (tabsContainer.value) {
       // keep placeholder for styling decisions
@@ -243,8 +267,11 @@ const showIntegrationsInProgressAlert = computed(() => store.getters['tenant/sho
 const showIntegrationsNeedReconnectAlert = computed(() => store.getters['tenant/showIntegrationsNeedReconnectAlert']);
 const showOrganizationsAlertBanner = computed(() => store.getters['tenant/showOrganizationsAlertBanner']);
 
+const activeInsightsCount = computed(() => store.state.chat?.chat?.activeInsightsCount || 0);
+
 const hasNotifications = computed(() => {
-  return showSampleDataAlert.value || 
+  return activeInsightsCount.value > 0 ||
+         showSampleDataAlert.value || 
          showIntegrationsErrorAlert.value || 
          showIntegrationsNoDataAlert.value || 
          showIntegrationsInProgressAlert.value || 

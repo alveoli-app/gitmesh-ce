@@ -14,11 +14,18 @@
         <cr-menu-quickstart v-if="isQuickstartEnabled" :collapsed="isCollapsed" />
 
         <!-- Menu items -->
-        <cr-menu-links class="mb-2" :links="currentMainMenu" :collapsed="isCollapsed" link-class="text-sm" />
-
-        <div class="border-t border-zinc-700 mb-4" />
-
-        <cr-menu-links :links="currentBottomMenu" :collapsed="isCollapsed" link-class="text-sm" />
+        <template v-if="selectedTop !== 'chat'">
+          <cr-menu-links class="mb-2" :links="currentMainMenu" :collapsed="isCollapsed" link-class="text-sm" />
+          <div class="border-t border-zinc-700 mb-4" />
+          <cr-menu-links :links="currentBottomMenu" :collapsed="isCollapsed" link-class="text-sm" />
+        </template>
+        
+        <!-- Chat Sidebar with conversation history -->
+        <template v-else>
+          <cr-menu-links class="mb-2" :links="chatMenu" :collapsed="isCollapsed" link-class="text-sm" />
+          <div class="border-t border-zinc-700 mb-4" />
+          <cr-chat-sidebar v-if="!isCollapsed" />
+        </template>
 
         <div class="grow" />
         <!-- Support popover and Toggle -->
@@ -61,6 +68,7 @@ import {
 import { useTopNavStore } from '@/modules/layout/store/topNav';
 import CrMenuSupport from '@/modules/layout/components/menu/menu-support.vue';
 import CrMenuQuickstart from '@/modules/layout/components/menu/menu-quickstart.vue';
+import CrChatSidebar from '@/modules/layout/components/menu/menu-chat-sidebar.vue';
 import { FeatureFlag } from '@/utils/featureFlag';
 
 const store = useStore();

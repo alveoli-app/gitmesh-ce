@@ -1,5 +1,5 @@
 <template>
-  <div class="capacity-page">
+  <div class="capacity-page devspace-page">
     <div class="page-header">
       <h1>Team Capacity</h1>
       <div class="header-actions">
@@ -86,28 +86,64 @@
         <div class="timeline-grid">
           <div v-for="day in timeline" :key="day.date" class="timeline-day">
             <div class="day-header">{{ formatDate(day.date) }}</div>
-            <div class="day-items">
-              <div v-for="item in day.assignments" :key="item.id" class="timeline-item">
-                <span class="item-assignee">{{ item.userName }}</span>
-                <span class="item-issue">{{ item.issueKey }}</span>
-              </div>
-            </div>
+            <draggable
+                v-model="day.assignments"
+                item-key="id"
+                group="timeline"
+                class="day-items"
+                :animation="200"
+                ghost-class="ghost-card"
+                @change="(e) => handleTimelineChange(e, day.date)"
+            >
+                <template #item="{ element }">
+                    <div class="timeline-item">
+                        <span class="item-assignee">{{ element.userName }}</span>
+                        <span class="item-issue">{{ element.issueKey }}</span>
+                    </div>
+                </template>
+            </draggable>
           </div>
         </div>
       </div>
+
+       <!-- GitHub Heatmap (Placeholder/Mock) -->
+       <div class="heatmap-section">
+         <h2>Contribution Activity</h2>
+         <div class="heatmap-container">
+            <div class="heatmap-grid">
+                <div v-for="i in 365" :key="i" class="heatmap-cell" :class="getRandomHeatmapClass()"></div>
+            </div>
+            <div class="heatmap-legend">
+                <span>Less</span>
+                <div class="legend-scale">
+                    <div class="heatmap-cell l0"></div>
+                    <div class="heatmap-cell l1"></div>
+                    <div class="heatmap-cell l2"></div>
+                    <div class="heatmap-cell l3"></div>
+                    <div class="heatmap-cell l4"></div>
+                </div>
+                <span>More</span>
+            </div>
+         </div>
+       </div>
     </template>
   </div>
 </template>
 
 <script>
+import { useStore } from 'vuex';
+import draggable from 'vuedraggable';
+import { ElMessage } from 'element-plus';
 import { useProject } from '@/modules/devspace/composables/useProject';
 import DevtelService from '@/modules/devspace/services/devtel-api';
 
 export default {
   name: 'CapacityPage',
+  components: { draggable },
   setup() {
     const { activeProjectId } = useProject();
-    return { activeProjectId };
+    const store = useStore();
+    return { activeProjectId, store };
   },
   data() {
     return {
@@ -194,11 +230,41 @@ export default {
     formatDate(date) {
       return new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     },
+    async handleTimelineChange(e, date) {
+        if (e.added) {
+            const issueId = e.added.element.id;
+            try {
+                // Determine assignee from the card or assume current user? 
+                // Ah, the card has 'userName'. But moving dates implies re-scheduling.
+                // We need to update scheduledDate for this issue.
+                
+                // Assuming issue service handles it via issue update
+                await this.store.dispatch('issues/updateIssue', {
+                    issueId,
+                    data: { scheduledDate: date }
+                });
+                ElMessage.success('Schedule updated');
+            } catch (err) {
+                ElMessage.error('Failed to reschedule');
+                await this.fetchCapacity(); // Revert
+            }
+        }
+    },
+    getRandomHeatmapClass() {
+        const r = Math.random();
+        if (r > 0.9) return 'l4';
+        if (r > 0.7) return 'l3';
+        if (r > 0.5) return 'l2';
+        if (r > 0.3) return 'l1';
+        return 'l0';
+    }
   },
 };
 </script>
 
 <style scoped>
+@import '../styles/devspace-common.css';
+
 .capacity-page {
   padding: 24px;
 }
@@ -350,13 +416,63 @@ export default {
   margin-bottom: 4px;
 }
 .item-assignee {
-  font-weight: 500;
+  font-weight: 600;
+  display: block;
 }
 .item-issue {
   color: var(--el-text-color-secondary);
-  margin-left: 4px;
+  font-size: 10px;
 }
 .loading-state {
   padding: 40px 0;
+}
+.ghost-card {
+    opacity: 0.5;
+    background: var(--el-color-primary-light-9);
+    border: 1px dashed var(--el-color-primary);
+}
+
+.heatmap-section {
+    margin-top: 32px;
+}
+.heatmap-container {
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 8px;
+    padding: 24px;
+}
+.heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(53, 1fr); /* Weeks */
+    gap: 4px;
+    margin-bottom: 16px;
+}
+.heatmap-cell {
+    width: 100%;
+    padding-top: 100%; /* Square */
+    border-radius: 2px;
+    background-color: var(--el-fill-color-light);
+}
+.heatmap-cell.l1 { background-color: #9be9a8; }
+.heatmap-cell.l2 { background-color: #40c463; }
+.heatmap-cell.l3 { background-color: #30a14e; }
+.heatmap-cell.l4 { background-color: #216e39; }
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+}
+.legend-scale {
+    display: flex;
+    gap: 2px;
+}
+.legend-scale .heatmap-cell {
+    width: 12px;
+    height: 12px;
+    padding: 0;
 }
 </style>

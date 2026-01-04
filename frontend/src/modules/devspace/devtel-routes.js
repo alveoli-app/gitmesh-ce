@@ -3,6 +3,7 @@ import Layout from '@/modules/layout/components/layout.vue';
 // Lazy-loaded page components
 const DevtelLayout = () => import('@/modules/devspace/pages/DevtelLayout.vue');
 const TelemetryPage = () => import('@/modules/devspace/pages/TelemetryPage.vue');
+const ReportListPage = () => import('@/modules/report/pages/report-list-page.vue');
 const BoardPage = () => import('@/modules/devspace/pages/BoardPage.vue');
 const BacklogPage = () => import('@/modules/devspace/pages/BacklogPage.vue');
 const CyclesPage = () => import('@/modules/devspace/pages/CyclesPage.vue');
@@ -13,58 +14,65 @@ const SettingsPage = () => import('@/modules/devspace/pages/SettingsPage.vue');
 
 export default [
     {
-        path: '/',
+        path: '/devspace',
         component: Layout,
         meta: { auth: true },
         children: [
             {
                 path: '',
                 component: DevtelLayout,
+                redirect: '/devspace/overview',
                 children: [
                     {
-                        name: 'overview',
+                        name: 'devspace-overview',
                         path: 'overview',
                         component: TelemetryPage,
                         meta: { auth: true, title: 'Project Overview' },
                     },
                     {
-                        name: 'board',
+                        name: 'devspace-devtel',
+                        path: 'devtel',
+                        component: ReportListPage,
+                        meta: { auth: true, title: 'Devtel' },
+                    },
+                    {
+                        name: 'devspace-board',
                         path: 'board',
                         component: BoardPage,
                         meta: { auth: true, title: 'Issues Board' },
                     },
                     {
-                        name: 'backlog',
+                        name: 'devspace-backlog',
                         path: 'backlog',
                         component: BacklogPage,
                         meta: { auth: true, title: 'Backlog' },
                     },
                     {
-                        name: 'cycles',
+                        name: 'devspace-cycles',
                         path: 'cycles',
                         component: CyclesPage,
                         meta: { auth: true, title: 'Cycles' },
                     },
                     {
-                        name: 'capacity',
+                        name: 'devspace-capacity',
                         path: 'capacity',
                         component: CapacityPage,
                         meta: { auth: true, title: 'Capacity' },
                     },
                     {
-                        name: 'specs',
+                        name: 'devspace-specs',
                         path: 'specs',
                         component: SpecsPage,
                         meta: { auth: true, title: 'Specs' },
                     },
                     {
-                        name: 'team',
+                        name: 'devspace-team',
                         path: 'team',
                         component: TeamPage,
                         meta: { auth: true, title: 'Team' },
                     },
                     {
-                        name: 'project-settings',
+                        name: 'devspace-project-settings',
                         path: 'project-settings',
                         component: SettingsPage,
                         meta: { auth: true, title: 'Project Settings' },

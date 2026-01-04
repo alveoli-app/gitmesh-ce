@@ -97,6 +97,9 @@ var RepositoryBase = /** @class */ (function () {
     RepositoryBase.prototype.create = function (data) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
+                if (!data) {
+                    throw new Error('Data is required for create operation');
+                }
                 throw new Error('Method not implemented.');
             });
         });
@@ -104,6 +107,12 @@ var RepositoryBase = /** @class */ (function () {
     RepositoryBase.prototype.update = function (id, data) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
+                if (!id) {
+                    throw new Error('ID is required for update operation');
+                }
+                if (!data) {
+                    throw new Error('Data is required for update operation');
+                }
                 throw new Error('Method not implemented.');
             });
         });
@@ -118,6 +127,9 @@ var RepositoryBase = /** @class */ (function () {
     RepositoryBase.prototype.destroyAll = function (ids) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
+                if (!ids || !Array.isArray(ids) || ids.length === 0) {
+                    throw new Error('Valid array of IDs is required for destroyAll operation');
+                }
                 throw new Error('Method not implemented.');
             });
         });
@@ -125,6 +137,9 @@ var RepositoryBase = /** @class */ (function () {
     RepositoryBase.prototype.findById = function (id) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
+                if (!id) {
+                    throw new Error('ID is required for findById operation');
+                }
                 throw new Error('Method not implemented.');
             });
         });
@@ -132,6 +147,9 @@ var RepositoryBase = /** @class */ (function () {
     RepositoryBase.prototype.findAndCountAll = function (criteria) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
+                if (!criteria) {
+                    throw new Error('Criteria is required for findAndCountAll operation');
+                }
                 throw new Error('Method not implemented.');
             });
         });

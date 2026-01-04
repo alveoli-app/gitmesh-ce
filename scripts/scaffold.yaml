@@ -146,7 +146,7 @@ services:
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
     ports:
-      - '9092:9092'
+      - '9094:9092'
     networks:
       - gitmesh-bridge
 

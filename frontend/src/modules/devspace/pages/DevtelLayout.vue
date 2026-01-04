@@ -1,5 +1,7 @@
 <template>
-  <div class="devtel-layout">
+  <loading-bar />
+  <error-boundary>
+    <div class="devtel-layout">
     <header class="devtel-header">
       <div class="header-left">
         <div class="app-title">
@@ -13,6 +15,7 @@
       </div>
       
       <div class="header-actions">
+        <connection-status class="mr-3" />
         <el-button 
           type="primary" 
           icon="ri-add-line"
@@ -47,15 +50,21 @@
       @success="handleProjectCreated"
     />
   </div>
+  </error-boundary>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
+import { ElMessage, ElNotification } from 'element-plus';
 import ProjectSelector from '../components/ProjectSelector.vue';
+import ConnectionStatus from '../components/ConnectionStatus.vue';
+import { devtelSocket } from '../services/devtel-socket';
 import IssueFormModal from '../components/IssueFormModal.vue';
 import ProjectFormModal from '../components/ProjectFormModal.vue';
+import LoadingBar from '../components/LoadingBar.vue';
+import ErrorBoundary from '../components/ErrorBoundary.vue';
 
 const store = useStore();
 const route = useRoute();
@@ -104,21 +113,34 @@ watch(activeProjectId, (newId, oldId) => {
 // Initialize WebSocket connection on mount
 onMounted(() => {
   console.log('[DevSpace] Layout mounted, initializing socket connection');
-  store.dispatch('issues/initializeSocket');
+  // Connect to Socket.IO
+  devtelSocket.connect();
+  
+  // Join workspace if available
+  const workspaceId = store.getters['devspace/activeWorkspaceId'];
+  if (workspaceId) {
+    devtelSocket.joinWorkspace(workspaceId);
+  }
+  
+  // Join project if available
+  if (activeProjectId.value) {
+    devtelSocket.joinProject(activeProjectId.value);
+  }
 });
 
 // Disconnect WebSocket on unmount
 onUnmounted(() => {
   console.log('[DevSpace] Layout unmounted, disconnecting socket');
-  store.dispatch('issues/disconnectSocket');
+  devtelSocket.disconnect();
 });
 
-// Watch for active project changes and join the project room
+// Watch for active project changes and update room membership
 watch(activeProjectId, (newProjectId, oldProjectId) => {
   if (oldProjectId && oldProjectId !== newProjectId) {
-    console.log(`[DevSpace] Project changed from ${oldProjectId} to ${newProjectId}`);
-    // Will be handled by the store's initializeSocket which joins the current project
-    store.dispatch('issues/initializeSocket');
+    devtelSocket.leaveProject(oldProjectId);
+  }
+  if (newProjectId) {
+    devtelSocket.joinProject(newProjectId);
   }
 }, { immediate: false });
 </script>

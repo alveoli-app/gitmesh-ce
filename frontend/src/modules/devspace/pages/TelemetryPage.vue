@@ -1,5 +1,5 @@
 <template>
-  <div class="telemetry-page">
+  <div class="telemetry-page devspace-page">
     <div class="page-header">
       <h1>Developer Telemetry</h1>
       <p class="subtitle" v-if="activeProjectId">Real-time metrics for current project</p>
@@ -100,7 +100,15 @@ const fetchData = async () => {
     
   } catch (error) {
     console.error('Failed to fetch telemetry:', error);
-    ElMessage.error('Failed to load telemetry data');
+    
+    // Provide more specific error messages
+    if (error.response?.status === 404) {
+      ElMessage.error('Telemetry service not available. Please check your tenant configuration.');
+    } else if (error.message?.includes('tenant context')) {
+      ElMessage.error('Please ensure you are logged in and have selected a workspace.');
+    } else {
+      ElMessage.error('Failed to load telemetry data');
+    }
   } finally {
     loading.value = false;
   }
@@ -123,6 +131,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
+@import '../styles/devspace-common.css';
+
 .telemetry-page {
   padding: 0;
   min-height: 100%;

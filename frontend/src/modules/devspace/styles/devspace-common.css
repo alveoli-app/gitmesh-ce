@@ -1,0 +1,246 @@
+/* DevSpace Common Styles - Consistent Text Sizing and Formatting */
+
+/* Page Headers */
+.devspace-page .page-header h1 {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  color: var(--el-text-color-primary) !important;
+  line-height: 1.2 !important;
+}
+
+.devspace-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+/* Section Headers */
+.devspace-page h2 {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  margin: 0 0 16px 0 !important;
+  color: var(--el-text-color-primary) !important;
+  line-height: 1.3 !important;
+}
+
+.devspace-page h3 {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  margin: 0 0 8px 0 !important;
+  color: var(--el-text-color-primary) !important;
+  line-height: 1.4 !important;
+}
+
+.devspace-page h4 {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin: 0 0 8px 0 !important;
+  color: var(--el-text-color-primary) !important;
+  line-height: 1.4 !important;
+}
+
+/* Body Text */
+.devspace-page p {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  margin: 0 0 12px 0 !important;
+  color: var(--el-text-color-regular) !important;
+}
+
+/* Secondary Text */
+.devspace-page .secondary-text,
+.devspace-page .text-secondary {
+  font-size: 13px !important;
+  color: var(--el-text-color-secondary) !important;
+  line-height: 1.4 !important;
+}
+
+/* Small Text */
+.devspace-page .small-text,
+.devspace-page .text-small {
+  font-size: 12px !important;
+  color: var(--el-text-color-secondary) !important;
+  line-height: 1.3 !important;
+}
+
+/* Extra Small Text */
+.devspace-page .xs-text,
+.devspace-page .text-xs {
+  font-size: 11px !important;
+  color: var(--el-text-color-secondary) !important;
+  line-height: 1.2 !important;
+}
+
+/* Card Titles */
+.devspace-page .card-title,
+.devspace-page .spec-title,
+.devspace-page .cycle-header h3,
+.devspace-page .member-name {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  margin: 0 0 8px 0 !important;
+  color: var(--el-text-color-primary) !important;
+  line-height: 1.4 !important;
+}
+
+/* Labels and Metadata */
+.devspace-page .card-label,
+.devspace-page .stat-label,
+.devspace-page .column-title,
+.devspace-page .day-header {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--el-text-color-secondary) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  line-height: 1.2 !important;
+}
+
+/* Values and Numbers */
+.devspace-page .card-value,
+.devspace-page .stat-value,
+.devspace-page .stat-num {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: var(--el-text-color-primary) !important;
+  line-height: 1.1 !important;
+}
+
+/* Issue IDs and Monospace Text */
+.devspace-page .issue-id,
+.devspace-page .issue-key {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace !important;
+  font-size: 12px !important;
+  color: var(--el-text-color-secondary) !important;
+  font-weight: 500 !important;
+}
+
+/* Button Text Consistency */
+.devspace-page .el-button {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+.devspace-page .el-button--small {
+  font-size: 13px !important;
+}
+
+/* Table Text */
+.devspace-page .el-table {
+  font-size: 14px !important;
+}
+
+.devspace-page .el-table th {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.devspace-page .el-table td {
+  font-size: 14px !important;
+}
+
+/* Form Labels */
+.devspace-page .el-form-item__label {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--el-text-color-regular) !important;
+}
+
+/* Input Text */
+.devspace-page .el-input__inner,
+.devspace-page .el-textarea__inner {
+  font-size: 14px !important;
+}
+
+/* Tag Text */
+.devspace-page .el-tag {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.devspace-page .el-tag--small {
+  font-size: 11px !important;
+}
+
+/* Priority Badges */
+.devspace-page .priority-badge {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+/* Consistent Spacing */
+.devspace-page .page-section {
+  margin-bottom: 32px;
+}
+
+.devspace-page .card-section {
+  margin-bottom: 16px;
+}
+
+/* Empty State Text */
+.devspace-page .empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--el-text-color-placeholder) !important;
+}
+
+.devspace-page .empty-state h3 {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  margin-bottom: 8px !important;
+}
+
+.devspace-page .empty-state p {
+  font-size: 14px !important;
+  margin-bottom: 16px !important;
+}
+
+/* Loading State */
+.devspace-page .loading-state {
+  padding: 40px 0;
+}
+
+/* Drawer and Modal Text */
+.devspace-page .el-drawer__title,
+.devspace-page .el-dialog__title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+/* Comment Text */
+.devspace-page .comment-author {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.devspace-page .comment-date {
+  font-size: 12px !important;
+  color: var(--el-text-color-secondary) !important;
+}
+
+.devspace-page .comment-text {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+/* Responsive Text Scaling */
+@media (max-width: 768px) {
+  .devspace-page .page-header h1 {
+    font-size: 20px !important;
+  }
+  
+  .devspace-page h2 {
+    font-size: 16px !important;
+  }
+  
+  .devspace-page .card-value,
+  .devspace-page .stat-value {
+    font-size: 24px !important;
+  }
+}

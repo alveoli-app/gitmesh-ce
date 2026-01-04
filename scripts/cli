@@ -42,6 +42,14 @@ function prepare_dev_env() {
         echo "# Here you can put environment variables that you would like to override when using local environment" > "$CLI_HOME/../frontend/.env.override.composed"
     fi
 
+    if [[ ! -f "$CLI_HOME/../chat-orchestrator/.env.override.local" ]]; then
+        echo "# Here you can put environment variables that you would like to override when using local environment" > "$CLI_HOME/../chat-orchestrator/.env.override.local"
+    fi
+
+    if [[ ! -f "$CLI_HOME/../chat-orchestrator/.env.override.composed" ]]; then
+        echo "# Here you can put environment variables that you would like to override when using local environment" > "$CLI_HOME/../chat-orchestrator/.env.override.composed"
+    fi
+
     set +eo pipefail
 
     $_DC >> /dev/null 2>&1
@@ -354,7 +362,7 @@ function scaffold_set_up_network() {
 
 function migrate_local() {
     say "Building flyway migration image..."
-    docker build $DOCKER_PLATFORM_FLAGS -t gitmesh_flyway -f $CLI_HOME/../backend/src/database/Dockerfile.flyway $CLI_HOME/../backend/src/database --load
+    docker build --no-cache $DOCKER_PLATFORM_FLAGS -t gitmesh_flyway -f $CLI_HOME/../backend/src/database/Dockerfile.flyway $CLI_HOME/../backend/src/database --load
     say "Applying database migrations!"
     docker run --rm --network "${PROJECT_NAME}-bridge" \
         -e PGHOST=db \
@@ -497,6 +505,28 @@ function wait_for_db() {
     say "Scaffold is up and running!"
 }
 
+function print_success_and_ports() {
+    echo -e "\n${GREEN}Script ran successfully!${RESET}"
+    echo -e "\n${YELLOW}Services and Ports:${RESET}"
+    echo -e "--------------------------------------------------"
+    echo -e "${BLUE}Frontend:${RESET}             http://localhost:8081"
+    echo -e "${BLUE}Backend API:${RESET}          http://localhost:8080"
+    echo -e "${BLUE}Chat Orchestrator:${RESET}    http://localhost:8001"
+    echo -e "${BLUE}PostgreSQL:${RESET}           http://localhost:5432"
+    echo -e "${BLUE}Redis:${RESET}                http://localhost:6379"
+    echo -e "${BLUE}OpenSearch:${RESET}           http://localhost:9200"
+    echo -e "${BLUE}SQS UI:${RESET}               http://localhost:9325"
+    echo -e "${BLUE}Nango:${RESET}                http://localhost:3003"
+    echo -e "${BLUE}Kafka:${RESET}                http://localhost:9094"
+    echo -e "${BLUE}Temporal UI:${RESET}          http://localhost:8233"
+    echo -e "${BLUE}Ollama:${RESET}               http://localhost:11434"
+    
+    if [[ "$__EDITION" == "gitmesh-ee" ]]; then
+        echo -e "${BLUE}Unleash:${RESET}              http://localhost:4242"
+    fi
+    echo -e "--------------------------------------------------"
+}
+
 function start() {
     if [[ -z "$CLEAN_START" ]]; then
         up_scaffold
@@ -524,6 +554,8 @@ function start() {
         fi
         unset SKIP
     done
+
+    print_success_and_ports
 }
 
 SCRIPT_USAGE="${YELLOW}${PROJECT_NAME} CLI ${RESET}\n\nExample usage: ./cli [ prod, dev, clean-dev, prod-ee, dev-ee, clean-dev-ee, prod-backend, dev-backend, clean-dev-backend, clean-orphans, scaffold =>, service =>, build =>, build-and-push ]"

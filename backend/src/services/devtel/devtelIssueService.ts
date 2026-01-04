@@ -44,6 +44,7 @@ export interface IssueCreateData {
 export interface IssueUpdateData extends Partial<IssueCreateData> {
     actualHours?: number
     complexityScore?: number
+    scheduledDate?: string | null
 }
 
 export interface IssueSearchParams {
@@ -65,6 +66,10 @@ export default class DevtelIssueService extends LoggerBase {
     constructor(options: IServiceOptions) {
         super(options.log)
         this.options = options
+    }
+
+    get req() {
+        return (this.options as any).req
     }
 
     /**
@@ -139,11 +144,14 @@ export default class DevtelIssueService extends LoggerBase {
             // Trigger async indexing to OpenSearch
             this.triggerSearchIndex(issue.id)
 
-            // Broadcast via Socket.IO
-            this.broadcastIssueChange('issue.created', projectId, issue)
-
-            this.log.info({ issueId: issue.id }, 'Calling findById to return full issue...')
+            // Fetch the full issue with relations for the response
             const fullIssue = await this.findById(projectId, issue.id)
+
+            // Broadcast via Socket.IO
+            if (this.req?.io?.devtel) {
+                this.req.io.devtel.emitIssueCreated(projectId, fullIssue)
+            }
+
             this.log.info({ issueId: issue.id }, 'DevtelIssueService.create - SUCCESS')
             return fullIssue
         } catch (error) {
@@ -226,28 +234,53 @@ export default class DevtelIssueService extends LoggerBase {
                 }
             }
 
+            // Handle scheduledDate update (for existing assignment)
+            if (data.scheduledDate !== undefined && issue.assigneeId) {
+                await this.options.database.devtelIssueAssignments.update(
+                    { scheduledDate: data.scheduledDate },
+                    {
+                        where: {
+                            issueId,
+                            userId: issue.assigneeId,
+                            role: 'assignee',
+                        },
+                        transaction,
+                    }
+                )
+            }
+
             updateFields.updatedById = this.options.currentUser?.id
             await issue.update(updateFields, { transaction })
 
             await SequelizeRepository.commitTransaction(transaction)
 
-            // Trigger async indexing
-            this.triggerSearchIndex(issueId)
+                // Trigger async indexing
+                this.triggerSearchIndex(issueId)
 
-            // Broadcast via Socket.IO
-            this.broadcastIssueChange('issue.updated', projectId, issue, { oldStatus })
+                // Fetch updated issue with all relations
+                const updatedIssue = await this.findById(projectId, issueId)
 
-            // If moved to done, trigger velocity calculation
-            if (data.status === IssueStatus.DONE && oldStatus !== IssueStatus.DONE) {
-                this.triggerVelocityCalculation(projectId, issue.cycleId)
+                // Broadcast via Socket.IO
+                if (this.req?.io?.devtel) {
+                    // If status changed, emit specific event
+                    if (data.status && data.status !== issue.status) {
+                        this.req.io.devtel.emitIssueStatusChanged(projectId, updatedIssue, issue.status)
+                    } else {
+                        this.req.io.devtel.emitIssueUpdated(projectId, updatedIssue)
+                    }
+                }
+
+                // If moved to done, trigger velocity calculation
+                if (data.status === IssueStatus.DONE && oldStatus !== IssueStatus.DONE) {
+                    this.triggerVelocityCalculation(projectId, issue.cycleId)
+                }
+
+                return updatedIssue
+            } catch (error) {
+                await SequelizeRepository.rollbackTransaction(transaction)
+                throw error
             }
-
-            return this.findById(projectId, issueId)
-        } catch (error) {
-            await SequelizeRepository.rollbackTransaction(transaction)
-            throw error
         }
-    }
 
     /**
      * Bulk update issues
@@ -271,40 +304,40 @@ export default class DevtelIssueService extends LoggerBase {
     async findById(projectId: string, issueId: string) {
         const issue = await this.options.database.devtelIssues.findOne({
             where: {
-                id: issueId,
-                projectId,
-                deletedAt: null,
-            },
-            include: [
-                {
-                    model: this.options.database.user,
-                    as: 'assignee',
-                    attributes: ['id', 'fullName', 'email', 'firstName', 'lastName'],
+                    id: issueId,
+                    projectId,
+                    deletedAt: null,
                 },
-                {
-                    model: this.options.database.devtelCycles,
-                    as: 'cycle',
-                    attributes: ['id', 'name', 'status', 'startDate', 'endDate'],
-                },
-                {
-                    model: this.options.database.devtelIssues,
-                    as: 'parentIssue',
-                    attributes: ['id', 'title', 'status'],
-                },
-                {
-                    model: this.options.database.devtelIssues,
-                    as: 'childIssues',
-                    where: { deletedAt: null },
-                    required: false,
-                    attributes: ['id', 'title', 'status', 'priority'],
-                },
-                {
-                    model: this.options.database.devtelExternalLinks,
-                    as: 'externalLinks',
-                    where: { linkableType: 'issue' },
-                    required: false,
-                },
-            ],
+                include: [
+                    {
+                        model: this.options.database.user,
+                        as: 'assignee',
+                        attributes: ['id', 'fullName', 'email', 'firstName', 'lastName'],
+                    },
+                    {
+                        model: this.options.database.devtelCycles,
+                        as: 'cycle',
+                        attributes: ['id', 'name', 'status', 'startDate', 'endDate'],
+                    },
+                    {
+                        model: this.options.database.devtelIssues,
+                        as: 'parentIssue',
+                        attributes: ['id', 'title', 'status'],
+                    },
+                    {
+                        model: this.options.database.devtelIssues,
+                        as: 'childIssues',
+                        where: { deletedAt: null },
+                        required: false,
+                        attributes: ['id', 'title', 'status', 'priority'],
+                    },
+                    {
+                        model: this.options.database.devtelExternalLinks,
+                        as: 'externalLinks',
+                        where: { linkableType: 'issue' },
+                        required: false,
+                    },
+                ],
         })
 
         if (!issue) {

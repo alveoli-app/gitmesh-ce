@@ -29,8 +29,9 @@
                    <div class="card-meta">
                      <span class="id">#{{ element.id?.slice(0, 6) }}</span>
                      <span class="points" v-if="element.storyPoints || element.estimatedHours">
-                        {{ element.storyPoints || element.estimatedHours }} pts
+                        {{ parseFloat(element.storyPoints) || parseFloat(element.estimatedHours) || 0 }} pts
                      </span>
+                     <span class="points no-points" v-else>0 pts</span>
                    </div>
                 </div>
               </div>
@@ -63,6 +64,7 @@
             class="issue-list cycle-list"
             :animation="200"
             ghost-class="ghost-card"
+            @change="handleCycleChange"
           >
             <template #item="{ element }">
               <div class="planning-card">
@@ -71,8 +73,9 @@
                    <div class="card-meta">
                      <span class="id">#{{ element.id?.slice(0, 6) }}</span>
                      <span class="points" v-if="element.storyPoints || element.estimatedHours">
-                        {{ element.storyPoints || element.estimatedHours }} pts
+                        {{ parseFloat(element.storyPoints) || parseFloat(element.estimatedHours) || 0 }} pts
                      </span>
+                     <span class="points no-points" v-else>0 pts</span>
                    </div>
                 </div>
               </div>
@@ -120,40 +123,95 @@ export default {
     const cycleIssues = ref([]);
     const saving = ref(false);
     const capacity = ref(20); // TODO: Fetch from settings or team capacity
+    const updateTrigger = ref(0); // Force reactivity trigger
 
     const totalPoints = computed(() => {
-        return cycleIssues.value.reduce((sum, issue) => {
-            return sum + (issue.storyPoints || issue.estimatedHours || 0);
+        // Access updateTrigger to force recomputation
+        updateTrigger.value;
+        
+        console.log('[SprintPlanning] Computing total points for', cycleIssues.value.length, 'issues');
+        const total = cycleIssues.value.reduce((sum, issue) => {
+            const points = parseFloat(issue.storyPoints) || parseFloat(issue.estimatedHours) || 0;
+            console.log('[SprintPlanning] Issue:', issue.title, 'Points:', points, 'storyPoints:', issue.storyPoints, 'estimatedHours:', issue.estimatedHours);
+            return sum + points;
         }, 0);
+        console.log('[SprintPlanning] Total calculated:', total);
+        return Math.round(total * 10) / 10; // Round to 1 decimal place
     });
+    
+    const handleCycleChange = (event) => {
+        console.log('[SprintPlanning] Cycle changed:', event);
+        console.log('[SprintPlanning] Current cycle issues:', cycleIssues.value.length);
+        // Force recomputation of totalPoints
+        updateTrigger.value++;
+    };
+    
+    // Watch for changes in cycleIssues
+    watch(cycleIssues, (newVal) => {
+        console.log('[SprintPlanning] Cycle issues changed:', newVal.length, 'issues');
+        console.log('[SprintPlanning] Issues:', newVal.map(i => ({ title: i.title, points: i.storyPoints || i.estimatedHours })));
+    }, { deep: true });
+
+    const fetchData = async () => {
+        try {
+            console.log('[SprintPlanning] Fetching issues for project:', props.projectId);
+            
+            // Fetch all issues from the project
+            const response = await DevtelService.listIssues(props.projectId, {});
+            
+            console.log('[SprintPlanning] Raw response:', response);
+            
+            // Handle different response formats
+            let allIssues = [];
+            if (Array.isArray(response)) {
+                allIssues = response;
+            } else if (response && response.rows) {
+                allIssues = response.rows;
+            } else if (response && response.data) {
+                allIssues = Array.isArray(response.data) ? response.data : response.data.rows || [];
+            }
+            
+            console.log('[SprintPlanning] All issues:', allIssues);
+            console.log('[SprintPlanning] Sample issue:', allIssues[0]);
+            
+            // Separate into those already in this cycle and others
+            if (props.cycle) {
+                // Issues already assigned to this cycle
+                cycleIssues.value = allIssues.filter(i => i.cycleId === props.cycle.id);
+                // Backlog issues: no cycle assigned or in backlog/todo status
+                backlogIssues.value = allIssues.filter(i => 
+                    !i.cycleId && (i.status === 'backlog' || i.status === 'todo')
+                );
+            } else {
+                backlogIssues.value = allIssues.filter(i => 
+                    !i.cycleId && (i.status === 'backlog' || i.status === 'todo')
+                );
+                cycleIssues.value = [];
+            }
+            
+            console.log('[SprintPlanning] Backlog issues:', backlogIssues.value);
+            console.log('[SprintPlanning] Cycle issues:', cycleIssues.value);
+        } catch (e) {
+            console.error('[SprintPlanning] Failed to load issues:', e);
+            ElMessage.error('Failed to load issues for planning: ' + e.message);
+        }
+    };
 
     // Fetch data when modal opens
     watch(() => props.modelValue, async (val) => {
       if (val && props.cycle) {
+        console.log('[SprintPlanning] Modal opened for cycle:', props.cycle);
+        await fetchData();
+      }
+    }, { immediate: true });
+    
+    // Also fetch on mount if already open
+    onMounted(async () => {
+      if (props.modelValue && props.cycle) {
+        console.log('[SprintPlanning] Modal mounted, fetching data');
         await fetchData();
       }
     });
-
-    const fetchData = async () => {
-        try {
-            // Fetch backlog issues (status=backlog or no cycle)
-            // Ideally we filter by no assigned cycle, but backend might not stick strictly. 
-            // For now fetch all candidates.
-            const allIssues = await DevtelService.listIssues(props.projectId, { status: ['backlog', 'todo'] }); // Adjust filters as needed
-            
-            // Separate into those already in this cycle and others
-            if (props.cycle) {
-                // Assuming issue object has cycleId property
-                cycleIssues.value = allIssues.filter(i => i.cycleId === props.cycle.id);
-                backlogIssues.value = allIssues.filter(i => i.cycleId !== props.cycle.id);
-            } else {
-                backlogIssues.value = allIssues;
-                cycleIssues.value = [];
-            }
-        } catch (e) {
-            ElMessage.error('Failed to load issues for planning');
-        }
-    };
 
     const handleClose = () => {
       visible.value = false;
@@ -183,7 +241,8 @@ export default {
       capacity,
       totalPoints,
       handleClose,
-      savePlan
+      savePlan,
+      handleCycleChange
     };
   }
 };
@@ -299,6 +358,11 @@ export default {
     justify-content: space-between;
     font-size: 11px;
     color: var(--el-text-color-secondary);
+}
+
+.card-meta .no-points {
+    color: var(--el-text-color-placeholder);
+    font-style: italic;
 }
 
 .divider {

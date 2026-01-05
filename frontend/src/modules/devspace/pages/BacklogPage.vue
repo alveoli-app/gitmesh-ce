@@ -1,13 +1,5 @@
 <template>
   <div class="backlog-page devspace-page">
-    <div class="page-header">
-      <h1>Backlog</h1>
-      <el-button type="primary" size="small">
-        <i class="ri-add-line"></i>
-        New Issue
-      </el-button>
-    </div>
-    
     <!-- Bulk Actions Toolbar -->
     <div class="bulk-actions" v-if="selectedIssues.length > 0">
       <div class="selected-count">{{ selectedIssues.length }} selected</div>
@@ -413,13 +405,6 @@ const setupSocketListeners = () => {
 
 .backlog-page {
   height: 100%;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
 }
 
 .bulk-actions {

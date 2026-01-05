@@ -3,6 +3,7 @@
  * Manages workspace and project context for DevSpace (project management)
  */
 import DevtelService from '@/modules/devspace/services/devtel-api';
+import { MemberService } from '@/modules/member/member-service';
 
 const state = () => ({
     workspace: null,
@@ -111,15 +112,87 @@ const actions = {
         }
     },
 
-    async fetchTeamMembers({ commit }, projectId) {
-        if (!projectId) return;
+    async fetchTeamMembers({ commit }) {
         try {
-            const { team } = await DevtelService.listTeamMembers(projectId);
-            commit('SET_TEAM_MEMBERS', team);
-            return team;
+            // Fetch team members from BOTH sources:
+            // 1. DevTel users (logged-in users)
+            // 2. Contacts with isTeamMember: true
+            
+            const [devtelResponse, contactsResponse] = await Promise.all([
+                DevtelService.listTeamMembers().catch(e => {
+                    console.warn('Failed to fetch DevTel team:', e);
+                    return { team: [] };
+                }),
+                MemberService.listMembers({
+                    filter: {
+                        and: [
+                            { isTeamMember: { eq: true } },
+                            { isBot: { not: true } },
+                            { isOrganization: { not: true } },
+                        ],
+                    },
+                    orderBy: 'displayName_ASC',
+                    limit: 100,
+                    offset: 0,
+                }).catch(e => {
+                    console.warn('Failed to fetch contacts team members:', e);
+                    return { rows: [] };
+                }),
+            ]);
+            
+            console.log('📥 DevTel users:', devtelResponse?.team?.length || 0);
+            console.log('📥 Contacts team members:', contactsResponse?.rows?.length || 0);
+            
+            // Create a map of emails to DevTel users for matching
+            const usersByEmail = new Map();
+            (devtelResponse?.team || []).forEach(user => {
+                if (user.email) {
+                    usersByEmail.set(user.email.toLowerCase(), user);
+                }
+            });
+            
+            // Process contacts - check if they have a matching user account
+            const teamMembers = (contactsResponse?.rows || []).map(member => {
+                const memberEmail = member.emails?.[0]?.toLowerCase();
+                const matchingUser = memberEmail ? usersByEmail.get(memberEmail) : null;
+                
+                return {
+                    id: matchingUser ? matchingUser.id : member.id,
+                    memberId: member.id,
+                    userId: matchingUser?.id || null,
+                    name: member.displayName || member.fullName || member.emails?.[0] || 'Unknown',
+                    email: member.emails?.[0] || '',
+                    avatarUrl: member.attributes?.avatarUrl?.default || matchingUser?.avatarUrl || null,
+                    hasJoined: !!matchingUser, // Has logged in
+                    isUser: !!matchingUser,
+                };
+            });
+            
+            // Add any DevTel users that don't have a matching contact
+            const contactEmails = new Set(teamMembers.map(m => m.email?.toLowerCase()).filter(Boolean));
+            (devtelResponse?.team || []).forEach(user => {
+                if (!user.email || !contactEmails.has(user.email.toLowerCase())) {
+                    teamMembers.push({
+                        id: user.id,
+                        memberId: null,
+                        userId: user.id,
+                        name: user.fullName || user.firstName || user.email || 'Unknown',
+                        email: user.email || '',
+                        avatarUrl: user.avatarUrl || null,
+                        hasJoined: true,
+                        isUser: true,
+                    });
+                }
+            });
+            
+            console.log('👥 Combined team members:', teamMembers.length, teamMembers);
+            
+            commit('SET_TEAM_MEMBERS', teamMembers);
+            return teamMembers;
         } catch (error) {
             console.error('Failed to fetch team members', error);
-            throw error;
+            commit('SET_TEAM_MEMBERS', []);
+            return [];
         }
     },
 

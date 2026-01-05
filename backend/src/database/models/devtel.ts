@@ -150,6 +150,10 @@ export default (sequelize) => {
             assigneeId: {
                 type: DataTypes.UUID,
             },
+            assigneeMemberId: {
+                type: DataTypes.UUID,
+                comment: 'References a member from contacts. Used for team members who may not have logged in yet.',
+            },
             title: {
                 type: DataTypes.STRING(500),
                 allowNull: false,
@@ -959,6 +963,10 @@ export default (sequelize) => {
         devtelIssues.belongsTo(models.user, {
             as: 'assignee',
             foreignKey: 'assigneeId',
+        })
+        devtelIssues.belongsTo(models.member, {
+            as: 'assigneeMember',
+            foreignKey: 'assigneeMemberId',
         })
         devtelIssues.hasMany(models.devtelIssueComments, {
             as: 'comments',

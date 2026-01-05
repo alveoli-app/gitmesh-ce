@@ -1,8 +1,31 @@
 <template>
   <div class="team-page devspace-page">
     <div class="page-header">
-      <h1>Team</h1>
+      <div class="header-left">
+        <h1>Team (Connected to Contacts)</h1>
+        <div class="datasource-info">
+          <span class="datasource-label">Data source:</span>
+          <router-link :to="contactsPageUrl" class="datasource-link">
+            <span class="ri-contacts-line"></span>
+            Contacts (Team Members)
+          </router-link>
+        </div>
+      </div>
       <div class="header-actions">
+        <el-select
+          v-model="selectedOrganization"
+          placeholder="Filter by organization"
+          clearable
+          style="width: 200px; margin-right: 12px"
+          @change="handleOrganizationChange"
+        >
+          <el-option
+            v-for="org in organizations"
+            :key="org.id"
+            :label="org.displayName || org.name"
+            :value="org.id"
+          />
+        </el-select>
         <el-input
           v-model="searchQuery"
           placeholder="Search members..."
@@ -11,6 +34,9 @@
           style="width: 200px"
           @input="handleSearch"
         />
+        <el-button type="primary" style="margin-left: 12px" @click="showAddMemberDialog = true">
+          <i class="ri-user-add-line"></i> Add Team Member
+        </el-button>
       </div>
     </div>
 
@@ -19,10 +45,9 @@
     </div>
 
     <template v-else>
-      <!-- Team Stats -->
       <div class="team-stats">
         <div class="stat-card">
-          <div class="stat-value">{{ teamMembers.length }}</div>
+          <div class="stat-value">{{ totalMembers }}</div>
           <div class="stat-label">Team Members</div>
         </div>
         <div class="stat-card">
@@ -39,116 +64,147 @@
         </div>
       </div>
 
-      <!-- Team Grid -->
       <div class="team-grid">
-        <div v-for="member in filteredMembers" :key="member.id" class="member-card">
+        <div v-for="member in filteredMembers" :key="member.id" class="member-card" :class="{ 'is-current-user': isCurrentUser(member) }">
           <div class="member-avatar">
-            <el-avatar :size="64">{{ (member.fullName || member.name || 'U').charAt(0) }}</el-avatar>
+            <el-avatar :size="64" :src="member.attributes?.avatarUrl?.default">
+              {{ getInitials(member) }}
+            </el-avatar>
           </div>
           <div class="member-info">
-            <h3 class="member-name">{{ member.fullName || member.name || 'Unknown' }}</h3>
-            <p class="member-email">{{ member.email }}</p>
+            <h3 class="member-name">
+              {{ member.displayName || member.fullName || getPrimaryEmail(member) || 'Unknown' }}
+              <span v-if="isCurrentUser(member)" class="me-badge">(You)</span>
+            </h3>
+            <p class="member-email">{{ getPrimaryEmail(member) }}</p>
+            <p v-if="member.attributes?.jobTitle?.default" class="member-title">
+              {{ member.attributes.jobTitle.default }}
+            </p>
           </div>
           
-          <div class="member-skills">
+          <div v-if="member.organizations?.length" class="member-orgs">
             <el-tag 
-              v-for="skill in member.skills?.slice(0, 3)" 
-              :key="skill.id"
+              v-for="org in member.organizations.slice(0, 2)" 
+              :key="org.id"
               size="small"
               type="info"
             >
-              {{ skill.skill }}
+              {{ org.displayName || org.name }}
             </el-tag>
-            <span v-if="member.skills?.length > 3" class="more-skills">
-              +{{ member.skills.length - 3 }}
+            <span v-if="member.organizations.length > 2" class="more-orgs">
+              +{{ member.organizations.length - 2 }}
             </span>
           </div>
 
           <div class="member-stats">
             <div class="stat">
-              <span class="stat-num">{{ member.issueStats?.completed || 0 }}</span>
-              <span class="stat-label">Done</span>
+              <span class="stat-num">{{ member.activityCount || 0 }}</span>
+              <span class="stat-label">Activities</span>
             </div>
             <div class="stat">
-              <span class="stat-num">{{ member.issueStats?.inProgress || 0 }}</span>
-              <span class="stat-label">Active</span>
+              <span class="stat-num">{{ member.score || 0 }}</span>
+              <span class="stat-label">Score</span>
             </div>
             <div class="stat">
-              <span class="stat-num">{{ member.issueStats?.total || 0 }}</span>
-              <span class="stat-label">Total</span>
+              <span class="stat-num">{{ formatDate(member.lastActive) }}</span>
+              <span class="stat-label">Last Active</span>
             </div>
           </div>
 
           <div class="member-actions">
             <el-button size="small" @click="viewProfile(member)">View Profile</el-button>
-            <router-link :to="{ name: 'member', params: { id: member.id } }">
+            <router-link :to="{ name: 'memberView', params: { id: member.id } }">
               <el-button size="small" type="primary" plain>View in Contacts</el-button>
             </router-link>
           </div>
         </div>
       </div>
 
-      <div v-if="filteredMembers.length === 0" class="empty-state">
-        <el-empty description="No team members found" />
+      <div v-if="filteredMembers.length === 0 && !loading" class="empty-state">
+        <el-empty description="No team members found">
+          <template #description>
+            <p>No team members found in contacts.</p>
+            <p class="empty-hint">
+              You can add team members in two ways:
+            </p>
+            <ul class="empty-options">
+              <li>Click "Add Team Member" to create a new contact as a team member</li>
+              <li>Go to <router-link :to="{ name: 'member' }">Contacts</router-link> and mark existing contacts as team members</li>
+            </ul>
+          </template>
+          <el-button type="primary" @click="showAddMemberDialog = true">
+            <i class="ri-user-add-line"></i> Add Team Member
+          </el-button>
+        </el-empty>
+      </div>
+
+      <div v-if="totalMembers > pageSize" class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="currentPage"
+          :page-size="pageSize"
+          :total="totalMembers"
+          layout="prev, pager, next"
+          @current-change="handlePageChange"
+        />
       </div>
     </template>
 
+    <!-- Add Team Member Dialog -->
+    <el-dialog v-model="showAddMemberDialog" title="Add Team Member" width="500px">
+      <div class="add-member-content">
+        <p class="add-member-description">
+          Create a new contact and add them as a team member.
+        </p>
+        
+        <el-form :model="newContactForm" label-position="top">
+          <el-form-item label="Display Name" required>
+            <el-input v-model="newContactForm.displayName" placeholder="John Doe" />
+          </el-form-item>
+          <el-form-item label="Email" required>
+            <el-input v-model="newContactForm.email" placeholder="john@example.com" type="email" />
+          </el-form-item>
+        </el-form>
+      </div>
+      
+      <template #footer>
+        <el-button @click="showAddMemberDialog = false">Cancel</el-button>
+        <el-button 
+          type="primary" 
+          :loading="addingMember"
+          :disabled="!newContactForm.displayName || !newContactForm.email"
+          @click="createNewTeamMember"
+        >
+          Create Team Member
+        </el-button>
+      </template>
+    </el-dialog>
+
     <!-- Profile Drawer -->
-    <el-drawer v-model="showProfileDrawer" :title="selectedMember?.name" size="400px">
+    <el-drawer v-model="showProfileDrawer" :title="selectedMember?.displayName || 'Profile'" size="400px">
       <template v-if="selectedMember">
         <div class="profile-content">
           <div class="profile-header">
-            <el-avatar :size="80">{{ (selectedMember.fullName || selectedMember.name)?.charAt(0) }}</el-avatar>
+            <el-avatar :size="80" :src="selectedMember.attributes?.avatarUrl?.default">
+              {{ getInitials(selectedMember) }}
+            </el-avatar>
             <div class="profile-info">
-              <h3>{{ selectedMember.fullName || selectedMember.name }}</h3>
-              <p>{{ selectedMember.email }}</p>
-              <router-link :to="{ name: 'member', params: { id: selectedMember.id } }" class="contact-link">
+              <h3>{{ selectedMember.displayName || 'Unknown' }}</h3>
+              <p>{{ getPrimaryEmail(selectedMember) }}</p>
+              <router-link :to="{ name: 'memberView', params: { id: selectedMember.id } }" class="contact-link">
                 <el-button size="small" type="primary" plain>View in Contacts</el-button>
               </router-link>
             </div>
           </div>
-
           <div class="profile-section">
-            <h4>Skills</h4>
-            <div class="skills-list">
-              <el-tag 
-                v-for="skill in selectedMember.skills" 
-                :key="skill.id"
-                size="default"
-                :type="getLevelType(skill.level)"
-                closable
-                @close="removeSkill(skill)"
-              >
-                {{ skill.skill }} ({{ skill.level }})
-              </el-tag>
-              <el-input 
-                  v-if="addingSkill" 
-                  v-model="newSkillName" 
-                  class="new-skill-input" 
-                  size="small" 
-                  placeholder="New Skill" 
-                  @keyup.enter="addSkill"
-                  @blur="addingSkill = false"
-                  ref="skillInput"
-              />
-              <el-button v-else size="small" class="button-new-tag" @click="startAddSkill">+ New Skill</el-button>
-            </div>
-          </div>
-
-          <div class="profile-section">
-            <h4>Statistics</h4>
+            <h4>Activity</h4>
             <div class="profile-stats">
               <div class="profile-stat">
-                <span class="value">{{ selectedMember.issueStats?.completed || 0 }}</span>
-                <span class="label">Completed</span>
+                <span class="value">{{ selectedMember.activityCount || 0 }}</span>
+                <span class="label">Activities</span>
               </div>
               <div class="profile-stat">
-                <span class="value">{{ selectedMember.issueStats?.inProgress || 0 }}</span>
-                <span class="label">In Progress</span>
-              </div>
-              <div class="profile-stat">
-                <span class="value">{{ selectedMember.issueStats?.avgPoints || 0 }}</span>
-                <span class="label">Avg Points</span>
+                <span class="value">{{ selectedMember.score || 0 }}</span>
+                <span class="label">Score</span>
               </div>
             </div>
           </div>
@@ -160,26 +216,42 @@
 
 <script>
 import { useProject } from '@/modules/devspace/composables/useProject';
+import { MemberService } from '@/modules/member/member-service';
 import DevtelService from '@/modules/devspace/services/devtel-api';
+import { OrganizationService } from '@/modules/organization/organization-service';
+import { mapGetters } from '@/shared/vuex/vuex.helpers';
+import { ElMessage } from 'element-plus';
 
 export default {
   name: 'TeamPage',
   setup() {
     const { activeProjectId } = useProject();
-    return { activeProjectId };
+    const { currentUser, currentUserEmail, currentTenant } = mapGetters('auth');
+    return { activeProjectId, currentUser, currentUserEmail, currentTenant };
   },
   data() {
     return {
       loading: true,
       teamMembers: [],
+      totalMembers: 0,
+      organizations: [],
+      selectedOrganization: null,
       analytics: {
-          completionsByUser: [], // Initialize
+        issuesCompleted: 0,
+        avgVelocity: 0,
+        avgCycleTime: 0,
       },
       searchQuery: '',
       showProfileDrawer: false,
       selectedMember: null,
-      addingSkill: false,
-      newSkillName: '',
+      currentPage: 1,
+      pageSize: 20,
+      showAddMemberDialog: false,
+      addingMember: false,
+      newContactForm: {
+        displayName: '',
+        email: '',
+      },
     };
   },
   computed: {
@@ -187,95 +259,192 @@ export default {
       return this.activeProjectId;
     },
     filteredMembers() {
-      if (!this.searchQuery) return this.teamMembers;
-      const q = this.searchQuery.toLowerCase();
-      return this.teamMembers.filter(m => 
-        m.fullName?.toLowerCase().includes(q) || 
-        m.name?.toLowerCase().includes(q) || 
-        m.email?.toLowerCase().includes(q)
-      );
+      let members = this.teamMembers;
+      if (this.searchQuery) {
+        const q = this.searchQuery.toLowerCase();
+        members = members.filter(m => 
+          m.displayName?.toLowerCase().includes(q) || 
+          this.getPrimaryEmail(m)?.toLowerCase().includes(q)
+        );
+      }
+      return members.sort((a, b) => {
+        const aIsMe = this.isCurrentUser(a);
+        const bIsMe = this.isCurrentUser(b);
+        if (aIsMe && !bIsMe) return -1;
+        if (!aIsMe && bIsMe) return 1;
+        return 0;
+      });
     },
-    sortedContributors() {
-        if (!this.analytics.completionsByUser) return [];
-        return [...this.analytics.completionsByUser].sort((a, b) => b.storyPoints - a.storyPoints).slice(0, 5);
+    workspaceName() {
+      const tenant = this.currentTenant?.value || this.currentTenant;
+      return tenant?.name || 'Default Workspace';
     },
-    maxPoints() {
-        if (this.sortedContributors.length === 0) return 0;
-        return Math.max(...this.sortedContributors.map(c => c.storyPoints));
+    contactsPageUrl() {
+      return {
+        name: 'member',
+        query: {
+          'order.prop': 'lastActive',
+          'order.order': 'descending',
+          'settings.teamMember': 'filter',
+        },
+      };
     },
   },
   mounted() {
-    if (this.projectId) {
-      this.fetchTeam();
-    }
+    this.fetchTeam();
+    this.fetchOrganizations();
   },
   methods: {
+    isCurrentUser(member) {
+      const userEmail = this.currentUserEmail?.value || this.currentUserEmail;
+      if (!userEmail) return false;
+      const memberEmails = member.emails || [];
+      return memberEmails.some(email => 
+        email?.toLowerCase() === userEmail?.toLowerCase()
+      );
+    },
     async fetchTeam() {
-      if (!this.projectId) return;
       this.loading = true;
       try {
-        const [membersData, analyticsData] = await Promise.all([
-          DevtelService.listTeamMembers(this.projectId),
-          DevtelService.getTeamAnalytics(this.projectId),
-        ]);
-        
-        // Backend returns { team: [...] }
-        this.teamMembers = membersData.team || [];
-        
-        // Transform analytics data
-        this.analytics = {
-          issuesCompleted: analyticsData.totalCompleted || 0,
-          avgVelocity: Math.round(analyticsData.totalPoints / 4) || 0, // Avg per week
-          avgCycleTime: 5, // TODO: Calculate from actual data when available
-          completionsByUser: analyticsData.completionsByUser || [],
+        const filter = {
+          and: [
+            { isTeamMember: { eq: true } },
+            { isBot: { not: true } },
+            { isOrganization: { not: true } },
+          ],
         };
+
+        if (this.selectedOrganization) {
+          filter.and.push({
+            organizations: { contains: [this.selectedOrganization] },
+          });
+        }
+
+        const body = {
+          filter,
+          orderBy: 'lastActive_DESC',
+          limit: this.pageSize,
+          offset: (this.currentPage - 1) * this.pageSize,
+        };
+
+        console.log('🔍 fetchTeam - Querying with:', JSON.stringify(body, null, 2));
+        const response = await MemberService.listMembers(body);
+        console.log('✅ fetchTeam - Response:', { count: response.count, rowsLength: response.rows?.length });
+        if (response.rows?.length > 0) {
+          console.log('✅ First member:', response.rows[0]);
+        }
+        
+        this.teamMembers = response.rows || [];
+        this.totalMembers = response.count || 0;
+
+        if (this.projectId) {
+          await this.fetchAnalytics();
+        }
       } catch (e) {
-        console.error('Failed to fetch team', e);
-        this.$message.error('Failed to load team data');
+        console.error('Failed to fetch team members', e);
+        if (ElMessage) {
+          ElMessage.error('Failed to load team data');
+        }
       } finally {
         this.loading = false;
       }
     },
+    async fetchAnalytics() {
+      try {
+        const analyticsData = await DevtelService.getTeamAnalytics(this.projectId);
+        this.analytics = {
+          issuesCompleted: analyticsData.totalCompleted || 0,
+          avgVelocity: Math.round(analyticsData.totalPoints / 4) || 0,
+          avgCycleTime: analyticsData.avgCycleTime || 0,
+        };
+      } catch (e) {
+        console.error('Failed to fetch team analytics', e);
+      }
+    },
+    async fetchOrganizations() {
+      try {
+        const response = await OrganizationService.listAutocomplete('', 100);
+        this.organizations = response || [];
+      } catch (e) {
+        console.error('Failed to fetch organizations', e);
+      }
+    },
     handleSearch() {
-      // Local filter, no API call needed
+      if (this.searchQuery.length >= 3) {
+        this.currentPage = 1;
+        this.fetchTeam();
+      }
+    },
+    handleOrganizationChange() {
+      this.currentPage = 1;
+      this.fetchTeam();
+    },
+    handlePageChange(page) {
+      this.currentPage = page;
+      this.fetchTeam();
     },
     viewProfile(member) {
       this.selectedMember = member;
       this.showProfileDrawer = true;
     },
-    getLevelType(level) {
-      const types = { beginner: 'info', intermediate: '', advanced: 'success', expert: 'warning' };
-      return types[level] || '';
+    getInitials(member) {
+      const name = member.displayName || '';
+      if (!name) return 'U';
+      return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
     },
-    startAddSkill() {
-        this.addingSkill = true;
-        this.$nextTick(() => {
-            if (this.$refs.skillInput) this.$refs.skillInput.focus();
-        });
+    getPrimaryEmail(member) {
+      return member.emails?.[0] || '';
     },
-    async addSkill() {
-        if (!this.newSkillName.trim() || !this.selectedMember) return;
-        try {
-            const skill = await DevtelService.addMemberSkill(this.projectId, this.selectedMember.id, {
-                skill: this.newSkillName,
-                level: 'intermediate' // Default
-            });
-            if (!this.selectedMember.skills) this.selectedMember.skills = [];
-            this.selectedMember.skills.push(skill);
-            this.newSkillName = '';
-            this.addingSkill = false;
-        } catch (e) {
-            this.$message.error('Failed to add skill');
+    formatDate(date) {
+      if (!date) return '-';
+      const d = new Date(date);
+      const now = new Date();
+      const diffDays = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays}d ago`;
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+      return d.toLocaleDateString();
+    },
+    async createNewTeamMember() {
+      if (!this.newContactForm.displayName || !this.newContactForm.email) return;
+      this.addingMember = true;
+      try {
+        const createData = {
+          data: {
+            platform: 'custom',
+            username: this.newContactForm.email,
+            displayName: this.newContactForm.displayName,
+            emails: [this.newContactForm.email],
+            joinedAt: new Date().toISOString(),
+            manuallyCreated: true,
+            organizations: [this.workspaceName],
+            attributes: {
+              isTeamMember: {
+                default: true,
+                custom: true,
+              },
+            },
+          },
+        };
+        console.log('📤 Creating member with workspace org:', this.workspaceName, createData);
+        const result = await MemberService.create(createData);
+        console.log('📥 Created member:', result);
+        if (ElMessage) {
+          ElMessage.success('Team member created!');
         }
-    },
-    async removeSkill(skill) {
-        if (!this.selectedMember) return;
-        try {
-            await DevtelService.removeMemberSkill(this.projectId, this.selectedMember.id, skill.id);
-            this.selectedMember.skills = this.selectedMember.skills.filter(s => s.id !== skill.id);
-        } catch (e) {
-            this.$message.error('Failed to remove skill');
+        this.showAddMemberDialog = false;
+        this.newContactForm = { displayName: '', email: '' };
+        // Wait for OpenSearch to index the new member
+        setTimeout(() => this.fetchTeam(), 2000);
+      } catch (e) {
+        console.error('Failed to create team member', e);
+        if (ElMessage) {
+          ElMessage.error(e.response?.data?.message || 'Failed to create team member');
         }
+      } finally {
+        this.addingMember = false;
+      }
     },
   },
 };
@@ -284,227 +453,52 @@ export default {
 <style scoped>
 @import '../styles/devspace-common.css';
 
-.team-page {
-  padding: 24px;
-}
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.page-header h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-}
-.team-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 32px;
-}
-.stat-card {
-  background: var(--el-bg-color);
-  border: 1px solid var(--el-border-color-light);
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-}
-.stat-card .stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--el-color-primary);
-}
-.stat-card .stat-label {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  margin-top: 4px;
-}
-.team-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-}
-.member-card {
-  background: var(--el-bg-color);
-  border: 1px solid var(--el-border-color-light);
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-}
-.member-avatar {
-  margin-bottom: 12px;
-}
-.member-name {
-  margin: 0 0 4px;
-  font-size: 16px;
-  font-weight: 600;
-}
-.member-email {
-  margin: 0 0 12px;
-  font-size: 13px;
-  color: var(--el-text-color-secondary);
-}
-.member-skills {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 16px;
-  min-height: 24px;
-}
-.more-skills {
-  font-size: 11px;
-  color: var(--el-text-color-secondary);
-}
-.member-stats {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 16px;
-  padding: 12px 0;
-  border-top: 1px solid var(--el-border-color-lighter);
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-.member-stats .stat {
-  text-align: center;
-}
-.member-stats .stat-num {
-  display: block;
-  font-size: 18px;
-  font-weight: 600;
-}
-.member-stats .stat-label {
-  font-size: 11px;
-  color: var(--el-text-color-secondary);
-}
-.member-actions {
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.profile-content {
-  padding: 0 16px;
-}
-.profile-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.profile-info {
-  text-align: center;
-  margin-top: 12px;
-}
-.profile-info h3 {
-  margin: 0 0 4px;
-}
-.profile-info p {
-  margin: 0 0 8px;
-  color: var(--el-text-color-secondary);
-}
-.contact-link {
-  display: inline-block;
-}
-.profile-section {
-  margin-bottom: 24px;
-}
-.profile-section h4 {
-  margin: 0 0 12px;
-  font-size: 14px;
-  font-weight: 600;
-}
-.skills-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.profile-stats {
-  display: flex;
-  gap: 20px;
-}
-.profile-stat {
-  text-align: center;
-}
-.profile-stat .value {
-  display: block;
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--el-color-primary);
-}
-.profile-stat .label {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-}
-.empty-state, .loading-state {
-  padding: 60px 0;
-}
-.team-analytics-section {
-    margin-bottom: 32px;
-}
-.team-analytics-section h3 {
-    margin: 0 0 16px;
-    font-size: 18px;
-}
-.contributors-chart {
-    background: var(--el-bg-color);
-    border: 1px solid var(--el-border-color-light);
-    border-radius: 8px;
-    padding: 20px;
-}
-.contributor-bar-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-}
-.contributor-bar-row:last-child {
-    margin-bottom: 0;
-}
-.user-info {
-    display: flex;
-    align-items: center;
-    width: 200px;
-    gap: 8px;
-}
-.user-info .name {
-    font-size: 14px;
-    font-weight: 500;
-}
-.bar-container {
-    flex: 1;
-    background: var(--el-fill-color-light);
-    height: 8px;
-    border-radius: 4px;
-    margin: 0 16px;
-    overflow: hidden;
-}
-.bar {
-    height: 100%;
-    background: var(--el-color-primary);
-    border-radius: 4px;
-}
-.stats {
-    display: flex;
-    gap: 16px;
-    font-size: 13px;
-    color: var(--el-text-color-secondary);
-    min-width: 150px;
-    justify-content: flex-end;
-}
-/* Existing styles */
-.new-skill-input {
-    width: 100px;
-    margin-left: 8px;
-    vertical-align: bottom;
-}
-.button-new-tag {
-    margin-left: 8px;
-    height: 32px;
-    line-height: 30px;
-    padding-top: 0;
-    padding-bottom: 0;
-}
+.team-page { padding: 24px; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+.header-left { display: flex; flex-direction: column; gap: 8px; }
+.page-header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+.datasource-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--el-text-color-secondary); }
+.datasource-label { color: var(--el-text-color-placeholder); }
+.datasource-link { display: flex; align-items: center; gap: 4px; color: var(--el-color-primary); text-decoration: none; }
+.datasource-link:hover { text-decoration: underline; }
+.header-actions { display: flex; align-items: center; }
+.team-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+.stat-card { background: var(--el-bg-color); border: 1px solid var(--el-border-color-light); border-radius: 8px; padding: 20px; text-align: center; }
+.stat-card .stat-value { font-size: 32px; font-weight: 700; color: var(--el-color-primary); }
+.stat-card .stat-label { font-size: 12px; color: var(--el-text-color-secondary); margin-top: 4px; }
+.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.member-card { background: var(--el-bg-color); border: 1px solid var(--el-border-color-light); border-radius: 12px; padding: 20px; text-align: center; }
+.member-card.is-current-user { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }
+.me-badge { font-size: 12px; font-weight: 500; color: var(--el-color-primary); margin-left: 4px; }
+.member-avatar { margin-bottom: 12px; }
+.member-name { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+.member-email { margin: 0 0 4px; font-size: 13px; color: var(--el-text-color-secondary); }
+.member-title { margin: 0 0 12px; font-size: 12px; color: var(--el-text-color-placeholder); }
+.member-orgs { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 16px; min-height: 24px; }
+.more-orgs { font-size: 11px; color: var(--el-text-color-secondary); }
+.member-stats { display: flex; justify-content: center; gap: 20px; margin-bottom: 16px; padding: 12px 0; border-top: 1px solid var(--el-border-color-lighter); border-bottom: 1px solid var(--el-border-color-lighter); }
+.member-stats .stat { text-align: center; }
+.member-stats .stat-num { display: block; font-size: 16px; font-weight: 600; }
+.member-stats .stat-label { font-size: 11px; color: var(--el-text-color-secondary); }
+.member-actions { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.profile-content { padding: 0 16px; }
+.profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
+.profile-info { text-align: center; margin-top: 12px; }
+.profile-info h3 { margin: 0 0 4px; }
+.profile-info p { margin: 0 0 8px; color: var(--el-text-color-secondary); }
+.contact-link { display: inline-block; }
+.profile-section { margin-bottom: 24px; }
+.profile-section h4 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+.profile-stats { display: flex; gap: 20px; }
+.profile-stat { text-align: center; }
+.profile-stat .value { display: block; font-size: 24px; font-weight: 600; color: var(--el-color-primary); }
+.profile-stat .label { font-size: 12px; color: var(--el-text-color-secondary); }
+.empty-state, .loading-state { padding: 60px 0; }
+.empty-hint { font-size: 13px; color: var(--el-text-color-secondary); margin-top: 8px; }
+.empty-options { text-align: left; font-size: 13px; color: var(--el-text-color-secondary); margin: 12px auto; max-width: 400px; padding-left: 20px; }
+.empty-options li { margin-bottom: 8px; }
+.empty-options a { color: var(--el-color-primary); }
+.pagination-wrapper { display: flex; justify-content: center; margin-top: 24px; }
+.add-member-content { padding: 0 8px; }
+.add-member-description { color: var(--el-text-color-secondary); font-size: 14px; margin-bottom: 16px; }
 </style>

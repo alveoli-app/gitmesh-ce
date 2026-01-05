@@ -3,6 +3,10 @@
     <div class="page-header">
       <h1>Cycles</h1>
       <div class="header-actions">
+        <el-button size="small" @click="refreshCycles" :loading="isRefreshing">
+          <i class="ri-refresh-line"></i>
+          Refresh
+        </el-button>
         <el-button size="small" @click="$router.push('/devspace/cycles/archived')">
           <i class="ri-inbox-archive-line"></i>
           View Archive
@@ -348,6 +352,7 @@ export default {
     const editingCycle = ref(null);
     const viewingCycle = ref(null);
     const isUpdating = ref(false);
+    const isRefreshing = ref(false);
     const newCycle = ref({ name: '', goal: '', startDate: null, endDate: null });
 
     const activeCycle = computed(() => store.getters['cycles/activeCycle']);
@@ -355,11 +360,27 @@ export default {
     const completedCycles = computed(() => store.getters['cycles/completedCycles']);
     const burndownData = computed(() => store.getters['cycles/burndownData'] || []);
     const velocityData = computed(() => {
-      return completedCycles.value.slice(0, 6).map(c => ({
-        name: c.name,
-        committed: c.storyPointsTotal || 0,
-        completed: c.storyPointsCompleted || 0,
-      })).reverse();
+      const data = completedCycles.value.slice(0, 6).map(c => {
+        const committed = c.stats?.totalStoryPoints || c.targetCapacity || 0;
+        const completed = c.storyPointsCompleted || c.stats?.completedStoryPoints || 0;
+        
+        console.log('[CyclesPage] Velocity data for', c.name, {
+          committed,
+          completed,
+          stats: c.stats,
+          storyPointsCompleted: c.storyPointsCompleted,
+          targetCapacity: c.targetCapacity
+        });
+        
+        return {
+          name: c.name,
+          committed,
+          completed,
+        };
+      }).reverse();
+      
+      console.log('[CyclesPage] Final velocity data:', data);
+      return data;
     });
 
     // Watch for modal close to reset state
@@ -398,6 +419,12 @@ export default {
     onMounted(async () => {
       if (hasActiveProject.value) {
         await store.dispatch('cycles/fetchCycles', activeProjectId.value);
+        
+        // Debug: Log active cycle data
+        console.log('[CyclesPage] Active cycle:', activeCycle.value);
+        if (activeCycle.value) {
+          console.log('[CyclesPage] Active cycle stats:', activeCycle.value.stats);
+        }
       }
       
       // Setup Socket.IO event listeners
@@ -578,6 +605,19 @@ export default {
       }
     };
 
+    const refreshCycles = async () => {
+      isRefreshing.value = true;
+      try {
+        await store.dispatch('cycles/fetchCycles', activeProjectId.value);
+        ElMessage.success('Cycles refreshed');
+      } catch (error) {
+        console.error('Failed to refresh cycles:', error);
+        ElMessage.error('Failed to refresh cycles');
+      } finally {
+        isRefreshing.value = false;
+      }
+    };
+
     const deleteCycle = async (cycle) => {
       try {
         await ElMessageBox.confirm(
@@ -609,6 +649,7 @@ export default {
       editingCycle,
       viewingCycle,
       isUpdating,
+      isRefreshing,
       newCycle,
       activeCycle,
       plannedCycles,
@@ -629,7 +670,8 @@ export default {
       deleteCycle,
       editCycle,
       updateCycle,
-      viewCycleDetails
+      viewCycleDetails,
+      refreshCycles
     };
   },
 };

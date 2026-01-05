@@ -357,7 +357,8 @@ export default class MemberService extends LoggerBase {
       }
 
       // Auto assign member to organization if email domain matches
-      if (data.emails) {
+      // Skip this for manually created members - they should only have explicitly set organizations
+      if (data.emails && !data.manuallyCreated) {
         const emailDomains = new Set<string>()
 
         // Collect unique domains

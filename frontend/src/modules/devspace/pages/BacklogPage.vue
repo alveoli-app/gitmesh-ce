@@ -113,21 +113,26 @@
                 </div>
             </template>
         </el-table-column>
-        <el-table-column prop="assignee" label="Assignee" width="150">
+        <el-table-column prop="assignee" label="Assignee" width="180">
           <template #default="{ row }">
             <div class="assignee-cell" @click.stop>
                  <el-popover
                     trigger="click"
                     placement="bottom-start"
-                    :width="200"
+                    :width="220"
                  >
                     <template #reference>
                         <div class="assignee-trigger">
-                             <el-avatar :size="20" :src="row.assignee?.avatarUrl" v-if="row.assignee">
-                                {{ row.assignee.name?.[0] || row.assignee.email?.[0] || 'U' }}
-                              </el-avatar>
-                              <span class="assignee-name" v-if="row.assignee">{{ row.assignee.name || row.assignee.email }}</span>
-                              <span class="unassigned" v-else>Unassigned</span>
+                             <template v-if="row.assignee || row.assigneeMember">
+                                <el-avatar :size="20" :src="row.assignee?.avatarUrl || row.assigneeMember?.attributes?.avatarUrl?.default">
+                                    {{ (row.assignee?.fullName || row.assigneeMember?.displayName)?.[0] || 'U' }}
+                                </el-avatar>
+                                <span class="assignee-name">
+                                    {{ row.assignee?.fullName || row.assignee?.email || row.assigneeMember?.displayName || row.assigneeMember?.emails?.[0] }}
+                                </span>
+                                <el-tag v-if="row.assigneeMember && !row.assignee" size="small" type="info" class="not-joined-tag">Not joined</el-tag>
+                             </template>
+                             <span class="unassigned" v-else>Unassigned</span>
                         </div>
                     </template>
                     <div class="assignee-select-list">
@@ -141,6 +146,10 @@
                                 {{ member.name?.[0] || 'U' }}
                               </el-avatar>
                               <span>{{ member.name }}</span>
+                              <el-tag v-if="!member.hasJoined" size="small" type="info" style="margin-left: 8px;">Not joined</el-tag>
+                        </div>
+                        <div v-if="teamMembers.length === 0" class="no-members-hint">
+                            No team members found. Add team members in the Team page.
                         </div>
                     </div>
                  </el-popover>
@@ -194,6 +203,8 @@ const { activeProjectId, hasActiveProject } = useProject();
     const editingId = ref(null);
 
     const teamMembers = computed(() => store.getters['devspace/teamMembers']);
+    // Only users (not contacts) can be assigned to issues
+    const assignableMembers = computed(() => teamMembers.value.filter(m => m.isUser !== false));
 
     // Initial simple filtering (can be expanded)
     const filteredIssues = computed(() => issues.value);
@@ -273,14 +284,16 @@ const { activeProjectId, hasActiveProject } = useProject();
 
     const updateAssignee = async (row, member) => {
          try {
+            // Use assigneeId for users, assigneeMemberId for contacts who haven't joined
+            const data = member.hasJoined 
+                ? { assigneeId: member.userId, assigneeMemberId: null }
+                : { assigneeMemberId: member.memberId, assigneeId: null };
+            
             await store.dispatch('issues/updateIssue', {
                 issueId: row.id,
-                data: { assigneeId: member.id }
+                data
             });
              ElMessage.success('Assignee updated');
-             // No need to refresh entire list if mutation handles it, but let's refresh to be safe or ensure mutation updates the list item
-             // Typically generic 'updateIssue' action might not update the list element deeply if it's not the selected issue.
-             // But issues getter is reactive. Let's assume it updates.
         } catch (e) {
              ElMessage.error('Failed to update assignee');
         }
@@ -342,7 +355,7 @@ const { activeProjectId, hasActiveProject } = useProject();
 
     const refreshData = async () => {
        await store.dispatch('issues/fetchIssues', activeProjectId.value);
-       await store.dispatch('devspace/fetchTeamMembers', activeProjectId.value);
+       await store.dispatch('devspace/fetchTeamMembers');
     };
 
     // Load data
@@ -494,6 +507,11 @@ const setupSocketListeners = () => {
 
 .assignee-trigger:hover {
     background-color: var(--el-fill-color-light);
+}
+
+.not-joined-tag {
+    margin-left: 6px;
+    font-size: 10px;
 }
 
 .member-option {

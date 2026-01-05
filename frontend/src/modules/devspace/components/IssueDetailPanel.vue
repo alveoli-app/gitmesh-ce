@@ -63,16 +63,17 @@
                 <div class="detail-item">
                     <span class="label">Assignee</span>
                     <el-select 
-                        v-model="localIssue.assigneeId" 
+                        v-model="selectedAssigneeId" 
                         filterable 
                         placeholder="Unassigned"
                         size="small"
                         @change="updateAssignee"
+                        clearable
                     >
                         <el-option
                             v-for="member in teamMembers"
                             :key="member.id"
-                            :label="member.name"
+                            :label="member.name + (member.hasJoined ? '' : ' (Not joined)')"
                             :value="member.id"
                         />
                     </el-select>
@@ -221,6 +222,7 @@ export default {
     
     // Local state for editing
     const localIssue = ref({});
+    const selectedAssigneeId = ref(null);
     const comments = ref([]);
     const externalLinks = ref([]);
     const newComment = ref('');
@@ -239,6 +241,15 @@ export default {
         if (newVal) {
             // Deep copy to break reactivity for editing
             localIssue.value = JSON.parse(JSON.stringify(newVal));
+            
+            // Set selected assignee - prefer user, then member
+            if (newVal.assigneeId) {
+                selectedAssigneeId.value = newVal.assigneeId;
+            } else if (newVal.assigneeMemberId) {
+                selectedAssigneeId.value = newVal.assigneeMemberId;
+            } else {
+                selectedAssigneeId.value = null;
+            }
             
             // Convert description to TipTap format if it's a string
             if (localIssue.value.description && typeof localIssue.value.description === 'string') {
@@ -324,7 +335,33 @@ export default {
     }
 
     async function updateAssignee() {
-        await updateField({ assigneeId: localIssue.value.assigneeId });
+        // Find the selected member to determine if it's a user or contact
+        const member = teamMembers.value.find(m => m.id === selectedAssigneeId.value);
+        
+        if (!member && selectedAssigneeId.value) {
+            // If no member found but ID is set, try to find by userId or memberId
+            const memberByUserId = teamMembers.value.find(m => m.userId === selectedAssigneeId.value);
+            const memberByMemberId = teamMembers.value.find(m => m.memberId === selectedAssigneeId.value);
+            const foundMember = memberByUserId || memberByMemberId;
+            
+            if (foundMember) {
+                const data = foundMember.hasJoined 
+                    ? { assigneeId: foundMember.userId, assigneeMemberId: null }
+                    : { assigneeMemberId: foundMember.memberId, assigneeId: null };
+                await updateField(data);
+                return;
+            }
+        }
+        
+        if (!selectedAssigneeId.value) {
+            // Clearing assignee
+            await updateField({ assigneeId: null, assigneeMemberId: null });
+        } else if (member) {
+            const data = member.hasJoined 
+                ? { assigneeId: member.userId, assigneeMemberId: null }
+                : { assigneeMemberId: member.memberId, assigneeId: null };
+            await updateField(data);
+        }
     }
 
     async function updateCycle() {
@@ -396,6 +433,7 @@ export default {
     return {
         issue,
         localIssue,
+        selectedAssigneeId,
         teamMembers,
         cycles,
         columns,

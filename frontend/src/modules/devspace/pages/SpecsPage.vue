@@ -18,7 +18,16 @@
       </div>
     </div>
 
-    <div v-if="loading" class="loading-state">
+    <!-- No Project Connected State -->
+    <div v-if="!projectId" class="no-project-state">
+      <div class="no-project-content">
+        <i class="ri-folder-add-line no-project-icon"></i>
+        <h2>No Project Connected</h2>
+        <p>Connect a project to start creating and managing specs and documentation.</p>
+      </div>
+    </div>
+
+    <div v-else-if="loading" class="loading-state">
       <el-skeleton :rows="5" animated />
     </div>
 
@@ -231,6 +240,8 @@ export default {
   mounted() {
     if (this.projectId) {
       this.fetchSpecs();
+    } else {
+      this.loading = false;
     }
     // Add keyboard event listener for delete shortcut
     document.addEventListener('keydown', this.handleKeydown);
@@ -647,6 +658,36 @@ export default {
 }
 .loading-state {
   padding: 40px 0;
+}
+
+/* No Project State */
+.no-project-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px;
+}
+.no-project-content {
+  text-align: center;
+  max-width: 400px;
+}
+.no-project-icon {
+  font-size: 64px;
+  color: var(--el-text-color-placeholder);
+  margin-bottom: 24px;
+}
+.no-project-content h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--el-text-color-primary);
+}
+.no-project-content p {
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  margin: 0 0 24px 0;
+  line-height: 1.6;
 }
 
 /* Create Spec Modal Styles */

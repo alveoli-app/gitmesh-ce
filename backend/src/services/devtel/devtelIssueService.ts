@@ -91,6 +91,12 @@ export default class DevtelIssueService extends LoggerBase {
                 await this.verifyUserAccess(data.assigneeId, transaction)
             }
 
+            // Validate member assignee if provided (for team members who haven't logged in)
+            if (data.assigneeMemberId) {
+                this.log.info({ assigneeMemberId: data.assigneeMemberId }, 'Verifying member assignee...')
+                await this.verifyMemberAccess(data.assigneeMemberId, transaction)
+            }
+
             // Validate cycle if provided
             if (data.cycleId) {
                 this.log.info({ cycleId: data.cycleId }, 'Verifying cycle...')
@@ -114,6 +120,7 @@ export default class DevtelIssueService extends LoggerBase {
                     estimatedHours: data.estimatedHours,
                     storyPoints: data.storyPoints,
                     assigneeId: data.assigneeId,
+                    assigneeMemberId: data.assigneeMemberId,
                     cycleId: data.cycleId,
                     parentIssueId: data.parentIssueId,
                     metadata: data.metadata || {},
@@ -206,6 +213,10 @@ export default class DevtelIssueService extends LoggerBase {
             // Handle assignee change
             if (data.assigneeId !== undefined && data.assigneeId !== issue.assigneeId) {
                 updateFields.assigneeId = data.assigneeId
+                // Clear member assignee if user assignee is set
+                if (data.assigneeId) {
+                    updateFields.assigneeMemberId = null
+                }
 
                 // Remove old assignment
                 if (issue.assigneeId) {
@@ -231,6 +242,30 @@ export default class DevtelIssueService extends LoggerBase {
                         },
                         { transaction },
                     )
+                }
+            }
+
+            // Handle member assignee change (for team members who haven't logged in)
+            if (data.assigneeMemberId !== undefined && data.assigneeMemberId !== issue.assigneeMemberId) {
+                updateFields.assigneeMemberId = data.assigneeMemberId
+                // Clear user assignee if member assignee is set
+                if (data.assigneeMemberId) {
+                    updateFields.assigneeId = null
+                    // Remove old user assignment if exists
+                    if (issue.assigneeId) {
+                        await this.options.database.devtelIssueAssignments.destroy({
+                            where: {
+                                issueId,
+                                userId: issue.assigneeId,
+                                role: 'assignee',
+                            },
+                            transaction,
+                        })
+                    }
+                }
+                // Verify member exists
+                if (data.assigneeMemberId) {
+                    await this.verifyMemberAccess(data.assigneeMemberId, transaction)
                 }
             }
 
@@ -313,11 +348,19 @@ export default class DevtelIssueService extends LoggerBase {
                         model: this.options.database.user,
                         as: 'assignee',
                         attributes: ['id', 'fullName', 'email', 'firstName', 'lastName'],
+                        required: false,
+                    },
+                    {
+                        model: this.options.database.member,
+                        as: 'assigneeMember',
+                        attributes: ['id', 'displayName', 'emails', 'attributes'],
+                        required: false,
                     },
                     {
                         model: this.options.database.devtelCycles,
                         as: 'cycle',
                         attributes: ['id', 'name', 'status', 'startDate', 'endDate'],
+                        required: false,
                     },
                     {
                         model: this.options.database.devtelIssues,
@@ -392,6 +435,13 @@ export default class DevtelIssueService extends LoggerBase {
                     model: this.options.database.user,
                     as: 'assignee',
                     attributes: ['id', 'fullName', 'email', 'firstName', 'lastName'],
+                    required: false,
+                },
+                {
+                    model: this.options.database.member,
+                    as: 'assigneeMember',
+                    attributes: ['id', 'displayName', 'emails', 'attributes'],
+                    required: false,
                 },
                 {
                     model: this.options.database.devtelExternalLinks,
@@ -486,6 +536,22 @@ export default class DevtelIssueService extends LoggerBase {
         }
 
         return user
+    }
+
+    private async verifyMemberAccess(memberId: string, transaction: any) {
+        const member = await this.options.database.member.findOne({
+            where: { 
+                id: memberId,
+                deletedAt: null,
+            },
+            transaction,
+        })
+
+        if (!member) {
+            throw new Error400(this.options.language, 'devtel.member.notFound')
+        }
+
+        return member
     }
 
     private async verifyCycleAccess(cycleId: string, projectId: string, transaction: any) {

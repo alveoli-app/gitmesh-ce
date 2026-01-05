@@ -64,6 +64,13 @@ export const issueCreateSchema = Joi.object({
             'string.guid': 'Assignee ID must be a valid UUID'
         }),
 
+    assigneeMemberId: Joi.string()
+        .uuid()
+        .allow(null)
+        .messages({
+            'string.guid': 'Assignee Member ID must be a valid UUID'
+        }),
+
     cycleId: Joi.string()
         .uuid()
         .allow(null)
@@ -128,6 +135,10 @@ export const issueUpdateSchema = Joi.object({
         .allow(null),
 
     assigneeId: Joi.string()
+        .uuid()
+        .allow(null),
+
+    assigneeMemberId: Joi.string()
         .uuid()
         .allow(null),
 

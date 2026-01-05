@@ -40,7 +40,7 @@
         @change="applyFilters"
       >
         <el-option
-          v-for="member in teamMembers"
+          v-for="member in assignableMembers"
           :key="member.id"
           :label="member.name"
           :value="member.id"
@@ -144,10 +144,11 @@
                 </div>
                 <div class="card-title">{{ issue.title }}</div>
                 <div class="card-footer">
-                  <div class="assignee" v-if="issue.assignee">
-                    <el-avatar :size="20" :src="issue.assignee.avatarUrl">
-                      {{ issue.assignee.name?.[0] || issue.assignee.email?.[0] || 'U' }}
+                  <div class="assignee" v-if="issue.assignee || issue.assigneeMember">
+                    <el-avatar :size="20" :src="issue.assignee?.avatarUrl || issue.assigneeMember?.attributes?.avatarUrl?.default">
+                      {{ (issue.assignee?.fullName || issue.assigneeMember?.displayName)?.[0] || 'U' }}
                     </el-avatar>
+                    <el-tag v-if="issue.assigneeMember && !issue.assignee" size="small" type="info" class="not-joined-badge">NJ</el-tag>
                   </div>
                   <div class="card-meta">
                     <span v-if="issue.estimatedHours" class="hours">
@@ -247,6 +248,8 @@ export default {
     const selectedIssue = computed(() => store.getters['issues/selectedIssue']);
     const cycles = computed(() => store.getters['cycles/cycles']);
     const teamMembers = computed(() => store.getters['devspace/teamMembers']);
+    // Only users (not contacts) can be assigned to issues
+    const assignableMembers = computed(() => teamMembers.value.filter(m => m.isUser !== false));
     const hasActiveFilters = computed(() => 
       filters.value.priority.length > 0 || filters.value.cycleId || filters.value.assigneeIds.length > 0
     );
@@ -337,7 +340,7 @@ export default {
         await Promise.all([
             store.dispatch('cycles/fetchCycles', activeProjectId.value),
             store.dispatch('issues/fetchIssues', activeProjectId.value),
-            store.dispatch('devspace/fetchTeamMembers', activeProjectId.value),
+            store.dispatch('devspace/fetchTeamMembers'),
         ]);
       }
       
@@ -431,6 +434,7 @@ export default {
       selectedIssue,
       cycles,
       teamMembers,
+      assignableMembers,
       hasActiveFilters,
       hasActiveProject,
       getColumnIssues,

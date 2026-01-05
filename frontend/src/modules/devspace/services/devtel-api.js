@@ -197,7 +197,7 @@ export default class DevtelService {
         const tenantId = getTenantId();
         const response = await authAxios.get(
             `/tenant/${tenantId}/devtel/projects/${projectId}/cycles`,
-            { params }
+            { params: { ...params, includeStats: true } }
         );
         return response.data;
     }
@@ -233,11 +233,32 @@ export default class DevtelService {
     }
 
     static async deleteCycle(projectId, cycleId) {
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const response = await authAxios.delete(
+                `/tenant/${tenantId}/devtel/projects/${projectId}/cycles/${cycleId}`
+            );
+            return response.data;
+        }, 'Delete Cycle');
+    }
+
+    static async listArchivedCycles(projectId, params = {}) {
         const tenantId = getTenantId();
-        const response = await authAxios.delete(
-            `/tenant/${tenantId}/devtel/projects/${projectId}/cycles/${cycleId}`
+        const response = await authAxios.get(
+            `/tenant/${tenantId}/devtel/projects/${projectId}/cycles/archived`,
+            { params }
         );
         return response.data;
+    }
+
+    static async restoreCycle(projectId, cycleId) {
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const response = await authAxios.post(
+                `/tenant/${tenantId}/devtel/projects/${projectId}/cycles/${cycleId}/restore`
+            );
+            return response.data;
+        }, 'Restore Cycle');
     }
 
     static async getCycleBurndown(projectId, cycleId) {
@@ -322,6 +343,17 @@ export default class DevtelService {
             `/tenant/${tenantId}/devtel/projects/${projectId}/cycles/${cycleId}/complete`
         );
         return response.data;
+    }
+
+    static async moveIncompleteIssues(projectId, toCycleId, fromCycleId) {
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const response = await authAxios.post(
+                `/tenant/${tenantId}/devtel/projects/${projectId}/cycles/${toCycleId}/move-incomplete`,
+                { fromCycleId }
+            );
+            return response.data;
+        }, 'Move Incomplete Issues');
     }
 
     // ============================================

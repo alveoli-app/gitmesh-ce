@@ -20,6 +20,7 @@ export interface CycleCreateData {
     goal?: string
     startDate: Date
     endDate: Date
+    targetCapacity?: number
 }
 
 export interface CycleUpdateData extends Partial<CycleCreateData> {
@@ -55,6 +56,7 @@ export default class DevtelCycleService extends LoggerBase {
                     goal: data.goal,
                     startDate: data.startDate,
                     endDate: data.endDate,
+                    targetCapacity: data.targetCapacity,
                     status: CycleStatus.PLANNED,
                     createdById: this.options.currentUser?.id,
                 },
@@ -140,7 +142,7 @@ export default class DevtelCycleService extends LoggerBase {
     /**
      * List cycles for a project
      */
-    async list(projectId: string, params: { status?: string; limit?: number; offset?: number } = {}) {
+    async list(projectId: string, params: { status?: string; limit?: number; offset?: number; includeStats?: boolean } = {}) {
         await this.verifyProjectAccess(projectId)
 
         const where: any = {
@@ -158,6 +160,17 @@ export default class DevtelCycleService extends LoggerBase {
             limit: params.limit || 50,
             offset: params.offset || 0,
         })
+
+        // If includeStats is true, fetch stats for each cycle
+        if (params.includeStats) {
+            const cyclesWithStats = await Promise.all(
+                rows.map(async (cycle) => {
+                    const cycleWithStats = await this.findById(projectId, cycle.id)
+                    return cycleWithStats
+                })
+            )
+            return { rows: cyclesWithStats, count }
+        }
 
         return { rows, count }
     }
@@ -208,6 +221,7 @@ export default class DevtelCycleService extends LoggerBase {
             if (data.goal !== undefined) updateFields.goal = data.goal
             if (data.startDate !== undefined) updateFields.startDate = data.startDate
             if (data.endDate !== undefined) updateFields.endDate = data.endDate
+            if (data.targetCapacity !== undefined) updateFields.targetCapacity = data.targetCapacity
             if (data.status !== undefined) {
                 // If activating, ensure no other active cycle
                 if (data.status === CycleStatus.ACTIVE && cycle.status !== CycleStatus.ACTIVE) {
@@ -436,6 +450,7 @@ export default class DevtelCycleService extends LoggerBase {
 
     /**
      * Plan sprint - move issues to cycle
+     * Issues can be moved between cycles freely, including incomplete issues from previous sprints
      */
     async planSprint(projectId: string, cycleId: string, issueIds: string[]) {
         const transaction = await SequelizeRepository.createTransaction(this.options)
@@ -455,6 +470,7 @@ export default class DevtelCycleService extends LoggerBase {
             }
 
             // Update issues to belong to this cycle
+            // This allows moving issues from any state (backlog, previous sprints, etc.)
             await this.options.database.devtelIssues.update(
                 {
                     cycleId,
@@ -478,9 +494,64 @@ export default class DevtelCycleService extends LoggerBase {
             throw error
         }
     }
+    
+    /**
+     * Move incomplete issues from one cycle to another
+     * Useful for carrying over unfinished work to the next sprint
+     */
+    async moveIncompleteIssues(projectId: string, fromCycleId: string, toCycleId: string) {
+        const transaction = await SequelizeRepository.createTransaction(this.options)
+
+        try {
+            // Verify both cycles exist
+            const [fromCycle, toCycle] = await Promise.all([
+                this.options.database.devtelCycles.findOne({
+                    where: { id: fromCycleId, projectId, deletedAt: null },
+                    transaction,
+                }),
+                this.options.database.devtelCycles.findOne({
+                    where: { id: toCycleId, projectId, deletedAt: null },
+                    transaction,
+                }),
+            ])
+
+            if (!fromCycle || !toCycle) {
+                throw new Error400(this.options.language, 'devtel.cycle.notFound')
+            }
+
+            // Move all incomplete issues (not in 'done' status)
+            const result = await this.options.database.devtelIssues.update(
+                {
+                    cycleId: toCycleId,
+                    updatedById: this.options.currentUser?.id,
+                },
+                {
+                    where: {
+                        cycleId: fromCycleId,
+                        projectId,
+                        status: { [Op.ne]: 'done' },
+                        deletedAt: null,
+                    },
+                    transaction,
+                },
+            )
+
+            await SequelizeRepository.commitTransaction(transaction)
+
+            return {
+                movedCount: result[0],
+                fromCycle: fromCycle.get({ plain: true }),
+                toCycle: toCycle.get({ plain: true }),
+            }
+        } catch (error) {
+            await SequelizeRepository.rollbackTransaction(transaction)
+            throw error
+        }
+    }
 
     /**
-     * Delete a cycle (soft delete)
+     * Delete a cycle (soft delete with archive)
+     * Cycles are archived for 30 days before permanent deletion
      */
     async destroy(projectId: string, cycleId: string) {
         const transaction = await SequelizeRepository.createTransaction(this.options)
@@ -508,9 +579,14 @@ export default class DevtelCycleService extends LoggerBase {
                 },
             )
 
+            const now = new Date()
+            const permanentDeleteDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+
             await cycle.update(
                 {
-                    deletedAt: new Date(),
+                    deletedAt: now,
+                    archivedAt: now,
+                    permanentDeleteAt: permanentDeleteDate,
                     updatedById: this.options.currentUser?.id,
                 },
                 { transaction },
@@ -523,6 +599,91 @@ export default class DevtelCycleService extends LoggerBase {
             await SequelizeRepository.rollbackTransaction(transaction)
             throw error
         }
+    }
+
+    /**
+     * List archived cycles (soft deleted, within 30-day retention)
+     */
+    async listArchived(projectId: string, params: { limit?: number; offset?: number } = {}) {
+        await this.verifyProjectAccess(projectId)
+
+        const now = new Date()
+
+        const { rows, count } = await this.options.database.devtelCycles.findAndCountAll({
+            where: {
+                projectId,
+                archivedAt: { [Op.ne]: null },
+                permanentDeleteAt: { [Op.gt]: now }, // Not yet permanently deleted
+            },
+            order: [['archivedAt', 'DESC']],
+            limit: params.limit || 50,
+            offset: params.offset || 0,
+            paranoid: false, // Include soft-deleted records
+        })
+
+        return { rows, count }
+    }
+
+    /**
+     * Restore an archived cycle
+     */
+    async restore(projectId: string, cycleId: string) {
+        const transaction = await SequelizeRepository.createTransaction(this.options)
+
+        try {
+            const cycle = await this.options.database.devtelCycles.findOne({
+                where: {
+                    id: cycleId,
+                    projectId,
+                    archivedAt: { [Op.ne]: null },
+                },
+                transaction,
+                paranoid: false,
+            })
+
+            if (!cycle) {
+                throw new Error400(this.options.language, 'devtel.cycle.notFound')
+            }
+
+            await cycle.update(
+                {
+                    deletedAt: null,
+                    archivedAt: null,
+                    permanentDeleteAt: null,
+                    updatedById: this.options.currentUser?.id,
+                },
+                { transaction },
+            )
+
+            await SequelizeRepository.commitTransaction(transaction)
+
+            return this.findById(projectId, cycleId)
+        } catch (error) {
+            await SequelizeRepository.rollbackTransaction(transaction)
+            throw error
+        }
+    }
+
+    /**
+     * Permanently delete archived cycles that have exceeded retention period
+     * This should be run as a scheduled job
+     */
+    async cleanupExpiredArchives() {
+        const now = new Date()
+
+        const expiredCycles = await this.options.database.devtelCycles.findAll({
+            where: {
+                archivedAt: { [Op.ne]: null },
+                permanentDeleteAt: { [Op.lte]: now },
+            },
+            paranoid: false,
+        })
+
+        for (const cycle of expiredCycles) {
+            await cycle.destroy({ force: true }) // Hard delete
+        }
+
+        return expiredCycles.length
     }
 
     // ============================================

@@ -44,8 +44,11 @@ CREATE TABLE "devtelCycles" (
     "startDate" DATE NOT NULL,
     "endDate" DATE NOT NULL,
     status VARCHAR(50) DEFAULT 'planned',
+    "targetCapacity" DECIMAL(10,2),
     velocity INTEGER,
     "storyPointsCompleted" INTEGER,
+    "archivedAt" TIMESTAMPTZ,
+    "permanentDeleteAt" TIMESTAMPTZ,
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "deletedAt" TIMESTAMPTZ,
@@ -55,6 +58,7 @@ CREATE TABLE "devtelCycles" (
 
 CREATE INDEX idx_devtel_cycles_project ON "devtelCycles"("projectId") WHERE "deletedAt" IS NULL;
 CREATE INDEX idx_devtel_cycles_status ON "devtelCycles"(status) WHERE "deletedAt" IS NULL;
+CREATE INDEX idx_devtel_cycles_archived ON "devtelCycles"("archivedAt") WHERE "archivedAt" IS NOT NULL;
 
 -- DevTel Issues
 CREATE TABLE "devtelIssues" (

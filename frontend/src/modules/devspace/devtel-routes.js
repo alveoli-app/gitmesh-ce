@@ -7,6 +7,7 @@ const ReportListPage = () => import('@/modules/report/pages/report-list-page.vue
 const BoardPage = () => import('@/modules/devspace/pages/BoardPage.vue');
 const BacklogPage = () => import('@/modules/devspace/pages/BacklogPage.vue');
 const CyclesPage = () => import('@/modules/devspace/pages/CyclesPage.vue');
+const ArchivedCyclesPage = () => import('@/modules/devspace/pages/ArchivedCyclesPage.vue');
 const CapacityPage = () => import('@/modules/devspace/pages/CapacityPage.vue');
 const SpecsPage = () => import('@/modules/devspace/pages/SpecsPage.vue');
 const TeamPage = () => import('@/modules/devspace/pages/TeamPage.vue');
@@ -52,6 +53,12 @@ export default [
                         path: 'cycles',
                         component: CyclesPage,
                         meta: { auth: true, title: 'Cycles' },
+                    },
+                    {
+                        name: 'devspace-archived-cycles',
+                        path: 'cycles/archived',
+                        component: ArchivedCyclesPage,
+                        meta: { auth: true, title: 'Archived Cycles' },
                     },
                     {
                         name: 'devspace-capacity',

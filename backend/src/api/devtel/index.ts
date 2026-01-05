@@ -106,6 +106,10 @@ export default (app) => {
         `/tenant/:tenantId/devtel/projects/:projectId/cycles`,
         safeWrap(require('./cycles/cycleList').default),
     )
+    app.get(
+        `/tenant/:tenantId/devtel/projects/:projectId/cycles/archived`,
+        safeWrap(require('./cycles/cycleArchiveList').default),
+    )
     app.post(
         `/tenant/:tenantId/devtel/projects/:projectId/cycles`,
         safeWrap(require('./cycles/cycleCreate').default),
@@ -122,6 +126,10 @@ export default (app) => {
         `/tenant/:tenantId/devtel/projects/:projectId/cycles/:cycleId`,
         safeWrap(require('./cycles/cycleDestroy').default),
     )
+    app.post(
+        `/tenant/:tenantId/devtel/projects/:projectId/cycles/:cycleId/restore`,
+        safeWrap(require('./cycles/cycleRestore').default),
+    )
     app.get(
         `/tenant/:tenantId/devtel/projects/:projectId/cycles/:cycleId/burndown`,
         safeWrap(require('./cycles/cycleBurndown').default),
@@ -137,6 +145,10 @@ export default (app) => {
     app.post(
         `/tenant/:tenantId/devtel/projects/:projectId/cycles/:cycleId/complete`,
         safeWrap(require('./cycles/cycleComplete').default),
+    )
+    app.post(
+        `/tenant/:tenantId/devtel/projects/:projectId/cycles/:cycleId/move-incomplete`,
+        safeWrap(require('./cycles/cycleMoveIncomplete').default),
     )
 
     // ============================================

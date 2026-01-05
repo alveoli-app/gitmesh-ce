@@ -51,9 +51,23 @@
           <h3>{{ cycle?.name || 'Sprint' }}</h3>
           <div class="cycle-meta">
              <span class="count">{{ cycleIssues.length }} issues</span>
-             <span class="capacity" :class="{ 'over-capacity': totalPoints > capacity }">
-                {{ totalPoints }} / {{ capacity }} pts
-             </span>
+             <div class="capacity-editor">
+                <span v-if="!isEditingCapacity" class="capacity" :class="{ 'over-capacity': capacity > 0 && totalPoints > capacity }" @click="isEditingCapacity = true">
+                  {{ totalPoints }}{{ capacity > 0 ? ` / ${capacity}` : '' }} pts
+                </span>
+                <el-input-number 
+                  v-else
+                  v-model="capacity" 
+                  size="small" 
+                  :min="0"
+                  :precision="1"
+                  :controls="false"
+                  @blur="saveCapacity"
+                  @keyup.enter="saveCapacity"
+                  placeholder="Set capacity"
+                  style="width: 120px"
+                />
+             </div>
           </div>
         </div>
         <div class="column-content">
@@ -122,8 +136,9 @@ export default {
     const backlogIssues = ref([]);
     const cycleIssues = ref([]);
     const saving = ref(false);
-    const capacity = ref(20); // TODO: Fetch from settings or team capacity
+    const capacity = ref(0); // Dynamic capacity from cycle settings
     const updateTrigger = ref(0); // Force reactivity trigger
+    const isEditingCapacity = ref(false);
 
     const totalPoints = computed(() => {
         // Access updateTrigger to force recomputation
@@ -176,11 +191,17 @@ export default {
             
             // Separate into those already in this cycle and others
             if (props.cycle) {
+                // Set capacity from cycle
+                capacity.value = props.cycle.targetCapacity || 0;
+                
                 // Issues already assigned to this cycle
                 cycleIssues.value = allIssues.filter(i => i.cycleId === props.cycle.id);
-                // Backlog issues: no cycle assigned or in backlog/todo status
+                
+                // Backlog issues: includes issues with no cycle AND incomplete issues from other cycles
+                // This allows carrying over unfinished work from previous sprints
                 backlogIssues.value = allIssues.filter(i => 
-                    !i.cycleId && (i.status === 'backlog' || i.status === 'todo')
+                    (i.cycleId !== props.cycle.id) && 
+                    (i.status !== 'done' || !i.cycleId)
                 );
             } else {
                 backlogIssues.value = allIssues.filter(i => 
@@ -217,6 +238,20 @@ export default {
       visible.value = false;
     };
 
+    const saveCapacity = async () => {
+        isEditingCapacity.value = false;
+        if (!props.cycle) return;
+        
+        try {
+            await DevtelService.updateCycle(props.projectId, props.cycle.id, {
+                targetCapacity: capacity.value
+            });
+            ElMessage.success('Capacity updated');
+        } catch (e) {
+            ElMessage.error('Failed to update capacity');
+        }
+    };
+
     const savePlan = async () => {
         if (!props.cycle) return;
         saving.value = true;
@@ -240,8 +275,10 @@ export default {
       saving,
       capacity,
       totalPoints,
+      isEditingCapacity,
       handleClose,
       savePlan,
+      saveCapacity,
       handleCycleChange
     };
   }
@@ -304,11 +341,22 @@ export default {
     background: var(--el-color-success-light-9);
     padding: 2px 6px;
     border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.capacity:hover {
+    background: var(--el-color-success-light-8);
 }
 
 .capacity.over-capacity {
     color: var(--el-color-danger);
     background: var(--el-color-danger-light-9);
+}
+
+.capacity-editor {
+    display: flex;
+    align-items: center;
 }
 
 .column-content {

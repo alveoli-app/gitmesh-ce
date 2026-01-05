@@ -74,8 +74,8 @@
     </template>
 
     <!-- Create Modal -->
-    <el-dialog v-model="showCreateModal" title="Create Spec" width="600px">
-      <el-form :model="newSpec" label-position="top">
+    <el-dialog v-model="showCreateModal" title="Create Spec" width="600px" class="create-spec-modal">
+      <el-form :model="newSpec" label-position="top" class="create-spec-form">
         <el-form-item label="Title" required>
           <el-input v-model="newSpec.title" placeholder="Spec title" />
         </el-form-item>
@@ -86,11 +86,12 @@
             <el-option value="approved" label="Approved" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Content">
+        <el-form-item label="Content" class="content-form-item">
           <rich-text-editor
             v-model="newSpec.contentText"
             placeholder="Write your spec content here..."
-            :min-height="'200px'"
+            :min-height="'300px'"
+            class="spec-editor"
           />
         </el-form-item>
       </el-form>
@@ -646,5 +647,53 @@ export default {
 }
 .loading-state {
   padding: 40px 0;
+}
+
+/* Create Spec Modal Styles */
+.create-spec-modal :deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+.create-spec-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.content-form-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.content-form-item :deep(.el-form-item__label) {
+  margin-bottom: 8px;
+}
+
+.content-form-item :deep(.el-form-item__content) {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 300px !important;
+}
+
+.spec-editor {
+  width: 100%;
+  min-height: 300px !important;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.spec-editor :deep(.rich-text-editor) {
+  min-height: 300px !important;
+  border: none;
+}
+
+.spec-editor :deep(.editor-content) {
+  min-height: 250px !important;
+  overflow-y: auto !important;
+}
+
+.spec-editor :deep(.ProseMirror) {
+  min-height: 250px !important;
 }
 </style>

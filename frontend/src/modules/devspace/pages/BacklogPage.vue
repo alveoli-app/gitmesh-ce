@@ -41,7 +41,7 @@
     <div class="quick-create">
       <el-input
         v-model="quickCreateTitle"
-        placeholder="+ Create new issue..."
+        placeholder="Create new issue..."
         @keyup.enter="handleQuickCreate"
         :disabled="isCreating"
       >

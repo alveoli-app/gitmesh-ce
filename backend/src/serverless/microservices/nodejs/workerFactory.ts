@@ -2,6 +2,8 @@
 import { AutomationTrigger, AutomationType, Edition, FeatureFlag } from '@gitmesh/types'
 import { getUnleashClient, isFeatureEnabled } from '@gitmesh/feature-flags'
 import { weeklyAnalyticsEmailsWorker } from './analytics/workers/weeklyAnalyticsEmailsWorker'
+import { syncExternalDataWorker } from './devtel/workers/syncExternalDataWorker'
+import { DevtelSyncExternalDataMessage } from './devtel/messageTypes'
 import {
   AutomationMessage,
   CsvExportMessage,
@@ -179,6 +181,9 @@ async function workerFactory(event: NodeMicroserviceMessage): Promise<any> {
         orgMergeMessage.secondaryOrgId,
         orgMergeMessage.notifyFrontend,
       )
+
+    case 'devtel-sync-external':
+      return syncExternalDataWorker(event as DevtelSyncExternalDataMessage)
 
     default:
       throw new Error(`Invalid microservice ${service}`)

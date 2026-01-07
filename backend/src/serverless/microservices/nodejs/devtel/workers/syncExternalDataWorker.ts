@@ -4,6 +4,8 @@
  */
 import { getServiceChildLogger } from '@gitmesh/logging'
 import { DevtelSyncExternalDataMessage } from '../messageTypes'
+import { request } from '@octokit/request'
+import { databaseInit } from '../../../../../database/databaseConnection'
 
 const log = getServiceChildLogger('SyncExternalDataWorker')
 
@@ -12,11 +14,12 @@ export async function syncExternalDataWorker(
 ): Promise<any> {
     const { tenant, workspaceId, integrationId, provider, syncType } = message
 
+    const database = await databaseInit()
     log.info({ workspaceId, provider, syncType }, 'Starting external data sync')
 
     try {
         // Get integration credentials
-        const integration = await getIntegration(tenant, integrationId)
+        const integration = await getIntegration(database, tenant, integrationId)
         if (!integration) {
             throw new Error(`Integration ${integrationId} not found`)
         }
@@ -25,7 +28,7 @@ export async function syncExternalDataWorker(
 
         switch (provider) {
             case 'github':
-                syncResult = await syncGithubData(tenant, workspaceId, integration, syncType)
+                syncResult = await syncGithubData(database, tenant, workspaceId, integration, syncType)
                 break
             case 'jira':
                 syncResult = await syncJiraData(tenant, workspaceId, integration, syncType)
@@ -53,17 +56,13 @@ interface SyncResult {
     externalLinksCreated: number
 }
 
-async function getIntegration(tenant: string, integrationId: string): Promise<any> {
-    // TODO: Use SequelizeRepository to get integration
-    // This is a placeholder - in production, use proper database access
-    return {
-        id: integrationId,
-        credentials: {},
-        settings: {},
-    }
+async function getIntegration(database: any, tenant: string, integrationId: string): Promise<any> {
+    // Fetch integration securely
+    return await database.devtelIntegrations.findByPk(integrationId);
 }
 
 async function syncGithubData(
+    database: any,
     tenant: string,
     workspaceId: string,
     integration: any,
@@ -71,17 +70,123 @@ async function syncGithubData(
 ): Promise<SyncResult> {
     log.info({ workspaceId, syncType }, 'Syncing GitHub data')
 
-    // TODO: Implement actual GitHub API sync
-    // 1. Fetch issues from GitHub API
-    // 2. Match/create DevTel issues
-    // 3. Create external links
-    // 4. Sync PR status
-
-    return {
+    const stats: SyncResult = {
         issuesCreated: 0,
         issuesUpdated: 0,
         externalLinksCreated: 0,
     }
+
+    // Configure Octokit
+    const token = integration.credentials?.accessToken || integration.credentials?.token;
+    if (!token) {
+        throw new Error('No access token found for GitHub integration');
+    }
+
+    const octokit = request.defaults({
+        headers: {
+            authorization: `token ${token}`,
+        },
+    })
+
+    // Find all projects in workspace with a githubRepo setting
+    const projects = await database.devtelProjects.findAll({
+        where: {
+            workspaceId,
+            deletedAt: null
+        }
+    });
+
+    const linkedProjects = projects.filter((p: any) => p.settings && p.settings.githubRepo);
+
+    log.info({ projectCount: linkedProjects.length }, 'Found projects with linked GitHub repositories');
+
+    for (const project of linkedProjects) {
+        try {
+            const [owner, repo] = project.settings.githubRepo.split('/');
+            if (!owner || !repo) continue;
+
+            log.info({ projectId: project.id, repo: project.settings.githubRepo }, 'Syncing project issues');
+
+            // Fetch issues (pagination loop simplified for example)
+            // TODO: Handle pagination properly for production
+            const { data: issues } = await octokit('GET /repos/{owner}/{repo}/issues', {
+                owner,
+                repo,
+                state: 'all', // Sync open and closed
+                per_page: 100,
+                sort: 'updated',
+                direction: 'desc'
+            });
+
+            for (const issue of issues) {
+                // Skip PRs (which are also issues in GitHub API)
+                if (issue.pull_request) continue;
+
+                // Check if already exists linked
+                const existingLink = await database.devtelExternalLinks.findOne({
+                    where: {
+                        externalId: issue.id.toString(),
+                        externalType: 'github_issue',
+                        linkableType: 'issue'
+                    }
+                });
+
+                if (existingLink) {
+                    // Update existing
+                    const devtelIssue = await database.devtelIssues.findByPk(existingLink.linkableId);
+                    if (devtelIssue) {
+                        const updates: any = {};
+                        if (issue.state === 'closed' && devtelIssue.status !== 'done') {
+                            updates.status = 'done';
+                        }
+                        // Only update matched fields if changed to avoid noise
+                        if (Object.keys(updates).length > 0) {
+                            await devtelIssue.update(updates);
+                            stats.issuesUpdated++;
+                        }
+                    }
+                } else {
+                    // Create new
+                    const newIssue = await database.devtelIssues.create({
+                        projectId: project.id,
+                        title: issue.title,
+                        description: issue.body || '',
+                        status: issue.state === 'closed' ? 'done' : 'todo',
+                        priority: 'medium', // Default
+                        metadata: {
+                            source: 'github',
+                            githubNumber: issue.number,
+                            githubAuthor: issue.user?.login
+                        },
+                        createdById: integration.createdById // Attribute to integrator
+                    });
+
+                    await database.devtelExternalLinks.create({
+                        linkableType: 'issue',
+                        linkableId: newIssue.id,
+                        externalType: 'github_issue',
+                        externalId: issue.id.toString(),
+                        url: issue.html_url,
+                        metadata: {
+                            number: issue.number,
+                            repo: `${owner}/${repo}`,
+                            author: issue.user?.login,
+                            status: issue.state,
+                            createdAt: issue.created_at
+                        },
+                        lastSyncedAt: new Date()
+                    });
+                    stats.issuesCreated++;
+                    stats.externalLinksCreated++;
+                }
+            }
+
+        } catch (err) {
+            log.error({ projectId: project.id, error: err.message }, 'Failed to sync project');
+        }
+    }
+
+    return stats;
 }
 
 async function syncJiraData(

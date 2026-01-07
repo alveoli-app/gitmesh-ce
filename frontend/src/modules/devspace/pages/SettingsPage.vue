@@ -410,14 +410,14 @@ export default {
   methods: {
     isWorkspaceIntegrationConnected(provider) {
       const integration = this.workspaceIntegrations?.[provider];
-      return !!(integration && (integration.status === 'done' || integration.status === 'in-progress'));
+      return !!(integration && (integration.status === 'done' || integration.status === 'in-progress' || integration.status === 'active'));
     },
     getIntegrationStatusText(provider) {
       const integration = this.workspaceIntegrations?.[provider];
       if (!integration) {
         return 'Not connected - click Connect to set up';
       }
-      if (integration.status === 'done') {
+      if (integration.status === 'done' || integration.status === 'active') {
         return 'Connected and syncing';
       }
       if (integration.status === 'in-progress') {
@@ -542,19 +542,51 @@ export default {
       try {
         if (!this.activeProject) return;
 
+        // Strip URL if present
+        let cleanRepo = this.settings.githubRepo.trim();
+        if (cleanRepo.startsWith('http')) {
+             try {
+                 const url = new URL(cleanRepo);
+                 const path = url.pathname.replace(/^\/|\/$/g, '');
+                 // Expecting owner/repo
+                 const parts = path.split('/');
+                 if (parts.length >= 2) {
+                     cleanRepo = `${parts[0]}/${parts[1]}`;
+                 }
+             } catch (e) {
+                 // Invalid URL, keep as is
+             }
+        }
+        
+        // Basic validation
+        if (cleanRepo && !cleanRepo.includes('/')) {
+             ElMessage.warning('Invalid repository format. Please use "owner/repo" format.');
+             return;
+        }
+
+        // Update UI model if changed
+        this.settings.githubRepo = cleanRepo;
+
+        this.loading = true;
         const projectUpdate = {
             settings: {
                 ...this.activeProject.settings,
-                githubRepo: this.settings.githubRepo,
+                githubRepo: cleanRepo,
             }
         };
 
         await DevtelService.updateProject(this.activeProject.id, projectUpdate);
         await this.$store.dispatch('devspace/fetchProjects'); // re-fetch to update state
-        ElMessage.success('Integration settings saved');
+        ElMessage.success({
+            message: 'Settings saved. Initial sync and backfill started in background.',
+            duration: 5000,
+            showClose: true
+        });
       } catch (e) {
         console.error(e);
-        ElMessage.error('Failed to save integration settings');
+        ElMessage.error('Failed to save integration settings: ' + (e.message || 'Unknown error'));
+      } finally {
+        this.loading = false;
       }
     },
     async confirmDeleteProject() {

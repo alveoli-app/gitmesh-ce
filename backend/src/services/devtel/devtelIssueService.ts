@@ -159,6 +159,9 @@ export default class DevtelIssueService extends LoggerBase {
                 this.req.io.devtel.emitIssueCreated(projectId, fullIssue)
             }
 
+            // Sync to External Providers
+            await this.syncToExternalProviders(projectId, fullIssue)
+
             this.log.info({ issueId: issue.id }, 'DevtelIssueService.create - SUCCESS')
             return fullIssue
         } catch (error) {
@@ -309,6 +312,9 @@ export default class DevtelIssueService extends LoggerBase {
                 if (data.status === IssueStatus.DONE && oldStatus !== IssueStatus.DONE) {
                     this.triggerVelocityCalculation(projectId, issue.cycleId)
                 }
+
+                // Sync to External Providers
+                await this.syncToExternalProviders(projectId, updatedIssue)
 
                 return updatedIssue
             } catch (error) {
@@ -604,6 +610,111 @@ export default class DevtelIssueService extends LoggerBase {
         // Will be implemented with Temporal workflow
         this.log.info({ projectId, cycleId }, 'Triggering velocity calculation')
         // TODO: Trigger temporal workflow
+    }
+
+    /**
+     * Sync issue with external providers (GitHub)
+     * Checks for Premium overrides first
+     */
+    async syncToExternalProviders(projectId: string, issue: any) {
+        try {
+            // Check for Premium Extension
+            try {
+                // @ts-ignore
+                const premiumSync = await import('../premium/devtel/githubSync')
+                if (premiumSync && premiumSync.syncToExternalProviders) {
+                    this.log.info({ projectId }, 'Delegating sync to Premium Service');
+                    return await premiumSync.syncToExternalProviders(projectId, issue, {
+                        database: this.options.database,
+                        log: this.log,
+                        currentTenant: this.options.currentTenant,
+                        currentUser: this.options.currentUser
+                    });
+                }
+            } catch (ignore) {
+                 // Premium module not found, proceed with CE logic
+            }
+
+            // CE Logic (Normal Sync for Public Repos/Community)
+            const project = await this.options.database.devtelProjects.findByPk(projectId);
+            if (!project?.settings?.githubRepo) return;
+
+             // Find integration
+            const integration = await this.options.database.devtelIntegrations.findOne({
+                where: {
+                    tenantId: this.options.currentTenant.id,
+                    provider: 'github',
+                    deletedAt: null
+                }
+            });
+
+            if (!integration) return;
+
+            const [owner, repo] = project.settings.githubRepo.split('/');
+            if (!owner || !repo) return;
+            
+            // Octokit setup
+            const { request } = require('@octokit/request');
+            
+            const token = integration.credentials?.accessToken || integration.credentials?.token;
+            if(!token) return;
+            
+             const octokit = request.defaults({
+                headers: {
+                    authorization: `token ${token}`,
+                },
+            })
+            
+            // In CE, we default to allowing sync. 
+            // The premium logic specifically handles the "Role Based" and "Private Repo" restrictions.
+            // If the user is on CE, they get basic sync functionality. 
+            // "normal ce should work without it too" implies basic sync works.
+
+            // Link Check
+            const existingLink = await this.options.database.devtelExternalLinks.findOne({
+                where: {
+                    linkableId: issue.id,
+                    externalType: 'github_issue'
+                }
+            });
+
+            if (existingLink) {
+                await octokit('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
+                    owner,
+                    repo,
+                    issue_number: existingLink.metadata.number,
+                    title: issue.title,
+                    body: issue.description,
+                    state: issue.status === 'done' ? 'closed' : 'open'
+                });
+            } else {
+                 if (issue.metadata?.githubNumber) return; 
+
+                const { data: newIssue } = await octokit('POST /repos/{owner}/{repo}/issues', {
+                    owner,
+                    repo,
+                    title: issue.title,
+                    body: issue.description
+                });
+                
+                await this.options.database.devtelExternalLinks.create({
+                        linkableType: 'issue',
+                        linkableId: issue.id,
+                        externalType: 'github_issue',
+                        externalId: newIssue.id.toString(),
+                        url: newIssue.html_url,
+                        metadata: {
+                            number: newIssue.number,
+                            repo: `${owner}/${repo}`,
+                            action: 'synced_to_github'
+                        },
+                        lastSyncedAt: new Date()
+                    });
+            }
+
+        } catch (error) {
+            this.log.error({ projectId, error: error.message }, 'Error syncing to external provider (CE)');
+        }
     }
 
     private broadcastIssueChange(event: string, projectId: string, data: any, extra?: any) {

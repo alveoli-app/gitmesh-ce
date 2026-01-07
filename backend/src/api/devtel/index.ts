@@ -134,6 +134,10 @@ export default (app) => {
         `/tenant/:tenantId/devtel/projects/:projectId/cycles/:cycleId/restore`,
         safeWrap(require('./cycles/cycleRestore').default),
     )
+    app.delete(
+        `/tenant/:tenantId/devtel/projects/:projectId/cycles/:cycleId/permanent`,
+        safeWrap(require('./cycles/cyclePermanentDelete').default),
+    )
     app.get(
         `/tenant/:tenantId/devtel/projects/:projectId/cycles/:cycleId/burndown`,
         safeWrap(require('./cycles/cycleBurndown').default),

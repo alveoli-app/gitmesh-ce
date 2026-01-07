@@ -37,13 +37,15 @@ export default async (req, res) => {
         where,
         include: [
             {
-                model: req.database.users,
+                model: req.database.user,
                 as: 'user',
+                required: false,
                 attributes: ['id', 'fullName', 'email', 'firstName', 'lastName'],
             },
             {
                 model: req.database.devtelIssues,
                 as: 'issue',
+                required: false,
                 where: { deletedAt: null },
                 attributes: ['id', 'title', 'status', 'priority', 'estimatedHours'],
             },

@@ -145,11 +145,19 @@ const actions = {
     },
 
     async deleteCycle({ commit, rootState }, cycleId) {
+        console.log('[Cycles Store] deleteCycle action called with cycleId:', cycleId);
         const projectId = rootState.devspace.activeProject?.id;
-        if (!projectId) throw new Error('No active project');
+        if (!projectId) {
+            console.error('[Cycles Store] No active project');
+            throw new Error('No active project');
+        }
 
-        await DevtelService.deleteCycle(projectId, cycleId);
+        console.log('[Cycles Store] Calling DevtelService.deleteCycle with projectId:', projectId, 'cycleId:', cycleId);
+        const result = await DevtelService.deleteCycle(projectId, cycleId);
+        console.log('[Cycles Store] DevtelService.deleteCycle returned:', result);
         commit('REMOVE_CYCLE', cycleId);
+        console.log('[Cycles Store] REMOVE_CYCLE committed');
+        return result;
     },
 
     async selectCycle({ commit, rootState }, cycleId) {

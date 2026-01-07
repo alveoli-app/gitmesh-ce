@@ -23,6 +23,6 @@
     "@gitmesh/logging": "file:../logging",
     "@gitmesh/types": "file:../types",
     "@gitmesh/redis": "file:../redis",
-    "unleash-client": "^3.18.1"
+    "unleash-client": "^6.9.0"
   }
 }

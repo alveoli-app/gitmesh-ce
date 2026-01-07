@@ -302,6 +302,9 @@ setImmediate(async () => {
   await createApiToken(UNLEASH_CONFIG.frontendApiKey, 'frontend-token', 'frontend')
   await createApiToken(UNLEASH_CONFIG.backendApiKey, 'backend-token', 'client')
 
+  // Configure CORS origins for frontend API access
+  await configureCorsOrigins(['http://localhost:8081', 'http://localhost:3000'])
+
   const allContextFields = Object.values(UnleashContextField)
   for (const field of allContextFields) {
     await createContextField(field)
@@ -343,6 +346,44 @@ async function createApiToken(token: string, name: string, type: string): Promis
     )
   } else {
     log.info(`${name} token found!`)
+  }
+}
+
+async function configureCorsOrigins(origins: string[]): Promise<void> {
+  log.info('Configuring CORS origins for frontend API...')
+  
+  // Check if settings table exists and has front-end-api-origin setting
+  try {
+    const results = await seq.query(
+      `select * from settings where name = 'frontendApiOrigins'`,
+      { type: QueryTypes.SELECT },
+    )
+    
+    const originsJson = JSON.stringify(origins)
+    
+    if (results.length === 0) {
+      log.info('CORS origins not configured - creating...')
+      await seq.query(
+        `insert into settings(name, content) values ('frontendApiOrigins', :origins)`,
+        {
+          replacements: { origins: originsJson },
+          type: QueryTypes.INSERT,
+        },
+      )
+    } else {
+      log.info('CORS origins found - updating...')
+      await seq.query(
+        `update settings set content = :origins where name = 'frontendApiOrigins'`,
+        {
+          replacements: { origins: originsJson },
+          type: QueryTypes.UPDATE,
+        },
+      )
+    }
+    log.info(`CORS origins configured: ${origins.join(', ')}`)
+  } catch (err) {
+    log.warn('Could not configure CORS origins via database, may need manual configuration')
+    log.warn(err)
   }
 }
 

@@ -15,31 +15,40 @@ export default async (req, res) => {
     const workspace = await workspaceService.getForCurrentTenant()
 
     // Get all users with their assigned hours
-    const users = await req.database.users.findAll({
-        where: { tenantId: req.currentTenant.id },
+    const users = await req.database.user.findAll({
+        include: [
+            {
+                model: req.database.tenantUser,
+                as: 'tenants',
+                where: { tenantId: req.currentTenant.id },
+                attributes: [],
+            },
+        ],
         attributes: ['id', 'fullName', 'email', 'firstName', 'lastName'],
     })
 
     // Get assignments for each user
     const userIds = users.map(u => u.id)
-    const assignments = await req.database.devtelIssueAssignments.findAll({
+    const assignments = userIds.length > 0 ? await req.database.devtelIssueAssignments.findAll({
         where: { userId: userIds },
         include: [
             {
                 model: req.database.devtelIssues,
                 as: 'issue',
+                required: false,
                 where: { deletedAt: null },
                 attributes: ['id', 'title', 'status', 'estimatedHours', 'cycleId'],
                 include: [
                     {
                         model: req.database.devtelCycles,
                         as: 'cycle',
+                        required: false,
                         attributes: ['id', 'name', 'startDate', 'endDate', 'status'],
                     },
                 ],
             },
         ],
-    })
+    }) : []
 
     // Group assignments by user
     const userCapacity = users.map(user => {
@@ -68,7 +77,7 @@ export default async (req, res) => {
     })
 
     await req.responseHandler.success(req, res, {
-        workspace: workspace.get({ plain: true }),
+        workspace: workspace?.get({ plain: true }) || null,
         capacity: userCapacity,
     })
 }

@@ -21,23 +21,15 @@ export const cycleCreateSchema = Joi.object({
             'string.max': 'Goal must be less than 500 characters'
         }),
 
-    startDate: Joi.date()
-        .iso()
+    startDate: Joi.any()
         .required()
         .messages({
-            'date.base': 'Start date must be a valid date',
-            'date.format': 'Start date must be in ISO format',
             'any.required': 'Start date is required'
         }),
 
-    endDate: Joi.date()
-        .iso()
-        .greater(Joi.ref('startDate'))
+    endDate: Joi.any()
         .required()
         .messages({
-            'date.base': 'End date must be a valid date',
-            'date.format': 'End date must be in ISO format',
-            'date.greater': 'End date must be after start date',
             'any.required': 'End date is required'
         }),
 

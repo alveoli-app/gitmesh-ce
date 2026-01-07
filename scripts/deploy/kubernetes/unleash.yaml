@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: unleash
-          image: unleashorg/unleash-server:latest
+          image: unleashorg/unleash-server:6.9
           env:
             - name: DATABASE_HOST
               valueFrom:

@@ -219,9 +219,17 @@ export default class DevtelService {
     static async createCycle(projectId, data) {
         return withErrorHandling(async () => {
             const tenantId = getTenantId();
+            console.log('[DevtelService] createCycle input data:', data);
+            // Convert Date objects to ISO strings for backend validation
+            const payload = {
+                ...data,
+                startDate: data.startDate ? (data.startDate instanceof Date ? data.startDate.toISOString() : data.startDate) : null,
+                endDate: data.endDate ? (data.endDate instanceof Date ? data.endDate.toISOString() : data.endDate) : null,
+            };
+            console.log('[DevtelService] createCycle payload:', payload);
             const response = await authAxios.post(
                 `/tenant/${tenantId}/devtel/projects/${projectId}/cycles`,
-                data
+                payload
             );
             return response.data;
         }, 'Create Cycle');
@@ -239,11 +247,14 @@ export default class DevtelService {
     }
 
     static async deleteCycle(projectId, cycleId) {
+        console.log('[DevtelService] deleteCycle called with projectId:', projectId, 'cycleId:', cycleId);
         return withErrorHandling(async () => {
             const tenantId = getTenantId();
+            console.log('[DevtelService] Making DELETE request to:', `/tenant/${tenantId}/devtel/projects/${projectId}/cycles/${cycleId}`);
             const response = await authAxios.delete(
                 `/tenant/${tenantId}/devtel/projects/${projectId}/cycles/${cycleId}`
             );
+            console.log('[DevtelService] DELETE response:', response.data);
             return response.data;
         }, 'Delete Cycle');
     }
@@ -265,6 +276,16 @@ export default class DevtelService {
             );
             return response.data;
         }, 'Restore Cycle');
+    }
+
+    static async permanentDeleteCycle(projectId, cycleId) {
+        return withErrorHandling(async () => {
+            const tenantId = getTenantId();
+            const response = await authAxios.delete(
+                `/tenant/${tenantId}/devtel/projects/${projectId}/cycles/${cycleId}/permanent`
+            );
+            return response.data;
+        }, 'Permanently Delete Cycle');
     }
 
     static async getCycleBurndown(projectId, cycleId) {

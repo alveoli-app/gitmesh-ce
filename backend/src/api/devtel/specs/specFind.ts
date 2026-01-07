@@ -21,7 +21,7 @@ export default async (req, res) => {
         },
         include: [
             {
-                model: req.database.users,
+                model: req.database.user,
                 as: 'author',
                 attributes: ['id', 'fullName', 'email', 'firstName', 'lastName'],
             },

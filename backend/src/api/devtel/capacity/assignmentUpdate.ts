@@ -31,7 +31,7 @@ export default async (req, res) => {
         where: { id: assignmentId },
         include: [
             {
-                model: req.database.users,
+                model: req.database.user,
                 as: 'user',
                 attributes: ['id', 'fullName', 'email'],
             },

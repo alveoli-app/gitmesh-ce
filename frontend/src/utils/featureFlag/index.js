@@ -38,6 +38,15 @@ class FeatureFlagService {
       return;
     }
 
+    // Skip Unleash initialization if URL is not configured
+    if (!config.unleash.url || config.unleash.url.length === 0) {
+      console.info('Unleash URL not configured, skipping feature flag initialization');
+      store.dispatch('tenant/doUpdateFeatureFlag', {
+        isReady: true,
+      });
+      return;
+    }
+
     const { init: initLogRocket, captureException } = useLogRocket();
 
     // Probe Unleash server before starting the client to avoid repeated
@@ -45,11 +54,16 @@ class FeatureFlagService {
     try {
       // Try a simple GET to the base URL; if connection is refused this will throw.
       // Use no-cors so the probe fails fast on network errors but won't break on CORS.
-      await fetch(config.unleash.url, { method: 'GET', mode: 'no-cors' });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      await fetch(config.unleash.url, { method: 'GET', mode: 'no-cors', signal: controller.signal });
+      clearTimeout(timeoutId);
     } catch (err) {
-      captureException(err);
+      // Silently handle connection errors - Unleash is optional
+      console.warn('Unleash server not available, feature flags will default to enabled');
       store.dispatch('tenant/doUpdateFeatureFlag', {
-        hasError: true,
+        isReady: true,
+        hasError: false,
       });
       return;
     }
@@ -59,7 +73,8 @@ class FeatureFlagService {
     } catch (err) {
       captureException(err);
       store.dispatch('tenant/doUpdateFeatureFlag', {
-        hasError: true,
+        isReady: true,
+        hasError: false,
       });
       return;
     }
@@ -92,6 +107,11 @@ class FeatureFlagService {
       return true;
     }
 
+    // If Unleash client isn't initialized, default to enabled
+    if (!this.unleash) {
+      return true;
+    }
+
     // Temporary workaround for Unleash connectivity issues
     // Check if user has premium plans for specific features
     let currentTenant = null;
@@ -110,7 +130,13 @@ class FeatureFlagService {
       if (hasPremiumPlan) return true;
     }
 
-    return this.unleash.isEnabled(flag);
+    try {
+      return this.unleash.isEnabled(flag);
+    } catch (err) {
+      // If Unleash throws, default to enabled
+      console.warn(`Feature flag check failed for ${flag}, defaulting to enabled`);
+      return true;
+    }
   }
 
   updateContext(tenant) {

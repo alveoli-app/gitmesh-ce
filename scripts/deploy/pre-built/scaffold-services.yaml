@@ -108,7 +108,7 @@ services:
 
   # default user credentials: admin:unleash4all
   unleash:
-    image: unleashorg/unleash-server:latest
+    image: unleashorg/unleash-server:6.9
     restart: always
     depends_on:
       unleash-db:

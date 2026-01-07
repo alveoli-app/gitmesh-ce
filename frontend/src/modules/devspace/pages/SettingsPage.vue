@@ -392,11 +392,13 @@ export default {
     },
     // React to project changes in the global dropdown
     activeProject: {
+      immediate: true,
       deep: true,
       handler(newVal, oldVal) {
         // Only fetch if project ID actually changed to avoid cycles or unnecessary reloads
-        if (newVal?.id !== oldVal?.id) {
-          this.fetchSettings();
+        // Also trigger on initial load when oldVal is undefined
+        if (newVal && (oldVal === undefined || newVal?.id !== oldVal?.id)) {
+          this.populateSettingsFromProject(newVal);
         }
       }
     }
@@ -408,6 +410,17 @@ export default {
     }
   },
   methods: {
+    populateSettingsFromProject(project) {
+      if (!project) return;
+      
+      this.settings.projectName = project.name || '';
+      this.settings.projectKey = project.prefix || '';
+      this.settings.projectDescription = project.description || '';
+      this.settings.cycleLength = project.settings?.cycleLength || 14;
+      this.settings.storyPointScale = project.settings?.storyPointScale || 'fibonacci';
+      this.settings.githubRepo = project.settings?.githubRepo || '';
+      this.projectData = project;
+    },
     isWorkspaceIntegrationConnected(provider) {
       const integration = this.workspaceIntegrations?.[provider];
       return !!(integration && (integration.status === 'done' || integration.status === 'in-progress' || integration.status === 'active'));
@@ -429,20 +442,6 @@ export default {
       this.$router.push('/integrations');
     },
     async fetchSettings() {
-      // Don't wait for workspaceId watcher, if activeProject exists, use it immediately
-      if (this.activeProject) {
-        // Initialize with project data first so UI isn't blank
-        this.settings = {
-          projectName: this.activeProject.name || '',
-          projectKey: this.activeProject.prefix || '',
-          projectDescription: this.activeProject.description || '',
-          cycleLength: this.activeProject.settings?.cycleLength || 14,
-          storyPointScale: this.activeProject.settings?.storyPointScale || 'fibonacci',
-          githubRepo: this.activeProject.settings?.githubRepo || '',
-        };
-        this.projectData = this.activeProject;
-      }
-
       if (!this.workspaceId) return;
       
       this.loading = true;
@@ -468,11 +467,15 @@ export default {
           this.workspaceData = generalSettings;
         }
 
-        // Re-apply project settings (case where activeProject might have updated during fetch)
-        if (this.activeProject) {
+        // Apply workspace-level defaults if project settings don't override them
+        if (this.activeProject && generalSettings) {
             const workspaceSettings = generalSettings?.workspaceSettings || {};
-            this.settings.cycleLength = this.activeProject.settings?.cycleLength || workspaceSettings.defaultCycleLength || 14;
-            this.settings.storyPointScale = this.activeProject.settings?.storyPointScale || workspaceSettings.storyPointScale || 'fibonacci';
+            if (!this.activeProject.settings?.cycleLength) {
+              this.settings.cycleLength = workspaceSettings.defaultCycleLength || 14;
+            }
+            if (!this.activeProject.settings?.storyPointScale) {
+              this.settings.storyPointScale = workspaceSettings.storyPointScale || 'fibonacci';
+            }
         }
 
       } catch (e) {

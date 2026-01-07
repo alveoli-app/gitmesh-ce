@@ -59,9 +59,7 @@
       v-else-if="!isLoading && filteredIssues.length === 0"
       icon="ri-file-list-3-line"
       title="No issues in backlog"
-      description="Start by creating your first issue. Use the quick create input above or click the button below."
-      action-text="Create Issue"
-      @action="$emit('create-issue')"
+      description="Start by creating your first issue."
     />
 
     <!-- Issues Table -->

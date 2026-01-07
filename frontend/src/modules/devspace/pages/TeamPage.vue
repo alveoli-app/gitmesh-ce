@@ -124,17 +124,7 @@
         <el-empty description="No team members found">
           <template #description>
             <p>No team members found in contacts.</p>
-            <p class="empty-hint">
-              You can add team members in two ways:
-            </p>
-            <ul class="empty-options">
-              <li>Click "Add Team Member" to create a new contact as a team member</li>
-              <li>Go to <router-link :to="{ name: 'member' }">Contacts</router-link> and mark existing contacts as team members</li>
-            </ul>
           </template>
-          <el-button type="primary" @click="showAddMemberDialog = true">
-            <i class="ri-user-add-line"></i> Add Team Member
-          </el-button>
         </el-empty>
       </div>
 

@@ -13,7 +13,7 @@
       <div class="header-actions">
         <connection-status class="mr-3" />
         <el-button 
-          v-if="!isSettingsPage"
+          v-if="!isSettingsPage && activeProjectId"
           type="primary" 
           icon="ri-add-line"
           @click="openNewIssueModal"

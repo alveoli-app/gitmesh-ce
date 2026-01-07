@@ -1,7 +1,17 @@
 <template>
   <div class="board-page devspace-page">
-    <!-- Page Header -->
-    <div class="page-header">
+    <!-- No Project State -->
+    <div v-if="!hasActiveProject" class="no-project-state">
+      <div class="no-project-content">
+        <i class="ri-folder-add-line no-project-icon"></i>
+        <h2>No Project Connected</h2>
+        <p>Connect a project to start tracking work on your board.</p>
+      </div>
+    </div>
+
+    <template v-else>
+      <!-- Page Header -->
+      <div class="page-header">
       <div class="header-left">
         <span class="issue-count" v-if="total > 0">{{ total }} issues</span>
       </div>
@@ -189,6 +199,7 @@
           <issue-detail-panel :issue-id="selectedIssue.id" />
       </div>
     </el-drawer>
+    </template>
   </div>
 </template>
 
@@ -755,5 +766,39 @@ export default {
 
 :deep(.issue-drawer .el-drawer__close-btn:hover) {
   color: var(--el-text-color-primary);
+}
+
+/* No Project State */
+.no-project-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px;
+}
+
+.no-project-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.no-project-icon {
+  font-size: 64px;
+  color: var(--el-text-color-placeholder);
+  margin-bottom: 24px;
+}
+
+.no-project-content h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--el-text-color-primary);
+}
+
+.no-project-content p {
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  margin: 0 0 24px 0;
+  line-height: 1.6;
 }
 </style>

@@ -1,25 +1,35 @@
 <template>
   <div class="cycles-page devspace-page">
-    <div class="page-header">
-      <h1>Cycles</h1>
-      <div class="header-actions">
-        <el-button size="small" @click="refreshCycles" :loading="isRefreshing">
-          <i class="ri-refresh-line"></i>
-          Refresh
-        </el-button>
-        <el-button size="small" @click="$router.push('/devspace/cycles/archived')">
-          <i class="ri-inbox-archive-line"></i>
-          View Archive
-        </el-button>
-        <el-button type="primary" size="small" @click="showCreateCycleModal = true">
-          <i class="ri-add-line"></i>
-          New Cycle
-        </el-button>
+    <!-- No Project Connected State -->
+    <div v-if="!activeProjectId" class="no-project-state">
+      <div class="no-project-content">
+        <i class="ri-folder-add-line no-project-icon"></i>
+        <h2>No Project Connected</h2>
+        <p>Connect a project to start managing cycles and sprints.</p>
       </div>
     </div>
+
+    <template v-else>
+      <div class="page-header">
+        <h1>Cycles</h1>
+        <div class="header-actions">
+          <el-button size="small" @click="refreshCycles" :loading="isRefreshing">
+            <i class="ri-refresh-line"></i>
+            Refresh
+          </el-button>
+          <el-button size="small" @click="$router.push('/devspace/cycles/archived')">
+            <i class="ri-inbox-archive-line"></i>
+            View Archive
+          </el-button>
+          <el-button type="primary" size="small" @click="showCreateCycleModal = true">
+            <i class="ri-add-line"></i>
+            New Cycle
+          </el-button>
+        </div>
+      </div>
     
-    <!-- Active Cycle -->
-    <div class="active-cycle-section" v-if="activeCycle">
+      <!-- Active Cycle -->
+      <div class="active-cycle-section" v-if="activeCycle">
       <h2>Active Sprint</h2>
       <div class="cycle-card active">
         <div class="cycle-header">
@@ -74,8 +84,8 @@
       </div>
     </div>
     
-    <!-- Planned Cycles -->
-    <div class="cycle-section">
+      <!-- Planned Cycles -->
+      <div class="cycle-section">
       <h2>Planned</h2>
       <div class="cycles-grid">
         <div v-for="cycle in plannedCycles" :key="cycle.id" class="cycle-card">
@@ -121,8 +131,8 @@
       </div>
     </div>
     
-    <!-- Completed Cycles -->
-    <div class="cycle-section">
+      <!-- Completed Cycles -->
+      <div class="cycle-section">
       <h2>Completed</h2>
       <div class="cycles-grid">
         <div v-for="cycle in completedCycles" :key="cycle.id" class="cycle-card completed">
@@ -161,8 +171,8 @@
       </div>
     </div>
 
-    <!-- Charts Section -->
-    <div class="charts-section" v-if="activeCycle || completedCycles.length">
+      <!-- Charts Section -->
+      <div class="charts-section" v-if="activeCycle || completedCycles.length">
       <h2>Analytics</h2>
       <div class="charts-grid">
         <BurndownChart 
@@ -179,8 +189,8 @@
       </div>
     </div>
 
-    <!-- Create Cycle Modal -->
-    <el-dialog v-model="showCreateCycleModal" title="Create Cycle" width="500px">
+      <!-- Create Cycle Modal -->
+      <el-dialog v-model="showCreateCycleModal" title="Create Cycle" width="500px">
       <el-form :model="newCycle" label-position="top">
         <el-form-item label="Name" required>
           <el-input v-model="newCycle.name" placeholder="Sprint 1" />
@@ -207,8 +217,8 @@
       </template>
     </el-dialog>
 
-    <!-- Sprint Planning Modal -->
-    <sprint-planning-modal
+      <!-- Sprint Planning Modal -->
+      <sprint-planning-modal
         v-if="planningCycle"
         v-model="showPlanningModal"
         :cycle="planningCycle"
@@ -216,8 +226,8 @@
         @saved="handlePlanSaved"
     />
 
-    <!-- Edit Cycle Modal -->
-    <el-dialog v-model="showEditCycleModal" title="Edit Cycle" width="500px">
+      <!-- Edit Cycle Modal -->
+      <el-dialog v-model="showEditCycleModal" title="Edit Cycle" width="500px">
       <el-form v-if="editingCycle" :model="editingCycle" label-position="top">
         <el-form-item label="Name" required>
           <el-input v-model="editingCycle.name" placeholder="Sprint 1" />
@@ -247,8 +257,8 @@
       </template>
     </el-dialog>
 
-    <!-- View Cycle Details Modal -->
-    <el-dialog v-model="showViewCycleModal" :title="viewingCycle?.name" width="600px">
+      <!-- View Cycle Details Modal -->
+      <el-dialog v-model="showViewCycleModal" :title="viewingCycle?.name" width="600px">
       <div v-if="viewingCycle" class="cycle-details">
         <div class="detail-section">
           <h4>Overview</h4>
@@ -322,7 +332,8 @@
         <el-button @click="showViewCycleModal = false">Close</el-button>
         <el-button type="primary" @click="editCycle(viewingCycle)">Edit</el-button>
       </template>
-    </el-dialog>
+      </el-dialog>
+    </template>
   </div>
 </template>
 
@@ -953,5 +964,39 @@ export default {
   color: var(--el-text-color-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* No Project State */
+.no-project-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px;
+}
+
+.no-project-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.no-project-icon {
+  font-size: 64px;
+  color: var(--el-text-color-placeholder);
+  margin-bottom: 24px;
+}
+
+.no-project-content h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--el-text-color-primary);
+}
+
+.no-project-content p {
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  margin: 0 0 24px 0;
+  line-height: 1.6;
 }
 </style>

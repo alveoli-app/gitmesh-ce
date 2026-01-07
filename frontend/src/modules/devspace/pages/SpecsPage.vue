@@ -4,6 +4,7 @@
       <h1>Specs & Documentation</h1>
       <div class="header-actions">
         <el-input
+          v-if="projectId"
           v-model="searchQuery"
           placeholder="Search specs..."
           prefix-icon="Search"
@@ -11,7 +12,7 @@
           style="width: 240px"
           @input="handleSearch"
         />
-        <el-button type="primary" @click="showCreateModal = true">
+        <el-button v-if="projectId" type="primary" @click="showCreateModal = true">
           <el-icon><Plus /></el-icon>
           New Spec
         </el-button>

@@ -3,8 +3,6 @@ import Layout from '@/modules/layout/components/layout.vue';
 // Lazy-loaded page components
 const DevtelLayout = () => import('@/modules/devspace/pages/DevtelLayout.vue');
 const OverviewPage = () => import('@/modules/devspace/pages/OverviewPage.vue');
-const TelemetryPage = () => import('@/modules/devspace/pages/TelemetryPage.vue');
-const ReportListPage = () => import('@/modules/report/pages/report-list-page.vue');
 const BoardPage = () => import('@/modules/devspace/pages/BoardPage.vue');
 const BacklogPage = () => import('@/modules/devspace/pages/BacklogPage.vue');
 const CyclesPage = () => import('@/modules/devspace/pages/CyclesPage.vue');
@@ -13,6 +11,7 @@ const CapacityPage = () => import('@/modules/devspace/pages/CapacityPage.vue');
 const SpecsPage = () => import('@/modules/devspace/pages/SpecsPage.vue');
 const TeamPage = () => import('@/modules/devspace/pages/TeamPage.vue');
 const SettingsPage = () => import('@/modules/devspace/pages/SettingsPage.vue');
+const ReportListPage = () => import('@/modules/report/pages/report-list-page.vue');
 
 export default [
     {
@@ -30,12 +29,6 @@ export default [
                         path: 'overview',
                         component: OverviewPage,
                         meta: { auth: true, title: 'Project Overview' },
-                    },
-                    {
-                        name: 'devspace-devtel',
-                        path: 'devtel',
-                        component: ReportListPage,
-                        meta: { auth: true, title: 'Devtel' },
                     },
                     {
                         name: 'devspace-board',
@@ -78,6 +71,12 @@ export default [
                         path: 'team',
                         component: TeamPage,
                         meta: { auth: true, title: 'Team' },
+                    },
+                    {
+                        name: 'devspace-devtel',
+                        path: 'devtel',
+                        component: ReportListPage,
+                        meta: { auth: true, title: 'Devtel' },
                     },
                     {
                         name: 'devspace-project-settings',

@@ -48,8 +48,8 @@ export const devspaceMenu: MenuLink[] = [
   devspaceLinks.capacity,
   devspaceLinks.specs,
   devspaceLinks.team,
-  devspaceLinks.projectSettings,
   devspaceLinks.devtel,
+  devspaceLinks.projectSettings,
 ];
 
 // Backwards-compatible exports (default to Signals menus)

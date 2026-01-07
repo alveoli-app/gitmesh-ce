@@ -13,7 +13,7 @@
         <div class="max-w-5xl mx-5 w-full">
           <router-link
             class="text-zinc-400 btn-link--md btn-link--secondary p-0 inline-flex items-center mb-2"
-            :to="{ path: '/devtel' }"
+            :to="{ path: '/devspace/devtel' }"
           >
             <i class="ri-arrow-left-s-line mr-2" />Reports
           </router-link>

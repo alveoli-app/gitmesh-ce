@@ -16,7 +16,7 @@
       <div class="max-w-5xl mx-auto px-8 pb-6">
         <router-link
           class="btn-link--sm btn-link--secondary inline-flex items-center mb-3.5"
-          :to="{ path: '/devtel' }"
+          :to="{ path: '/devspace/devtel' }"
         >
           <i
             class="ri-arrow-left-s-line mr-2"

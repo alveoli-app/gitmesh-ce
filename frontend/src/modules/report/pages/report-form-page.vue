@@ -9,7 +9,7 @@
       <div class="flex items-center justify-between">
         <router-link
           class="text-gray-300 btn-link--md btn-link--secondary p-0 inline-flex items-center"
-          :to="{ path: '/devtel' }"
+          :to="{ path: '/devspace/devtel' }"
         >
           <i class="ri-arrow-left-s-line mr-2" />Reports
         </router-link>
@@ -92,7 +92,7 @@ export default {
     }),
 
     doCancel() {
-      this.$router.push('/devtel');
+      this.$router.push('/devspace/devtel');
     },
   },
 };

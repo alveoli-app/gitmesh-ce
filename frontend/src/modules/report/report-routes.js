@@ -1,7 +1,6 @@
 import Layout from '@/modules/layout/components/layout.vue';
 import Permissions from '@/security/permissions';
 
-const ReportListPage = () => import('@/modules/report/pages/report-list-page.vue');
 const ReportFormPage = () => import('@/modules/report/pages/report-form-page.vue');
 const ReportViewPage = () => import('@/modules/report/pages/report-view-page.vue');
 const ReportTemplatePage = () => import(
@@ -14,23 +13,13 @@ const ReportViewPagePublic = () => import(
 export default [
   {
     name: '',
-    path: '/devtel',
+    path: '/devspace/devtel',
     component: Layout,
     meta: { auth: true, title: 'Reports' },
     children: [
       {
-        name: 'report',
-        path: '/devtel',
-        component: ReportListPage,
-        meta: {
-          auth: true,
-          permission: Permissions.values.reportRead,
-          badge: 'BETA',
-        },
-      },
-      {
         name: 'reportTemplate',
-        path: '/devtel/default/:id',
+        path: 'default/:id',
         component: ReportTemplatePage,
         meta: {
           auth: true,
@@ -40,7 +29,7 @@ export default [
       },
       {
         name: 'reportEdit',
-        path: '/devtel/:id/edit',
+        path: ':id/edit',
         component: ReportFormPage,
         meta: {
           auth: true,
@@ -50,7 +39,7 @@ export default [
       },
       {
         name: 'reportView',
-        path: '/devtel/:id',
+        path: ':id',
         component: ReportViewPage,
         meta: {
           auth: true,
@@ -62,7 +51,7 @@ export default [
   },
   {
     name: 'reportPublicView',
-    path: '/tenant/:tenantId/devtel/:id/public',
+    path: '/tenant/:tenantId/devspace/devtel/:id/public',
     component: ReportViewPagePublic,
     props: true,
   },

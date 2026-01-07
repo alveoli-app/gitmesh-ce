@@ -68,7 +68,7 @@ const viewReportGuide: QuickstartGuide = {
   body: 'Explore ready-made reports for deeper community insights.',
   videoLink: '', // Video to be added later
   learnMoreLink: '', // Video to be added later
-  buttonLink: '/devtel',
+  buttonLink: '/devspace/devtel',
   buttonText: 'Explore reports',
   completed: false,
 }

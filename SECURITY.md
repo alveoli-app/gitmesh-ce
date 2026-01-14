@@ -47,9 +47,9 @@ If you discover or suspect a security vulnerability in **GitMesh EE**, do **not*
 
 Instead, report EE issues directly and only to:
 
-* **CTO of Alveoli – Security Contact for EE**
-  **Name:** Ronit Raj
-  **Email:** `ronitk964@gmail.com`
+* **CEO of Alveoli – Security Contact for EE**
+  **Name:** Ryan Madhuwala
+  **Email:** `rawx18.dev@gmail.com`
 
 EE issues are handled solely through Alveoli’s internal security and engineering processes.
 
@@ -180,16 +180,16 @@ GitMesh EE is:
 * Not open source and not licensed under Apache License 2.0
 * Governed by terms defined by Alveoli for the use of EE
 
-All EE security issues must be reported **only** to the **CTO of Alveoli**:
+All EE security issues must be reported **only** to the **CEO of Alveoli**:
 
-* **EE Security Contact – CTO of Alveoli**: `ronitk964@gmail.com`
+* **EE Security Contact – CEO of Alveoli**: `rawx18.dev@gmail.com`
 
 No rights to inspect, modify, or redistribute GitMesh EE are granted beyond those explicitly permitted by Alveoli. All rights, title, and interest in GitMesh EE, including all intellectual property rights, remain solely with Alveoli.
 
 If any GitMesh EE code is ever inadvertently included in or distributed with GitMesh CE, that code remains the exclusive proprietary property of Alveoli. It must not be used, executed, copied, modified, incorporated, or redistributed for any reason. Any such discovery should be reported immediately:
 
 * For CE repositories or artifacts: to the **Lab Leader** (`rawx18.dev@gmail.com`)
-* For EE code concerns: to the **CTO of Alveoli** (`ronitk964@gmail.com`)
+* For EE code concerns: to the **CEO of Alveoli** (`rawx18.dev@gmail.com`)
 
 All recipients must remove the affected material from all systems, repositories, forks, mirrors, backups, and distributions upon discovery. The accidental presence of Enterprise Edition code in any CE repository or distribution does not grant any license or permission to use it in any way.
 
@@ -214,8 +214,8 @@ Users should keep GitMesh, underlying operating systems, and related infrastruct
 * **GitMesh CE Security – Lab Leader (Ryan Madhuwala)**
   `rawx18.dev@gmail.com`
 
-* **GitMesh EE Security – CTO of Alveoli (Ronit Raj)**
-  `ronitk964@gmail.com`
+* **GitMesh EE Security – CTO of Alveoli (Ryan Madhuwala)**
+  `rawx18.dev@gmail.com`
 
 * **LFDT (Escalation for CE only)**
   `support@lfdecentralizedtrust.org`

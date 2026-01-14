@@ -1,83 +1,149 @@
-# Contributing to GitMesh
+# Contributing to GitMesh (Community Edition)
 
-Thank you for your interest in contributing to GitMesh! This document provides guidelines for contributing to the project.
+This document describes the minimal rules and workflow for contributing to GitMesh Community Edition.
 
-## Developer Certificate of Origin (DCO)
+---
 
-All commits must include a "Signed-off-by" line to certify that you have the right to submit the code under the project's license. This is done using the Developer Certificate of Origin (DCO).
+## Commit sign-off (DCO)
 
-To sign your commits, use the `-s` flag with git commit:
+All commits **must** be signed off using the Developer Certificate of Origin (DCO).
 
-```shell
-git commit -s -m "Your commit message"
-```
+Create a signed commit:
+```bash
+git commit -s -m "your commit message"
+````
 
-This will add a line like:
-```
-Signed-off-by: Your Name <your.email@example.com>
-```
+Fix a missing sign-off on the last commit:
 
-**Important:** All commits in your PR must have DCO sign-off. PRs without proper sign-off will not pass the required DCO check.
-
-If you forget to sign your commits, you can amend your last commit with:
-```shell
+```bash
 git commit --amend -s
 ```
 
-To sign multiple commits in your branch, you have two common options:
+Sign multiple commits:
 
-- Rebase onto your base branch (replace `main` with your actual base branch, e.g., `main`, `master`, `develop`):
-  ```shell
-  git rebase --signoff main
-  ```
-- Or rebase only the last N commits (replace `N` with the number of commits you want to sign):
-  ```shell
-  git rebase --signoff HEAD~N
-  ```
-
-**Note:** Rebasing can cause conflicts. Resolve any conflicts as they appear and continue the rebase with `git rebase --continue`.
-
-## Getting Started
-
-1. Get the mono repo from GitHub
-
-```shell
-git clone [YOUR_REPOSITORY_URL]
+```bash
+git rebase --signoff main
+# or
+git rebase --signoff HEAD~N
 ```
 
-2. Run the start script:
+Pull requests without valid sign-off will be rejected.
 
-```shell
-cd scripts
-./cli prod
-```
+---
 
-For hot reloading, you can run:
-```shell
+## Local development
+
+### Prerequisites
+
+* Node.js (LTS)
+* Docker + Docker Compose
+* Git
+
+### Setup
+
+```bash
+git clone <your-fork-url>
+cd gitmesh
 cd scripts
 ./cli clean-dev
 ```
 
-The app will be available at http://localhost:8081
+### Environment files
 
-### Running services individually
+Both frontend and backend require the following environment configuration files:
 
-To optimize resource usage during development, we would suggest starting only the necessary services and leveraging hot reloading where applicable. 
+**Backend & Frontend `.env` files:**
+* `.env.dist.local` - Distribution template for local development
+* `.env.dist.composed` - Distribution template for Docker Compose
+* `.env.override.local` - Local overrides (for local development)
+* `.env.override.composed` - Overrides for Docker Compose
 
-1. Start the scaffold service, including the necessary components like the database, etc:
+The application runs at:
 
-```shell
-./cli scaffold up 
+```
+http://localhost:8081
 ```
 
-This will set up the foundational services required for the project.
+### Running fewer services
 
-2. If you are primarily working on the frontend but also need the API without hot reloading:
+To reduce resource usage:
 
-
-```shell
+```bash
+./cli scaffold up
 DEV=1 ./cli service frontend up
 ./cli service api up
 ```
 
-By selectively starting the frontend and API services without enabling hot reloading, helps reduce resource usage. 
+---
+
+## Vibe coding (optional)
+
+If you use agent-based or IDE-assisted “vibe coding”, GitMesh provides helper scripts that create local symlinks.
+
+Enable:
+
+```bash
+./gitmesh/setup-vibe.sh
+```
+
+Disable / clean up:
+
+```bash
+./gitmesh/remove-vibe.sh
+```
+
+These scripts modify your local workspace only.
+Do **not** commit generated symlinks or agent artifacts.
+Always review generated code carefully before committing.
+
+---
+
+## Contributing workflow
+
+1. Fork the repository
+2. Create a branch:
+
+   ```bash
+   git checkout -b type/short-description
+   ```
+3. Make changes and commit with sign-off:
+
+   ```bash
+   git commit -s -m "clear commit message"
+   ```
+4. Push to your fork:
+
+   ```bash
+   git push origin type/short-description
+   ```
+5. Open a pull request to the upstream repository
+
+---
+
+## Pull request expectations
+
+* Keep PRs small and focused
+* Explain what changed and why
+* Include testing or reproduction steps when relevant
+* Avoid committing local configs, symlinks, or temp files
+
+---
+
+## Staying up to date
+
+```bash
+git stash
+git pull origin main
+git stash pop
+```
+
+---
+
+## Getting help
+
+* GitHub Issues: bugs, features, technical discussion
+* Discord: real-time help and coordination
+
+---
+
+By contributing, you agree that your work is licensed under the project’s Apache 2.0 license and complies with the DCO.

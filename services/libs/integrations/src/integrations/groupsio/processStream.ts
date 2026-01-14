@@ -15,10 +15,12 @@ import {
   ListTopics,
   GroupsioMessageData,
   GroupsioMemberJoinData,
+  GroupsioCookieExpiredError,
 } from './types'
 import { getTopicsFromGroup } from './api/getTopicsFromGroup'
 import { getMessagesFromTopic } from './api/getMessagesFromTopic'
 import { getGroupMembers } from './api/getGroupMembers'
+import { refreshGroupsioCookie } from './api/refreshCookie'
 
 const cacheMember = async (ctx: IProcessStreamContext, member: MemberInfo): Promise<void> => {
   const cacheKey = `${GroupsioStreamType.GROUP_MEMBERS}:${member.user_id}`
@@ -46,14 +48,38 @@ const getMemberFromCache = async (
 
 const processGroupStream: ProcessStreamHandler = async (ctx) => {
   const data = ctx.stream.data as GroupsioGroupStreamMetadata
-  const settings = ctx.integration.settings as GroupsioIntegrationSettings
+  let settings = ctx.integration.settings as GroupsioIntegrationSettings
 
-  const response = (await getTopicsFromGroup(
-    data.group,
-    settings.token,
-    ctx,
-    data.page,
-  )) as ListTopics
+  let response: ListTopics
+  try {
+    response = (await getTopicsFromGroup(data.group, settings.token, ctx, data.page)) as ListTopics
+  } catch (err) {
+    if (err instanceof GroupsioCookieExpiredError) {
+      ctx.log.info({ group: data.group }, 'Cookie expired, attempting to refresh...')
+      try {
+        const newCookie = await refreshGroupsioCookie(ctx)
+        // Get updated settings after refresh
+        settings = ctx.integration.settings as GroupsioIntegrationSettings
+        // Retry with new cookie
+        response = (await getTopicsFromGroup(data.group, newCookie, ctx, data.page)) as ListTopics
+        ctx.log.info({ group: data.group }, 'Successfully retried after cookie refresh')
+      } catch (refreshErr) {
+        ctx.log.error(
+          refreshErr,
+          { group: data.group },
+          'Failed to refresh cookie or retry operation',
+        )
+        await ctx.abortRunWithError(
+          `Failed to refresh Groups.io authentication for group ${data.group}. Please reconnect the integration.`,
+          { group: data.group, error: refreshErr.message },
+          refreshErr as Error,
+        )
+        return
+      }
+    } else {
+      throw err
+    }
+  }
 
   // processing next page stream
   if (response?.next_page_token) {
@@ -81,14 +107,48 @@ const processGroupStream: ProcessStreamHandler = async (ctx) => {
 
 const processTopicStream: ProcessStreamHandler = async (ctx) => {
   const data = ctx.stream.data as GroupsioTopicStreamMetadata
-  const settings = ctx.integration.settings as GroupsioIntegrationSettings
+  let settings = ctx.integration.settings as GroupsioIntegrationSettings
 
-  const response = (await getMessagesFromTopic(
-    data.topic.id.toString(),
-    settings.token,
-    ctx,
-    data.page,
-  )) as ListMessages
+  let response: ListMessages
+  try {
+    response = (await getMessagesFromTopic(
+      data.topic.id.toString(),
+      settings.token,
+      ctx,
+      data.page,
+    )) as ListMessages
+  } catch (err) {
+    if (err instanceof GroupsioCookieExpiredError) {
+      ctx.log.info({ topicId: data.topic.id }, 'Cookie expired, attempting to refresh...')
+      try {
+        const newCookie = await refreshGroupsioCookie(ctx)
+        // Get updated settings after refresh
+        settings = ctx.integration.settings as GroupsioIntegrationSettings
+        // Retry with new cookie
+        response = (await getMessagesFromTopic(
+          data.topic.id.toString(),
+          newCookie,
+          ctx,
+          data.page,
+        )) as ListMessages
+        ctx.log.info({ topicId: data.topic.id }, 'Successfully retried after cookie refresh')
+      } catch (refreshErr) {
+        ctx.log.error(
+          refreshErr,
+          { topicId: data.topic.id },
+          'Failed to refresh cookie or retry operation',
+        )
+        await ctx.abortRunWithError(
+          `Failed to refresh Groups.io authentication for topic ${data.topic.id}. Please reconnect the integration.`,
+          { topicId: data.topic.id, error: refreshErr.message },
+          refreshErr as Error,
+        )
+        return
+      }
+    } else {
+      throw err
+    }
+  }
 
   // processing next page stream
   if (response?.next_page_token) {
@@ -141,14 +201,38 @@ const processTopicStream: ProcessStreamHandler = async (ctx) => {
 
 const processGroupMembersStream: ProcessStreamHandler = async (ctx) => {
   const data = ctx.stream.data as GroupsioGroupMembersStreamMetadata
-  const settings = ctx.integration.settings as GroupsioIntegrationSettings
+  let settings = ctx.integration.settings as GroupsioIntegrationSettings
 
-  const response = (await getGroupMembers(
-    data.group,
-    settings.token,
-    ctx,
-    data.page,
-  )) as ListMembers
+  let response: ListMembers
+  try {
+    response = (await getGroupMembers(data.group, settings.token, ctx, data.page)) as ListMembers
+  } catch (err) {
+    if (err instanceof GroupsioCookieExpiredError) {
+      ctx.log.info({ group: data.group }, 'Cookie expired, attempting to refresh...')
+      try {
+        const newCookie = await refreshGroupsioCookie(ctx)
+        // Get updated settings after refresh
+        settings = ctx.integration.settings as GroupsioIntegrationSettings
+        // Retry with new cookie
+        response = (await getGroupMembers(data.group, newCookie, ctx, data.page)) as ListMembers
+        ctx.log.info({ group: data.group }, 'Successfully retried after cookie refresh')
+      } catch (refreshErr) {
+        ctx.log.error(
+          refreshErr,
+          { group: data.group },
+          'Failed to refresh cookie or retry operation',
+        )
+        await ctx.abortRunWithError(
+          `Failed to refresh Groups.io authentication for group ${data.group}. Please reconnect the integration.`,
+          { group: data.group, error: refreshErr.message },
+          refreshErr as Error,
+        )
+        return
+      }
+    } else {
+      throw err
+    }
+  }
 
   // publish members
   for (const member of response.data) {

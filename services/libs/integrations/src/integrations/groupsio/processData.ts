@@ -113,6 +113,8 @@ const handler: ProcessDataHandler = async (ctx) => {
 
   const type = data.type
 
+  ctx.log.debug({ dataType: type, integrationId: ctx.integration.id }, 'Processing Groups.io data')
+
   switch (type) {
     case GroupsioPublishDataType.MEMBER_JOIN:
       await processMemberJoin(ctx)
@@ -124,7 +126,14 @@ const handler: ProcessDataHandler = async (ctx) => {
       await processMemberLeft(ctx)
       break
     default:
-      await ctx.abortRunWithError(`Unknown publish data type: ${type}`)
+      ctx.log.error(
+        { dataType: type, integrationId: ctx.integration.id },
+        'Unknown Groups.io publish data type',
+      )
+      await ctx.abortRunWithError(
+        `Unknown Groups.io data type: ${type}. Please report this issue.`,
+        { errorCode: 'GROUPSIO_UNKNOWN_DATA_TYPE', dataType: type },
+      )
   }
 }
 

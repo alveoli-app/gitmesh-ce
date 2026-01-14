@@ -22,11 +22,21 @@
 
 ---
 
-## The Hunt Begins
+## What is GitMesh?
 
-**GitMesh** watches thousands of signals across GitHub, Reddit, X, Discord, Stack Overflow, and beyond, then correlates them with your team's actual capacity and sprint progress. Instead of manually triaging feedback or guessing priorities, you get auto-generated GitHub issues ranked by impact, ICP fit, and competitive gaps. It maps work to the right engineers, syncs milestones across your stack, and even guides implementation so your team ships what users need, not just what they asked for.
+**GitMesh Community Edition** aggregates external product signals from GitHub, Reddit, X, Discord, and Stack Overflow, deduplicates and classifies them, and surfaces them alongside existing issues and sprints through two-way sync with Jira, GitHub, and Linear. Engineering and product teams get shared visibility into customer feedback and delivery progress in one place, reducing manual triage and context switching.
 
-**Meet Meshy, our pack leader**, a wolf whose instincts mirror GitMesh's core philosophy: agile, resilient, and unstoppable together. Like wolves in a pack, we thrive on coordination, moving as one efficient and powerful force.
+<details>
+<summary><strong>Enterprise Edition</strong></summary>
+
+``` GitMesh Enterprise Edition adds a capacity-aware intelligence layer that correlates those signals with your product surface, roadmap constraints, and team capacity to produce capacity-constrained, ranked backlogs and executable GitHub issues with persistent decision rationale, approval workflows, and audit logs. Leaders interact through an agentic interface with role-based controls to propose, evaluate, and approve prioritization and sprint changes—turning visibility into velocity. ```
+
+Website: ``` www.alveoli.app ``` (Offered by Alveoli)
+
+</details>
+
+
+
 
 ---
 

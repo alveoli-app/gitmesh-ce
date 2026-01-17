@@ -26,26 +26,29 @@ export interface DiscordWebsocketPayload {
   data: any
 }
 
-export interface SendgridWebhookEvent {
+export interface BrevoWebhookEvent {
   email: string
-  url: string
-  event: SendgridWebhookEventType
-  ip: string
-  sg_content_type: string
-  sg_event_id: string
-  sg_machine_open: boolean
-  sg_message_id: string
-  sg_template_id: string
-  sg_template_name: string
-  tenantId: string
+  link?: string
+  event: BrevoWebhookEventType
+  messageId?: string
+  uuid?: string
+  templateId?: number
+  tags?: string[]
   timestamp: number
-  useragent: string
+  ip?: string
+  userAgent?: string
 }
 
-export enum SendgridWebhookEventType {
-  DIGEST_OPENED = 'open',
-  POST_CLICKED = 'click',
+export enum BrevoWebhookEventType {
+  OPENED = 'opened',
+  CLICK = 'click',
+  DELIVERED = 'delivered',
+  BOUNCED = 'bounced',
+  SPAM = 'spam',
+  UNSUBSCRIBED = 'unsubscribed',
 }
+
+
 
 export interface GithubWebhookPayload {
   signature: string

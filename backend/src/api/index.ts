@@ -207,8 +207,8 @@ setImmediate(async () => {
       limit: '5mb',
       verify(req, res, buf) {
         const url = (<any>req).originalUrl
-        if (url.startsWith('/webhooks/stripe') || url.startsWith('/webhooks/sendgrid')) {
-          // Stripe and sendgrid webhooks needs the body raw
+        if (url.startsWith('/webhooks/stripe') || url.startsWith('/webhooks/brevo')) {
+          // Stripe and Brevo webhooks needs the body raw
           // for verifying the webhook with signing secret
           ; (<any>req).rawBody = buf.toString()
         }

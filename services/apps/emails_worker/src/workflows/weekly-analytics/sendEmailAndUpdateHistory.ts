@@ -49,7 +49,7 @@ sendEmailAndUpdateHistory is a Temporal workflow that:
   - [Activity]: Fetch the tenant's users to have email addresses to send the
     email to.
   - [Activity]: Actually send the email to the each user's email address using
-    the SendGrid API.
+    the Brevo API.
   - [Async Activities]: Update email history in the database.
 */
 export async function sendEmailAndUpdateHistory(input: InputAnalyticsWithTimes): Promise<void> {

@@ -30,7 +30,12 @@ export const formatNumberToCompact = (number) => {
  * @returns returns a string with a language-sensitive representation
  * of the original number
  */
-export const formatNumber = (number) => number.toLocaleString('en-US');
+export const formatNumber = (number) => {
+  if (number === null || number === undefined || typeof number !== 'number') {
+    return '-';
+  }
+  return number.toLocaleString('en-US');
+};
 
 export const formatPercentage = (percentage) => `${Math.ceil(
   percentage < 0 ? percentage * -1 : percentage,

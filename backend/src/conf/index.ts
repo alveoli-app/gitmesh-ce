@@ -14,7 +14,7 @@ import {
   ServiceType,
   SegmentConfiguration,
   GithubConfiguration,
-  SendgridConfiguration,
+  BrevoConfiguration,
   NetlifyConfiguration,
   TenantMode,
   CubeJSConfiguration,
@@ -97,7 +97,7 @@ export const DISCORD_CONFIG: DiscordConfiguration = config.get<DiscordConfigurat
 
 export const GITHUB_CONFIG: GithubConfiguration = config.get<GithubConfiguration>('github')
 
-export const SENDGRID_CONFIG: SendgridConfiguration = config.get<SendgridConfiguration>('sendgrid')
+export const BREVO_CONFIG: BrevoConfiguration = config.get<BrevoConfiguration>('brevo')
 
 export const NETLIFY_CONFIG: NetlifyConfiguration = config.get<NetlifyConfiguration>('netlify')
 

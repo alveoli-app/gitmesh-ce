@@ -17,31 +17,31 @@ export const pageContent = {
     featuresList: [],
   },
   signals: {
-    icon: 'ri-search-eye-line',
-    headerTitle: 'Signals',
+    icon: 'ri-shield-line',
+    headerTitle: 'Sentinel',
     title: 'Show up where the conversation happens.',
     mainContent:
-      'Use Signals to find the right conversations, show up early, and grow your community naturally.',
+      'Find the right conversations, engage early, and grow your community naturally.',
     imageSrc: '/images/paywall/signals.png',
     imageClass: '',
     featuresList: [
       {
         icon: 'ri-eye-2-line',
-        title: 'Keep a Signals on the right conversations',
+        title: 'Monitor the right conversations',
         content:
-          "Signals helps you monitor relevant discussions beyond your existing community so you can show up early, engage smartly, and grow organically.",
+          "Track relevant discussions beyond your community to engage early and grow organically.",
       },
       {
         icon: 'ri-apps-2-line',
-        title: 'Identify and engage across platforms',
+        title: 'Engage across platforms',
         content:
-          "Enter a few keywords and Signals surfaces the latest relevant posts across platforms like Hacker News, Dev.to, and more to connect you with the right people.",
+          "Enter keywords and surface posts from Hacker News, Dev.to, and more.",
       },
       {
         icon: 'ri-character-recognition-line',
-        title: 'Search powered by NLP',
+        title: 'AI-powered search',
         content:
-          "Our semantic search model finds meaningful content even when it doesn't exactly match your keywords — so you never miss important conversations.",
+          "Semantic search finds relevant content even without exact keyword matches.",
       },
     ],
   },

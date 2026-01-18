@@ -1,0 +1,25 @@
+# CubeJS cache and data files
+.cubestore/
+*.log
+
+# Node modules (handled by parent gitignore but explicit here)
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

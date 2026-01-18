@@ -16,6 +16,10 @@ fi
 set -e
 CLI_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+# Clean up any CubeJS cache files that might cause ENOENT errors
+printf "${YELLOW}Cleaning up CubeJS cache files...${RESET}\n"
+find $CLI_HOME/../libs -name ".cubestore" -type d -exec rm -rf {} + 2>/dev/null || true
+
 FLAGS=$1
 N=1  # sequential installation to avoid npm registry issues
 

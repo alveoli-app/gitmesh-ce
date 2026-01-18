@@ -1,0 +1,39 @@
+{
+  "dateRanges": [
+    {
+      "label": "Last 24 hours",
+      "value": "24h",
+      "hours": 24
+    },
+    {
+      "label": "Last 7 days",
+      "value": "7d",
+      "hours": 168
+    },
+    {
+      "label": "Last 30 days",
+      "value": "30d",
+      "hours": 720
+    },
+    {
+      "label": "Last 90 days",
+      "value": "90d",
+      "hours": 2160
+    },
+    {
+      "label": "Last 6 months",
+      "value": "6m",
+      "hours": 4320
+    },
+    {
+      "label": "Last year",
+      "value": "1y",
+      "hours": 8760
+    },
+    {
+      "label": "All time",
+      "value": "all",
+      "hours": null
+    }
+  ]
+}

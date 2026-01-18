@@ -82,11 +82,11 @@ export const devtel: MenuLink = {
 };
 
 export const projectSettings: MenuLink = {
-    id: 'project-settings',
-    label: 'Project Settings',
+    id: 'settings',
+    label: 'Settings',
     icon: 'ri-settings-3-line',
-    routeName: 'devspace-project-settings',
-    path: '/devspace/project-settings',
+    routeName: 'devspace-settings',
+    path: '/devspace/settings',
     display: () => true,
     disable: () => false,
 };

@@ -4,7 +4,7 @@ const home: MenuLink = {
   id: 'home',
   label: 'Home',
   icon: 'ri-home-5-line',
-  routeName: 'dashboard',
+  routeName: 'signals-dashboard',
   display: () => true,
   disable: () => false,
 };

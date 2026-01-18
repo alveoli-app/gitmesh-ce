@@ -5,7 +5,7 @@ const activities: MenuLink = {
   id: 'activities',
   label: 'Activities',
   icon: 'ri-radar-line',
-  routeName: 'activity',
+  routeName: 'signals-activities',
   display: ({ user, tenant }) => {
     const activityPermissions = new ActivityPermissions(
       tenant,

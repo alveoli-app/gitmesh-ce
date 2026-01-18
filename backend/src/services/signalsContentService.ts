@@ -134,17 +134,26 @@ export default class SignalsContentService extends LoggerBase {
   }
 
   async search(email = false) {
-    const signalsSettings: SignalsSettings = (
-      await TenantUserRepository.findByTenantAndUser(
+    try {
+      const tenantUser = await TenantUserRepository.findByTenantAndUser(
         this.options.currentTenant.id,
         this.options.currentUser.id,
         this.options,
       )
-    ).settings.signals
 
-    if (!signalsSettings.onboarded) {
-      throw new Error400(this.options.language, 'errors.signals.notOnboarded')
-    }
+      // If tenantUser doesn't exist or doesn't have signals settings, user is not onboarded
+      if (!tenantUser || !tenantUser.settings || !tenantUser.settings.signals) {
+        this.log.info('User has no signals settings, returning empty results')
+        return []
+      }
+
+      const signalsSettings: SignalsSettings = tenantUser.settings.signals
+
+      if (!signalsSettings.onboarded) {
+        // User is not onboarded yet, return empty results
+        this.log.info('User not onboarded for signals, returning empty results')
+        return []
+      }
 
     const feedSettings = email ? signalsSettings.emailDigest.feed : signalsSettings.feed
 
@@ -317,6 +326,11 @@ export default class SignalsContentService extends LoggerBase {
     }
 
     return out
+    } catch (error) {
+      this.log.error(error, 'Error in signals search, returning empty results')
+      // Return empty results instead of throwing error to prevent 500 errors
+      return []
+    }
   }
 
   static async reply(title, description) {

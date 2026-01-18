@@ -116,7 +116,7 @@ const config = defaultConfig.backendUrl
   ? defaultConfig
   : composedConfig;
 
-config.isCommunityVersion = config.edition === 'gitmesh-ce';
+config.isCommunityVersion = config.edition === 'gitmesh';
 config.hasPremiumModules = !config.isCommunityVersion
   || config.communityPremium === 'true';
 config.isGitIntegrationEnabled = config.isGitEnabled === 'true';

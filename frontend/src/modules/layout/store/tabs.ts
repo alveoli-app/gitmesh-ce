@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { useTopNavStore } from '@/modules/layout/store/topNav';
+import { useTopNavStore, type TabType } from '@/modules/layout/store/topNav';
 
 export interface Tab {
   id: string;
@@ -117,11 +117,11 @@ export const useTabsStore = defineStore('tabs', {
     },
 
     // Utilities for other components
-    getTabsFor(top: 'signals' | 'chat' | 'devspace') {
+    getTabsFor(top: TabType) {
       // @ts-ignore
       return this.groups[top].tabs;
     },
-    getActiveFor(top: 'signals' | 'chat' | 'devspace') {
+    getActiveFor(top: TabType) {
       // @ts-ignore
       return this.groups[top].activeTabPath;
     },

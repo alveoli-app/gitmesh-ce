@@ -63,8 +63,8 @@ import { useActivityTypeStore } from '@/modules/activity/store/type';
 import CrMenuWorkspace from '@/modules/layout/components/menu/menu-workspace.vue';
 import CrMenuLinks from '@/modules/layout/components/menu/menu-links.vue';
 import {
-  signalsMainMenu,
-  signalsBottomMenu,
+  sentinelMainMenu,
+  sentinelBottomMenu,
   chatMenu,
   devspaceMenu,
 } from '@/modules/layout/config/menu';
@@ -99,13 +99,13 @@ const selectedTop = computed(() => topNav.selected);
 const currentMainMenu = computed(() => {
   if (selectedTop.value === 'chat') return chatMenu;
   if (selectedTop.value === 'devspace') return devspaceMenu;
-  return signalsMainMenu;
+  return sentinelMainMenu;
 });
 
 const currentBottomMenu = computed(() => {
   if (selectedTop.value === 'chat') return [];
   if (selectedTop.value === 'devspace') return [];
-  return signalsBottomMenu;
+  return sentinelBottomMenu;
 });
 function toggleMenu() {
   store.dispatch('layout/toggleMenu');

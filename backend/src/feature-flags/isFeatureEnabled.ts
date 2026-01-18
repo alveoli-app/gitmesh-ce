@@ -33,6 +33,23 @@ export default async (featureFlag: FeatureFlag, req: any): Promise<boolean> => {
     return true
   }
 
+  // For signals feature, allow all enterprise edition plans without Unleash check
+  // This ensures Essential, Scale, Enterprise, Growth, and Signals plans have access
+  if (featureFlag === FeatureFlag.SIGNALS) {
+    const tenantPlan = req.currentTenant?.plan
+    const enterprisePlans = [
+      Plans.values.essential,
+      Plans.values.scale, 
+      Plans.values.enterprise,
+      Plans.values.growth,
+      Plans.values.signals
+    ]
+    
+    if (enterprisePlans.includes(tenantPlan)) {
+      return true
+    }
+  }
+
   return isFeatureEnabled(
     featureFlag,
     async () => getFeatureFlagTenantContext(req.currentTenant, req.database, req.redis, req.log),

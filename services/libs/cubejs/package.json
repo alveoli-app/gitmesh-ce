@@ -5,6 +5,7 @@
   "main": "dist/cubejs/src/index.js",
   "types": "src/index.ts",
   "scripts": {
+    "preinstall": "rm -rf .cubestore || true",
     "lint": "./node_modules/.bin/eslint --ext .ts src --max-warnings=0",
     "format": "./node_modules/.bin/prettier --write \"src/**/*.ts\"",
     "format-check": "./node_modules/.bin/prettier --check .",

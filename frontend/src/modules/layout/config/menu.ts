@@ -1,4 +1,5 @@
 import { MenuLink } from '@/modules/layout/types/MenuLink';
+import { FeatureFlag } from '@/utils/featureFlag';
 import home from './links/home';
 import contacts from './links/contacts';
 import organizations from './links/organizations';
@@ -17,19 +18,34 @@ import plansBilling from './links/plans-billing';
 import * as chatLinks from './links/chat-links';
 import * as devspaceLinks from './links/devspace-links';
 
-// Signals (default) main menu: everything except DevTel
+// Signals tab menu: includes all pages, Sentinel requires EE
 export const signalsMainMenu: MenuLink[] = [
-  home,
+  {
+    id: 'dashboard',
+    label: 'Home',
+    icon: 'ri-home-5-line',
+    routeName: 'signals-dashboard',
+    display: () => true,
+    disable: () => false,
+  },
   contacts,
   organizations,
   activities,
-];
-
-// Signals bottom menu: everything except chat
-export const signalsBottomMenu: MenuLink[] = [
+  {
+    id: 'sentinel',
+    label: 'Sentinel',
+    icon: 'ri-shield-line',
+    routeName: 'signals-sentinel',
+    display: () => FeatureFlag.isFlagEnabled(FeatureFlag.flags.signals), // EE only
+    disable: () => false,
+  },
   automations,
   integrations,
 ];
+
+// For backward compatibility, keep sentinel menus pointing to the signals structure
+export const sentinelMainMenu: MenuLink[] = signalsMainMenu;
+export const sentinelBottomMenu: MenuLink[] = [];
 
 // Chat-only menu
 export const chatMenu: MenuLink[] = [
@@ -54,7 +70,10 @@ export const devspaceMenu: MenuLink[] = [
 
 // Backwards-compatible exports (default to Signals menus)
 export const mainMenu: MenuLink[] = signalsMainMenu;
-export const bottomMenu: MenuLink[] = signalsBottomMenu;
+export const bottomMenu: MenuLink[] = [];
+
+// Legacy exports for backward compatibility
+// Note: signalsMainMenu is now the primary menu, sentinelMainMenu points to it
 
 // Support menu
 export const supportMenu: MenuLink[] = [

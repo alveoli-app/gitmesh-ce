@@ -416,7 +416,16 @@ function install_libs() {
 
 function init_unleash() {
     install_libs
-    (cd $CLI_HOME/../backend && source source-local.sh && npm i && npm run script:unleash-init)
+    set +e  # Don't exit on error
+    (cd $CLI_HOME/../backend && source source-local.sh && pnpm i && pnpm run script:unleash-init)
+    local unleash_exit_code=$?
+    set -e  # Re-enable exit on error
+    
+    if [ $unleash_exit_code -ne 0 ]; then
+        yell "Unleash initialization failed, but continuing with service startup..."
+    else
+        say "Unleash initialized successfully."
+    fi
 }
 
 function up_scaffold() {
@@ -670,6 +679,15 @@ do
             exit;
         ;;
         dev-ee)
+            # Check for premium directories before starting EE mode
+            if ! node $CLI_HOME/check-premium-dirs.js > /dev/null 2>&1; then
+                error "Premium directories not found or incomplete. Cannot start Enterprise Edition."
+                say "Missing premium directories. Falling back to Community Edition..."
+                say "Use './cli dev' for Community Edition development."
+                exit 1
+            fi
+            
+            say "Premium directories found - starting Enterprise Edition..."
             sed -i 's/VUE_APP_EDITION=gitmesh-ce/VUE_APP_EDITION=gitmesh-ee/g' $CLI_HOME/../frontend/.env.override.local
             if grep -q "EDITION=" $CLI_HOME/../backend/.env.override.local; then
                     sed -i 's/EDITION=.*/EDITION=gitmesh-ee/g' $CLI_HOME/../backend/.env.override.local
@@ -681,7 +699,25 @@ do
             exit;
         ;;
         clean-dev-ee)
+            # Check for premium directories before starting EE mode
+            if ! node $CLI_HOME/check-premium-dirs.js > /dev/null 2>&1; then
+                error "Premium directories not found or incomplete. Cannot start Enterprise Edition."
+                say "Missing premium directories. Falling back to Community Edition..."
+                say "Use './cli clean-dev' for Community Edition development."
+                exit 1
+            fi
+            
+            say "Premium directories found - starting Enterprise Edition..."
+            
+            # Clean up cache files to prevent ENOENT errors
+            bash $CLI_HOME/cleanup-cache.sh
+            
             sed -i 's/VUE_APP_EDITION=gitmesh-ce/VUE_APP_EDITION=gitmesh-ee/g' $CLI_HOME/../frontend/.env.override.local
+            if grep -q "EDITION=" $CLI_HOME/../backend/.env.override.local; then
+                    sed -i 's/EDITION=.*/EDITION=gitmesh-ee/g' $CLI_HOME/../backend/.env.override.local
+                else
+                    echo "EDITION=gitmesh-ee" >> $CLI_HOME/../backend/.env.override.local
+            fi
             CLEAN_START=1
             DEV=1
             start

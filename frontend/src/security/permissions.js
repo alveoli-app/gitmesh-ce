@@ -691,6 +691,18 @@ class Permissions {
         ],
         allowedSampleTenant: true,
       },
+      sentinelRead: {
+        id: 'sentinelRead',
+        allowedRoles: [roles.admin, roles.readonly],
+        allowedPlans: [
+          plans.essential,  // All enterprise edition plans have access
+          plans.scale,
+          plans.enterprise,
+          plans.growth,
+          plans.signals,
+        ],
+        allowedSampleTenant: true, // Allow sample tenant in enterprise edition
+      },
       automationImport: {
         id: 'automationImport',
         allowedRoles: [roles.admin],

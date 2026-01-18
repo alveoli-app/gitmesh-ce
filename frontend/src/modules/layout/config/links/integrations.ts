@@ -4,7 +4,7 @@ const integrations: MenuLink = {
   id: 'integrations',
   label: 'Integrations',
   icon: 'ri-apps-2-line',
-  routeName: 'integration',
+  routeName: 'signals-integrations',
   display: () => true,
   disable: () => false,
 };

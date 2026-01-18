@@ -4,30 +4,37 @@
       <!-- Top selector (replaces multi-tab bar) -->
       <div ref="tabsContainer" class="flex-1 flex items-center">
         <div class="top-tabs w-full flex items-center justify-between">
+          <!-- Signals Tab - Available in Community Edition -->
           <el-button
+            v-if="isTabAvailable('signals')"
             class="top-tab-btn"
             :class="{ active: selectedTop === 'signals' }"
             @click="setTop('signals')"
             size="small"
+            data-testid="signals-tab"
           >
             Signals
           </el-button>
 
+          <!-- Chat Tab - Only show in Enterprise Edition -->
           <el-button
-            v-if="isChatEnabled"
+            v-if="isTabAvailable('chat')"
             class="top-tab-btn"
             :class="{ active: selectedTop === 'chat' }"
             @click="setTop('chat')"
             size="small"
+            data-testid="chat-tab"
           >
             Chat
           </el-button>
 
+          <!-- DevSpace Tab - Available in all editions -->
           <el-button
             class="top-tab-btn"
             :class="{ active: selectedTop === 'devspace' }"
             @click="setTop('devspace')"
             size="small"
+            data-testid="devspace-tab"
           >
             DevSpace
           </el-button>
@@ -227,7 +234,19 @@ import { useTabsStore } from '@/modules/layout/store/tabs';
 import { FeatureFlag } from '@/utils/featureFlag';
 import { signalsMainMenu, chatMenu, devspaceMenu } from '@/modules/layout/config/menu';
 import { useStore } from 'vuex';
-import pageStatus from '@/config/page-status.json';
+// import pageStatus from '@/config/page-status.json';
+const pageStatus: Record<string, string> = {
+  "dashboard": "NONE",
+  "member": "NONE", 
+  "organization": "NONE",
+  "activity": "NONE",
+  "report": "BETA",
+  "signals": "BETA",
+  "chat": "COMING SOON",
+  "automations": "COMING SOON",
+  "integration": "NONE"
+};
+import config from '@/config';
 
 const route = useRoute();
 const router = useRouter();
@@ -239,8 +258,13 @@ const store = useStore();
 const tabsContainer = ref(null);
 
 const isChatEnabled = computed(() => FeatureFlag.isFlagEnabled(FeatureFlag.flags.agenticChat));
+const isSentinelEnabled = computed(() => FeatureFlag.isFlagEnabled(FeatureFlag.flags.signals));
 
-const isDevMode = import.meta.env.DEV;
+// Edition-based tab visibility
+const availableTabs = computed(() => topNav.availableTabs);
+const isTabAvailable = (tab: string) => topNav.isTabAvailable(tab as any);
+
+const isDevMode = (import.meta as any).env?.DEV;
 const badge = computed(() => {
   // Check if the current route name exists in the page status config
   if (route.name && pageStatus[route.name as keyof typeof pageStatus]) {
@@ -308,6 +332,27 @@ const integrationsNeedReconnectToString = computed(() => {
 const selectedTop = computed(() => topNav.selected);
 
 const setTop = (value: 'signals' | 'chat' | 'devspace') => {
+  // Check if tab is available in current edition
+  if (!isTabAvailable(value)) {
+    // For Community Edition users trying to access premium features, redirect to paywall
+    if ((config as any).isCommunityVersion && value === 'chat') {
+      console.log(`Community Edition user attempted to access premium tab: ${value}`);
+      
+      // Navigate to paywall page - redirect to settings with upgrade prompt
+      router.push({
+        name: 'settings',
+        query: { activeTab: 'plans', feature: value }
+      }).catch(() => {
+        // Fallback: redirect to devspace if settings route fails
+        router.push({ name: 'devspace-overview' }).catch(() => {});
+      });
+      return;
+    }
+    
+    console.warn(`Tab '${value}' is not available in current edition. Available tabs:`, availableTabs.value);
+    return;
+  }
+  
   topNav.set(value);
 };
 
@@ -392,6 +437,19 @@ watch(() => topNav.selected, (newVal) => {
   align-items: center;
   font-weight: 600;
   padding: 0 12px !important;
+}
+
+/* Adjust flex basis for Community Edition (single tab) */
+.top-tabs:has(.top-tab-btn:only-child) .top-tab-btn {
+  flex: 0 0 auto;
+  min-width: 120px;
+  max-width: 200px;
+}
+
+/* Adjust flex basis for Enterprise Edition (multiple tabs) */
+.top-tabs:has(.top-tab-btn:not(:only-child)) .top-tab-btn {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .top-tab-btn:hover {

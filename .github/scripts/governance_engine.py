@@ -50,7 +50,7 @@ def get_authorized_users():
                     parts = line.split()
                     for part in parts:
                         if part.startswith('@'):
-                            authorized.add(part.lstrip('@'))
+                            authorized.add(part.lstrip('@').lower())
     except Exception as e:
         print(f"Error parsing CODEOWNERS: {e}")
     
@@ -285,7 +285,7 @@ def run_command_mode(event_path, event_name):
     
     # Authorization
     authorized_users = get_authorized_users()
-    if author not in authorized_users:
+    if author.lower() not in authorized_users:
         post_comment(pr_number, f"⛔ **Permission Denied**: @{author} is not a registered code owner for governance.")
         return
 

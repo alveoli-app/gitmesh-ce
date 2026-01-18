@@ -91,8 +91,8 @@ describe('TopNavStore', () => {
       
       const store = useTopNavStore();
 
-      store.set('sentinel');
-      expect(store.selected).toBe('sentinel');
+      store.set('signals');
+      expect(store.selected).toBe('signals');
 
       store.set('chat');
       expect(store.selected).toBe('chat');
@@ -114,14 +114,14 @@ describe('TopNavStore', () => {
       expect(store.selected).toBe('devspace');
     });
 
-    it('should default to sentinel in Enterprise Edition', async () => {
+    it('should default to signals in Enterprise Edition', async () => {
       // Mock Enterprise Edition
       const config = await import('@/config');
       vi.mocked(config.default).isCommunityVersion = false;
       
       const store = useTopNavStore();
       
-      expect(store.getDefaultTab()).toBe('sentinel');
+      expect(store.getDefaultTab()).toBe('signals');
     });
   });
 
@@ -130,10 +130,10 @@ describe('TopNavStore', () => {
       const store = useTopNavStore();
       
       store.setLastVisited('devspace', '/devspace/overview');
-      store.setLastVisited('sentinel', '/sentinel/home');
+      store.setLastVisited('signals', '/signals/dashboard');
       
       expect(store.lastVisited.devspace).toBe('/devspace/overview');
-      expect(store.lastVisited.sentinel).toBe('/sentinel/home');
+      expect(store.lastVisited.signals).toBe('/signals/dashboard');
       
       // Check localStorage persistence
       const stored = JSON.parse(localStorage.getItem('topNav:v1') || '{}');

@@ -1,8 +1,5 @@
 import Layout from '@/modules/layout/components/layout.vue';
 import Permissions from '@/security/permissions';
-import { FeatureFlag } from '@/utils/featureFlag';
-import config from '@/config';
-import { checkSentinelAccess } from '@/middleware/edition-guard';
 
 // Import existing page components from the main codebase
 const DashboardPage = () => import('@/modules/dashboard/pages/dashboard-page.vue');
@@ -94,31 +91,16 @@ export default [
           title: 'Signals - Integrations',
         },
       },
-      // Sentinel route - Enterprise Edition Only
-      // Community Edition: Redirects to 403 (Forbidden)
-      // Enterprise Edition: Handled by premium signals module routes
+      // Sentinel route fallback for community edition
+      // In community edition, redirect to paywall
+      // In enterprise edition, this route is overridden by premium-frontend
       {
-        name: 'signals-sentinel-community',
+        name: 'signals-sentinel-fallback',
         path: 'sentinel',
-        redirect: '/403',
+        redirect: '/paywall/sentinel',
         meta: {
           auth: true,
-          permission: Permissions.values.sentinelRead,
           title: 'Signals - Sentinel',
-          premiumFeature: true,
-          requiresSignals: true,
-          feature: 'sentinel',
-        },
-        beforeEnter: (to, from, next) => {
-          // In community edition, always redirect to 403 (Forbidden)
-          // Sentinel is an enterprise-only feature
-          if (config.isCommunityVersion) {
-            next('/403');
-          } else {
-            // In enterprise edition, this route should not be reached
-            // as premium routes should take precedence
-            next('/404');
-          }
         },
       },
     ],

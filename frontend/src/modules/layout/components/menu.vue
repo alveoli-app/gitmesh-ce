@@ -63,8 +63,7 @@ import { useActivityTypeStore } from '@/modules/activity/store/type';
 import CrMenuWorkspace from '@/modules/layout/components/menu/menu-workspace.vue';
 import CrMenuLinks from '@/modules/layout/components/menu/menu-links.vue';
 import {
-  sentinelMainMenu,
-  sentinelBottomMenu,
+  signalsMainMenu,
   chatMenu,
   devspaceMenu,
 } from '@/modules/layout/config/menu';
@@ -99,13 +98,13 @@ const selectedTop = computed(() => topNav.selected);
 const currentMainMenu = computed(() => {
   if (selectedTop.value === 'chat') return chatMenu;
   if (selectedTop.value === 'devspace') return devspaceMenu;
-  return sentinelMainMenu;
+  return signalsMainMenu;
 });
 
 const currentBottomMenu = computed(() => {
   if (selectedTop.value === 'chat') return [];
   if (selectedTop.value === 'devspace') return [];
-  return sentinelBottomMenu;
+  return []; // No bottom menu for signals in community edition
 });
 function toggleMenu() {
   store.dispatch('layout/toggleMenu');

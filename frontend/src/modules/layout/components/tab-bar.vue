@@ -258,7 +258,6 @@ const store = useStore();
 const tabsContainer = ref(null);
 
 const isChatEnabled = computed(() => FeatureFlag.isFlagEnabled(FeatureFlag.flags.agenticChat));
-const isSentinelEnabled = computed(() => FeatureFlag.isFlagEnabled(FeatureFlag.flags.signals));
 
 // Edition-based tab visibility
 const availableTabs = computed(() => topNav.availableTabs);

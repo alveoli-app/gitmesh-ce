@@ -84,21 +84,6 @@ export const checkPremiumAccess = (to, from, next) => {
 };
 
 /**
- * Route guard specifically for sentinel page access
- * Combines edition check with signals feature flag validation
- * @param {Object} to - Target route
- * @param {Object} from - Source route
- * @param {Function} next - Navigation callback
- */
-export const checkSentinelAccess = (to, from, next) => {
-  // Set meta flag for signals requirement
-  to.meta = { ...to.meta, requiresSignals: true, feature: 'sentinel' };
-  
-  // Use the general premium access check
-  checkPremiumAccess(to, from, next);
-};
-
-/**
  * Route guard specifically for chat access
  * Combines edition check with chat feature flag validation
  * @param {Object} to - Target route
@@ -120,16 +105,30 @@ export const checkChatAccess = (to, from, next) => {
  */
 export const isFeatureAvailable = (feature) => {
   if (config.isCommunityVersion) {
-    // Community edition only has basic features
-    const communityFeatures = ['dashboard', 'contacts', 'organizations', 'activities', 'automations', 'integrations', 'devspace'];
-    return communityFeatures.includes(feature);
+    // Community edition has basic signals features, but no sentinel
+    const communityFeatures = ['dashboard', 'contacts', 'organizations', 'activities', 'automations', 'integrations', 'devspace', 'signals'];
+    return communityFeatures.includes(feature) && feature !== 'sentinel';
   }
   
-  // Enterprise edition has all features, but check feature flags
+  // Enterprise edition has all features, but check feature flags and plans
   switch (feature) {
     case 'signals':
-    case 'sentinel':
       return FeatureFlag.isFlagEnabled(FeatureFlag.flags.signals);
+    case 'sentinel':
+      // Sentinel requires both signals flag and enterprise plan
+      if (!FeatureFlag.isFlagEnabled(FeatureFlag.flags.signals)) {
+        return false;
+      }
+      // Check if user has enterprise plan
+      let currentTenant = null;
+      if (window.store?.state?.auth?.currentTenant) {
+        currentTenant = window.store.state.auth.currentTenant;
+      }
+      if (currentTenant) {
+        const enterprisePlans = ['Essential', 'Scale', 'Enterprise', 'Growth', 'Signals'];
+        return enterprisePlans.includes(currentTenant.plan);
+      }
+      return false;
     case 'chat':
       return FeatureFlag.isFlagEnabled(FeatureFlag.flags.agenticChat);
     default:

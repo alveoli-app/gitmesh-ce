@@ -17,6 +17,35 @@ export const pageContent = {
     featuresList: [],
   },
   signals: {
+    icon: 'ri-radar-line',
+    headerTitle: 'Signals',
+    title: 'Monitor your community data and insights.',
+    mainContent:
+      'Track community activity, member engagement, and organizational growth.',
+    imageSrc: '/images/paywall/signals.png',
+    imageClass: '',
+    featuresList: [
+      {
+        icon: 'ri-dashboard-line',
+        title: 'Community Dashboard',
+        content:
+          "Get insights into your community's growth and engagement metrics.",
+      },
+      {
+        icon: 'ri-team-line',
+        title: 'Member Analytics',
+        content:
+          "Track member activity, engagement patterns, and community contributions.",
+      },
+      {
+        icon: 'ri-building-line',
+        title: 'Organization Insights',
+        content:
+          "Monitor which organizations are represented in your community.",
+      },
+    ],
+  },
+  sentinel: {
     icon: 'ri-shield-line',
     headerTitle: 'Sentinel',
     title: 'Show up where the conversation happens.',

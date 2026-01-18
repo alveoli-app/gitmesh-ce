@@ -42,7 +42,7 @@ export const useTopNavStore = defineStore('topNav', {
           const parsed = JSON.parse(raw);
           
           // Handle migration from 'sentinel' back to 'signals' (if needed)
-          // Note: The tab name is 'signals' but routes use /sentinel/*
+          // Note: In community edition, sentinel is not available
           if (parsed.selected === 'sentinel') {
             parsed.selected = 'signals';
           }

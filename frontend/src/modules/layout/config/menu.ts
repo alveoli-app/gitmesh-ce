@@ -18,7 +18,7 @@ import plansBilling from './links/plans-billing';
 import * as chatLinks from './links/chat-links';
 import * as devspaceLinks from './links/devspace-links';
 
-// Signals tab menu: includes all pages, Sentinel requires EE
+// Signals tab menu: includes sentinel for enterprise plans
 export const signalsMainMenu: MenuLink[] = [
   {
     id: 'dashboard',
@@ -36,7 +36,21 @@ export const signalsMainMenu: MenuLink[] = [
     label: 'Sentinel',
     icon: 'ri-shield-line',
     routeName: 'signals-sentinel',
-    display: () => FeatureFlag.isFlagEnabled(FeatureFlag.flags.signals), // EE only
+    display: ({ user, tenant }) => {
+      // Check if signals feature flag is enabled (enterprise edition only)
+      if (!FeatureFlag.isFlagEnabled(FeatureFlag.flags.signals)) {
+        return false;
+      }
+      
+      // Check if user has enterprise plan
+      if (tenant) {
+        const enterprisePlans = ['Essential', 'Scale', 'Enterprise', 'Growth', 'Signals'];
+        return enterprisePlans.includes(tenant.plan);
+      }
+      
+      // Default to false if no tenant info available
+      return false;
+    },
     disable: () => false,
   },
   automations,
@@ -44,6 +58,7 @@ export const signalsMainMenu: MenuLink[] = [
 ];
 
 // For backward compatibility, keep sentinel menus pointing to the signals structure
+// Note: Sentinel functionality is available for enterprise plans only
 export const sentinelMainMenu: MenuLink[] = signalsMainMenu;
 export const sentinelBottomMenu: MenuLink[] = [];
 

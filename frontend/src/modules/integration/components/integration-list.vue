@@ -100,13 +100,7 @@ const filters = [
   { label: 'Not Connected', value: 'not_connected' },
 ];
 
-const customIntegration = ref({
-  platform: 'custom',
-  name: 'Build your own',
-  description:
-    'Use our integration framework to build your own connector.',
-  image: '/images/integrations/custom.svg',
-});
+
 
 const loading = computed(
   () => store.getters['integration/loadingFetch'],
@@ -117,7 +111,7 @@ const allIntegrations = computed(() => {
     ? GitmeshIntegrations.mappedEnabledConfigs(store)
     : GitmeshIntegrations.mappedConfigs(store);
   
-  return [...list, customIntegration.value];
+  return [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 });
 
 const filteredIntegrations = computed(() => {

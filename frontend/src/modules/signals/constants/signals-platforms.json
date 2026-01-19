@@ -1,3 +1,0 @@
-// Re-export the shared constants
-export { default as platformOptions } from '@/shared/signals/constants/signals-platforms.json';
-export { default as datePublishedOptions } from '@/shared/signals/constants/signals-date-published.json';

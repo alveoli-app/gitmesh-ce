@@ -5,12 +5,14 @@ if [[ ${TERM} == "" || ${TERM} == "dumb" ]]; then
     GREEN=""
     GREY=""
     YELLOW=""
+    BLUE=""
     RESET=""
 else
     RED=`tput setaf 1`
     GREEN=`tput setaf 2`
     GREY=`tput setaf 7`
     YELLOW=`tput setaf 3`
+    BLUE=`tput setaf 4`
     RESET=`tput sgr0`
 fi
 

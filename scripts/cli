@@ -516,27 +516,377 @@ function wait_for_db() {
     say "Scaffold is up and running!"
 }
 
+# Health check functions
+function check_service_health() {
+    local service_name="$1"
+    local check_command="$2"
+    local timeout="${3:-5}"
+    
+    if timeout "$timeout" bash -c "$check_command" >/dev/null 2>&1; then
+        echo "${GREEN}healthy${RESET}"
+    else
+        echo "${RED}unhealthy${RESET}"
+    fi
+}
+
+function check_http_service_health() {
+    local service_name="$1"
+    local url="$2"
+    local timeout="${3:-3}"
+    
+    # First check if container is running
+    local container_status=$(check_container_health "${PROJECT_NAME}.*${service_name}")
+    
+    if [[ "$container_status" == *"not running"* ]]; then
+        echo "${GREY}not running${RESET}"
+        return 0
+    fi
+    
+    if [[ "$container_status" == *"unhealthy"* ]]; then
+        echo "${RED}unhealthy${RESET}"
+        return 0
+    fi
+    
+    # If container is running, try HTTP check
+    if timeout "$timeout" curl -f -s "$url" >/dev/null 2>&1; then
+        echo "${GREEN}healthy${RESET}"
+    elif timeout "$timeout" curl -s "$url" >/dev/null 2>&1; then
+        # HTTP connection works but might return non-200 status
+        echo "${YELLOW}starting${RESET}"
+    else
+        # Container running but HTTP not responding
+        echo "${YELLOW}starting${RESET}"
+    fi
+}
+
+function check_container_health() {
+    local container_pattern="$1"
+    
+    # Check if container exists (running or stopped)
+    local container_id=$(docker ps -a --filter "name=$container_pattern" --format "{{.ID}}" 2>/dev/null | head -n1)
+    
+    if [[ -z "$container_id" ]]; then
+        # No container exists at all
+        echo "${GREY}not running${RESET}"
+        return 0
+    fi
+    
+    # Container exists, check if it's running
+    local status=$(docker inspect --format='{{.State.Status}}' "$container_id" 2>/dev/null || echo "not_found")
+    
+    if [[ "$status" == "running" ]]; then
+        # Check health status if available
+        local health_status=$(docker inspect --format='{{.State.Health.Status}}' "$container_id" 2>/dev/null || echo "none")
+        
+        if [[ "$health_status" == "healthy" ]]; then
+            echo "${GREEN}healthy${RESET}"
+        elif [[ "$health_status" == "starting" ]]; then
+            echo "${YELLOW}starting${RESET}"
+        elif [[ "$health_status" == "unhealthy" ]]; then
+            echo "${RED}unhealthy${RESET}"
+        elif [[ "$health_status" == "none" ]]; then
+            # No health check defined, but container is running - consider it healthy
+            echo "${GREEN}healthy${RESET}"
+        else
+            echo "${RED}unhealthy${RESET}"
+        fi
+    else
+        # Container exists but is not running (stopped, exited, etc.)
+        echo "${RED}unhealthy${RESET}"
+    fi
+    return 0
+}
+
+function check_application_service_health() {
+    local service_name="$1"
+    
+    # Check if container exists (running or stopped)
+    local container_id=$(docker ps -a --filter "name=${PROJECT_NAME}_${service_name}_" --format "{{.ID}}" 2>/dev/null | head -n1)
+    
+    if [[ -z "$container_id" ]]; then
+        # Try dev version
+        container_id=$(docker ps -a --filter "name=${PROJECT_NAME}_${service_name}-dev_" --format "{{.ID}}" 2>/dev/null | head -n1)
+    fi
+    
+    if [[ -z "$container_id" ]]; then
+        # No container exists at all
+        echo "${GREY}not running${RESET}"
+        return 0
+    fi
+    
+    # Container exists, check if it's running
+    local status=$(docker inspect --format='{{.State.Status}}' "$container_id" 2>/dev/null || echo "not_found")
+    
+    if [[ "$status" == "running" ]]; then
+        # Check health status if available
+        local health_status=$(docker inspect --format='{{.State.Health.Status}}' "$container_id" 2>/dev/null || echo "none")
+        
+        if [[ "$health_status" == "healthy" ]]; then
+            echo "${GREEN}healthy${RESET}"
+        elif [[ "$health_status" == "starting" ]]; then
+            echo "${YELLOW}starting${RESET}"
+        elif [[ "$health_status" == "unhealthy" ]]; then
+            echo "${RED}unhealthy${RESET}"
+        elif [[ "$health_status" == "none" ]]; then
+            # No health check defined, but container is running - consider it healthy
+            echo "${GREEN}healthy${RESET}"
+        else
+            echo "${RED}unhealthy${RESET}"
+        fi
+    else
+        # Container exists but is not running (stopped, exited, etc.)
+        echo "${RED}unhealthy${RESET}"
+    fi
+    return 0
+}
+
+function should_check_service() {
+    local service_name="$1"
+    
+    # Skip chat-orchestrator for CE edition
+    if [[ "$__EDITION" != "gitmesh-ee" && "$service_name" == "chat-orchestrator" ]]; then
+        return 1
+    fi
+    
+    # Check if service is in ignored services array
+    if [[ ${#INGORED_SERVICES[@]} -ne 0 ]]; then
+        for IGNORED_SERVICE in "${INGORED_SERVICES[@]}"
+        do
+            if [[ "$service_name" == "${IGNORED_SERVICE}" ]]; then
+                return 1
+            fi
+        done
+    fi
+    
+    return 0
+}
+
 function print_success_and_ports() {
-    echo -e "\n${GREEN}Script ran successfully!${RESET}"
+    # Temporarily disable exit on error for health checks
+    set +e
+    
+    # Ensure __EDITION is set
+    if [[ -z "$__EDITION" ]]; then
+        source_edition
+    fi
+    
     echo -e "\n${YELLOW}Services and Ports:${RESET}"
     echo -e "--------------------------------------------------"
-    echo -e "${BLUE}Frontend:${RESET}             http://localhost:8081"
-    echo -e "${BLUE}Backend API:${RESET}          http://localhost:8080"
-    echo -e "${BLUE}Nango:${RESET}                http://localhost:3003"
-    echo -e "${BLUE}CubeJS:${RESET}               http://localhost:4000"
-    echo -e "${BLUE}PostgreSQL:${RESET}           http://localhost:5432"
-    echo -e "${BLUE}Redis:${RESET}                http://localhost:6379"
-    echo -e "${BLUE}Chat Orchestrator:${RESET}    http://localhost:8001"
-    echo -e "${BLUE}Temporal UI:${RESET}          http://localhost:8233"
-    echo -e "${BLUE}Kafka:${RESET}                http://localhost:9094"
-    echo -e "${BLUE}OpenSearch:${RESET}           http://localhost:9200"
-    echo -e "${BLUE}SQS UI:${RESET}               http://localhost:9325"
-    echo -e "${BLUE}Ollama:${RESET}               http://localhost:11434"
     
-    if [[ "$__EDITION" == "gitmesh-ee" ]]; then
-        echo -e "${BLUE}Unleash:${RESET}              http://localhost:4242"
+    local unhealthy_count=0
+    local total_services=0
+    
+    # Core Application Services
+    echo -e "${GREY}Core Services:${RESET}"
+    
+    # Check Frontend
+    if should_check_service "frontend"; then
+        local frontend_status=$(check_application_service_health "frontend")
+        echo -e "${BLUE}Frontend:${RESET}             http://localhost:8081 - $frontend_status"
+        [[ "$frontend_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+        [[ "$frontend_status" != *"not running"* ]] && ((total_services++))
     fi
+    
+    # Check Backend API
+    if should_check_service "api"; then
+        local backend_status=$(check_application_service_health "api")
+        echo -e "${BLUE}Backend API:${RESET}          http://localhost:8080 - $backend_status"
+        [[ "$backend_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+        [[ "$backend_status" != *"not running"* ]] && ((total_services++))
+    fi
+    
+    # Check Search Sync API
+    if should_check_service "search-sync-api"; then
+        local search_sync_api_status=$(check_application_service_health "search-sync-api")
+        echo -e "${BLUE}Search Sync API:${RESET}      http://localhost:8082 - $search_sync_api_status"
+        [[ "$search_sync_api_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+        [[ "$search_sync_api_status" != *"not running"* ]] && ((total_services++))
+    fi
+    
+    # Check Webhook API
+    if should_check_service "webhook-api"; then
+        local webhook_api_status=$(check_application_service_health "webhook-api")
+        echo -e "${BLUE}Webhook API:${RESET}          http://localhost:8083 - $webhook_api_status"
+        [[ "$webhook_api_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+        [[ "$webhook_api_status" != *"not running"* ]] && ((total_services++))
+    fi
+    
+    # Check Chat Orchestrator (only for EE)
+    if should_check_service "chat-orchestrator"; then
+        local chat_status=$(check_application_service_health "chat-orchestrator")
+        echo -e "${BLUE}Chat Orchestrator:${RESET}    http://localhost:8001 - $chat_status"
+        [[ "$chat_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+        [[ "$chat_status" != *"not running"* ]] && ((total_services++))
+    fi
+    
+    # echo ""
+    # echo -e "${GREY}Worker Services:${RESET}"
+    
+    # # Check all worker services
+    # if should_check_service "automations-worker"; then
+    #     local automations_worker_status=$(check_application_service_health "automations-worker")
+    #     echo -e "${BLUE}Automations Worker:${RESET}   - $automations_worker_status"
+    #     [[ "$automations_worker_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$automations_worker_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    # if should_check_service "data-sink-worker"; then
+    #     local data_sink_worker_status=$(check_application_service_health "data-sink-worker")
+    #     echo -e "${BLUE}Data Sink Worker:${RESET}     - $data_sink_worker_status"
+    #     [[ "$data_sink_worker_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$data_sink_worker_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    # if should_check_service "emails-worker"; then
+    #     local emails_worker_status=$(check_application_service_health "emails-worker")
+    #     echo -e "${BLUE}Emails Worker:${RESET}        - $emails_worker_status"
+    #     [[ "$emails_worker_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$emails_worker_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    # if should_check_service "integration-data-worker"; then
+    #     local integration_data_worker_status=$(check_application_service_health "integration-data-worker")
+    #     echo -e "${BLUE}Integration Data Worker:${RESET} - $integration_data_worker_status"
+    #     [[ "$integration_data_worker_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$integration_data_worker_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    # if should_check_service "integration-run-worker"; then
+    #     local integration_run_worker_status=$(check_application_service_health "integration-run-worker")
+    #     echo -e "${BLUE}Integration Run Worker:${RESET} - $integration_run_worker_status"
+    #     [[ "$integration_run_worker_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$integration_run_worker_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    # if should_check_service "integration-stream-worker"; then
+    #     local integration_stream_worker_status=$(check_application_service_health "integration-stream-worker")
+    #     echo -e "${BLUE}Integration Stream Worker:${RESET} - $integration_stream_worker_status"
+    #     [[ "$integration_stream_worker_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$integration_stream_worker_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    # if should_check_service "integration-sync-worker"; then
+    #     local integration_sync_worker_status=$(check_application_service_health "integration-sync-worker")
+    #     echo -e "${BLUE}Integration Sync Worker:${RESET} - $integration_sync_worker_status"
+    #     [[ "$integration_sync_worker_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$integration_sync_worker_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    # if should_check_service "search-sync-worker"; then
+    #     local search_sync_worker_status=$(check_application_service_health "search-sync-worker")
+    #     echo -e "${BLUE}Search Sync Worker:${RESET}   - $search_sync_worker_status"
+    #     [[ "$search_sync_worker_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$search_sync_worker_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    # if should_check_service "nodejs-worker"; then
+    #     local nodejs_worker_status=$(check_application_service_health "nodejs-worker")
+    #     echo -e "${BLUE}NodeJS Worker:${RESET}        - $nodejs_worker_status"
+    #     [[ "$nodejs_worker_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$nodejs_worker_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    # if should_check_service "python-worker"; then
+    #     local python_worker_status=$(check_application_service_health "python-worker")
+    #     echo -e "${BLUE}Python Worker:${RESET}        - $python_worker_status"
+    #     [[ "$python_worker_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$python_worker_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    # if should_check_service "job-generator"; then
+    #     local job_generator_status=$(check_application_service_health "job-generator")
+    #     echo -e "${BLUE}Job Generator:${RESET}        - $job_generator_status"
+    #     [[ "$job_generator_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$job_generator_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    # if should_check_service "discord-ws"; then
+    #     local discord_ws_status=$(check_application_service_health "discord-ws")
+    #     echo -e "${BLUE}Discord WebSocket:${RESET}    - $discord_ws_status"
+    #     [[ "$discord_ws_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    #     [[ "$discord_ws_status" != *"not running"* ]] && ((total_services++))
+    # fi
+    
+    echo ""
+    echo -e "${GREY}Infrastructure Services:${RESET}"
+    
+    # Infrastructure services are always checked
+    # Check Nango - has HTTP health endpoint
+    local nango_status=$(check_http_service_health "nango" "http://localhost:3003/health")
+    echo -e "${BLUE}Nango:${RESET}                http://localhost:3003 - $nango_status"
+    [[ "$nango_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    [[ "$nango_status" != *"not running"* ]] && ((total_services++))
+    
+    # Check CubeJS - has HTTP endpoint
+    local cubejs_status=$(check_http_service_health "cubejs" "http://localhost:4000/readyz")
+    echo -e "${BLUE}CubeJS:${RESET}               http://localhost:4000 - $cubejs_status"
+    [[ "$cubejs_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    [[ "$cubejs_status" != *"not running"* ]] && ((total_services++))
+    
+    # Check PostgreSQL - has built-in health check
+    local postgres_status=$(check_container_health "${PROJECT_NAME}.*db")
+    echo -e "${BLUE}PostgreSQL:${RESET}           http://localhost:5432 - $postgres_status"
+    [[ "$postgres_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    [[ "$postgres_status" != *"not running"* ]] && ((total_services++))
+    
+    # Check Redis - has built-in health check
+    local redis_status=$(check_container_health "${PROJECT_NAME}.*redis")
+    echo -e "${BLUE}Redis:${RESET}                http://localhost:6379 - $redis_status"
+    [[ "$redis_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    [[ "$redis_status" != *"not running"* ]] && ((total_services++))
+    
+    # Check Temporal UI - has HTTP endpoint
+    local temporal_status=$(check_http_service_health "temporal" "http://localhost:8233")
+    echo -e "${BLUE}Temporal UI:${RESET}          http://localhost:8233 - $temporal_status"
+    [[ "$temporal_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    [[ "$temporal_status" != *"not running"* ]] && ((total_services++))
+    
+    # Check Kafka - has built-in health check
+    local kafka_status=$(check_container_health "${PROJECT_NAME}.*kafka")
+    echo -e "${BLUE}Kafka:${RESET}                http://localhost:9094 - $kafka_status"
+    [[ "$kafka_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    [[ "$kafka_status" != *"not running"* ]] && ((total_services++))
+    
+    # Check OpenSearch - has HTTP health endpoint
+    local opensearch_status=$(check_http_service_health "open-search" "http://localhost:9200/_cluster/health")
+    echo -e "${BLUE}OpenSearch:${RESET}           http://localhost:9200 - $opensearch_status"
+    [[ "$opensearch_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    [[ "$opensearch_status" != *"not running"* ]] && ((total_services++))
+    
+    # Check SQS UI - has HTTP endpoint
+    local sqs_status=$(check_http_service_health "sqs" "http://localhost:9325")
+    echo -e "${BLUE}SQS UI:${RESET}               http://localhost:9325 - $sqs_status"
+    [[ "$sqs_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    [[ "$sqs_status" != *"not running"* ]] && ((total_services++))
+    
+    # Check Ollama - has HTTP endpoint
+    local ollama_status=$(check_http_service_health "ollama" "http://localhost:11434")
+    echo -e "${BLUE}Ollama:${RESET}               http://localhost:11434 - $ollama_status"
+    [[ "$ollama_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+    [[ "$ollama_status" != *"not running"* ]] && ((total_services++))
+    
+    # Check Unleash (only for EE) - has HTTP endpoint
+    if [[ "$__EDITION" == "gitmesh-ee" ]]; then
+        local unleash_status=$(check_http_service_health "unleash[^-]" "http://localhost:4242/health")
+        echo -e "${BLUE}Unleash:${RESET}              http://localhost:4242 - $unleash_status"
+        [[ "$unleash_status" == *"unhealthy"* ]] && ((unhealthy_count++))
+        [[ "$unleash_status" != *"not running"* ]] && ((total_services++))
+    fi
+    
     echo -e "--------------------------------------------------"
+    
+    # Print summary message
+    if [[ $unhealthy_count -eq 0 ]]; then
+        echo -e "\n${GREEN}Script ran successfully! All $total_services services are healthy.${RESET}"
+    else
+        local healthy_count=$((total_services - unhealthy_count))
+        echo -e "\n${YELLOW}Script ran successfully but $unhealthy_count of $total_services service(s) are unhealthy.${RESET}"
+        echo -e "${GREEN}$healthy_count services are healthy.${RESET}"
+        echo -e "${GREY}Check the logs for unhealthy services: ./cli service <service-name> logs${RESET}"
+    fi
+    
+    # Re-enable exit on error
+    set -e
 }
 
 function start() {

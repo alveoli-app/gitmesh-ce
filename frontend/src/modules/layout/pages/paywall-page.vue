@@ -107,12 +107,12 @@ import { FeatureFlag } from '@/utils/featureFlag';
 const router = useRouter();
 
 const section = computed(
-  () => router.currentRoute.value.name,
+  () => router.currentRoute.value.params.section || router.currentRoute.value.name,
 );
 const page = computed(() => pageContent[section.value]);
 const computedFeaturePlan = computed(() => {
   if (config.isCommunityVersion) return 'Custom plan';
-  if (page.value.headerTitle === 'Signals') return 'Scale and Signals plans';
+  if (page.value?.headerTitle === 'Signals' || page.value?.headerTitle === 'Sentinel') return 'Pro, Teams+, and Enterprise plans';
   return 'Scale plan';
 });
 </script>

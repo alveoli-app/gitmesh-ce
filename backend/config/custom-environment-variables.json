@@ -82,19 +82,18 @@
     "apiKey": "NETLIFY_API_KEY",
     "siteDomain": "NETLIFY_SITE_DOMAIN"
   },
-  "sendgrid": {
-    "key": "SENDGRID_KEY",
-    "webhookSigningSecret": "SENDGRID_WEBHOOK_SIGNING_SECRET",
-    "emailFrom": "SENDGRID_EMAIL_FROM",
-    "nameFrom": "SENDGRID_NAME_FROM",
-    "templateEmailAddressVerification": "SENDGRID_TEMPLATE_EMAIL_ADDRESS_VERIFICATION",
-    "templateInvitation": "SENDGRID_TEMPLATE_INVITATION",
-    "templatePasswordReset": "SENDGRID_TEMPLATE_PASSWORD_RESET",
-    "templateWeeklyAnalytics": "SENDGRID_TEMPLATE_WEEKLY_ANALYTICS",
-    "templateIntegrationDone": "SENDGRID_TEMPLATE_INTEGRATION_DONE",
-    "templateCsvExport": "SENDGRID_TEMPLATE_CSV_EXPORT",
-    "templateSignalsDigest": "SENDGRID_TEMPLATE_SIGNALS_DIGEST",
-    "weeklyAnalyticsUnsubscribeGroupId": "SENDGRID_WEEKLY_ANALYTICS_UNSUBSCRIBE_GROUP_ID"
+  "brevo": {
+    "apiKey": "BREVO_API_KEY",
+    "webhookSecret": "BREVO_WEBHOOK_SECRET",
+    "emailFrom": "BREVO_EMAIL_FROM",
+    "nameFrom": "BREVO_NAME_FROM",
+    "templateEmailAddressVerification": "BREVO_TEMPLATE_EMAIL_ADDRESS_VERIFICATION",
+    "templateInvitation": "BREVO_TEMPLATE_INVITATION",
+    "templatePasswordReset": "BREVO_TEMPLATE_PASSWORD_RESET",
+    "templateWeeklyAnalytics": "BREVO_TEMPLATE_WEEKLY_ANALYTICS",
+    "templateIntegrationDone": "BREVO_TEMPLATE_INTEGRATION_DONE",
+    "templateCsvExport": "BREVO_TEMPLATE_CSV_EXPORT",
+    "templateSignalsDigest": "BREVO_TEMPLATE_SIGNALS_DIGEST"
   },
   "plans": {
     "stripePricePremium": "STRIPE_PRICE_PREMIUM",

@@ -146,27 +146,28 @@
         <div v-show="activeSection === 'integrations'" class="settings-section">
           <h2>Integrations</h2>
           
-          <el-alert
-            title="Configure Project Integrations"
-            type="info"
-            description="Link this project to external tools. Ensure the integration is first connected at the workspace level."
-            show-icon
-            :closable="false"
-            class="mb-4"
-          />
 
           <el-card shadow="never" class="settings-card">
               <template #header>
-                  <div class="card-header">
+                  <div class="card-header flex justify-between items-center">
                       <h3>GitHub Sync</h3>
+                      <el-button 
+                        type="warning" 
+                        plain 
+                        size="small" 
+                        @click="openConflictQueue" 
+                        v-if="settings.githubSync.direction === 'dominant'"
+                      >
+                        Conflict Queue
+                      </el-button>
                   </div>
               </template>
-             <div class="integration-item">
+             <div class="integration-item mb-6">
               <div class="integration-info">
                 <div class="integration-icon github">G</div>
                 <div>
                   <h4>Repository Configuration</h4>
-                  <p>Sync issues and pull requests two-way.</p>
+                  <p>Select the repository to link with this project.</p>
                 </div>
               </div>
               <div class="integration-config pl-4 flex-1">
@@ -176,14 +177,93 @@
                   :disabled="!isWorkspaceIntegrationConnected('github')"
                 >
                   <template #append>
-                    <el-button @click="saveIntegrationSettings" :disabled="!isWorkspaceIntegrationConnected('github')">Save</el-button>
+                    <el-button @click="saveIntegrationSettings" :disabled="!isWorkspaceIntegrationConnected('github')" :loading="syncing">
+                      {{ syncing ? 'Syncing...' : 'Save' }}
+                    </el-button>
                   </template>
                 </el-input>
+                <div v-if="syncing" class="mt-2 text-xs" style="color: var(--el-color-primary)">
+                  <el-icon class="is-loading"><Loading /></el-icon>
+                  {{ syncProgress || 'Syncing issues from GitHub...' }}
+                </div>
                 <div class="mt-2 text-xs text-secondary" v-if="!isWorkspaceIntegrationConnected('github')">
                   <span class="text-warning">GitHub not connected.</span> 
                   <a @click="goToIntegrationsPage" class="link cursor-pointer ml-1">Connect in Workspace Integrations</a>
                 </div>
               </div>
+            </div>
+
+            <el-divider />
+
+            <!-- Sync Strategy (Hardcoded to Dominant) -->
+            <div class="mb-6">
+                <el-alert
+                    title="Dominant One-Way Sync Active"
+                    type="success"
+                    :closable="false"
+                    show-icon
+                >
+                    <template #default>
+                        <div class="text-sm">
+                            <p class="mb-1">Your project is configured for <strong>GitHub → GitMesh Dominant Sync</strong>.</p>
+                             <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>Inbound:</strong> All GitHub issues, comments, and labels sync to GitMesh in real-time.</li>
+                                <li><strong>Outbound:</strong> Changes in GitMesh are <strong>NOT auto-pushed</strong> to GitHub.</li>
+                                <li><strong>Publishing:</strong> Only issues marked <code>publishable</code> and approved by an Admin are pushed.</li>
+                            </ul>
+                        </div>
+                    </template>
+                </el-alert>
+            </div>
+
+            <!-- Advanced Config -->
+            <div class="p-4 rounded-md border" style="background: var(--el-fill-color-light); border-color: var(--el-border-color-light);">
+                <h4 class="mb-3 text-sm font-bold uppercase" style="color: var(--el-text-color-secondary)">Dominant Sync Controls</h4>
+                
+                <!-- Role Visibility -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1" style="color: var(--el-text-color-primary)">Role-Based Push Control</label>
+                    <div class="text-xs mb-2" style="color: var(--el-text-color-secondary)">Controls who can push changes back to GitHub.</div>
+                    <div class="grid grid-cols-3 gap-2 text-sm">
+                        <div class="p-2 border rounded" style="background: var(--el-bg-color); border-color: var(--el-border-color);">
+                            <div class="font-bold" style="color: var(--el-text-color-primary)">Admin</div>
+                            <div class="text-xs text-green-600">Full Override</div>
+                        </div>
+                        <div class="p-2 border rounded" style="background: var(--el-bg-color); border-color: var(--el-border-color);">
+                            <div class="font-bold" style="color: var(--el-text-color-primary)">Team</div>
+                            <div class="text-xs text-orange-600">Approval Required</div>
+                        </div>
+                         <div class="p-2 border rounded" style="background: var(--el-bg-color); border-color: var(--el-border-color);">
+                            <div class="font-bold" style="color: var(--el-text-color-primary)">Private</div>
+                            <div class="text-xs text-red-600">Never Push</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conflict Resolution -->
+                <el-form label-position="top">
+                    <div class="form-row">
+                        <el-form-item label="Conflict Resolution Strategy" class="flex-1 mb-0">
+                             <el-select v-model="settings.githubSync.conflictResolution" class="w-full">
+                                 <el-option label="Default to GitHub (GitHub Wins)" value="github-wins" />
+                                 <el-option label="Manual (Admin Queue)" value="manual" />
+                             </el-select>
+                             <div class="text-xs mt-1" style="color: var(--el-text-color-secondary)">
+                                 On same-field conflicts, this rule determines the winner. Non-overlapping changes are auto-merged.
+                             </div>
+                        </el-form-item>
+                    </div>
+                </el-form>
+            </div>
+
+            <div class="mt-4 flex justify-end items-center">
+                 <div v-if="syncing" class="mr-4 text-sm" style="color: var(--el-color-primary)">
+                   <el-icon class="is-loading"><Loading /></el-icon>
+                   {{ syncProgress || 'Syncing issues from GitHub...' }}
+                 </div>
+                 <el-button type="primary" @click="saveIntegrationSettings" :loading="syncing" :disabled="syncing">
+                   {{ syncing ? 'Syncing...' : 'Update Sync Settings' }}
+                 </el-button>
             </div>
           </el-card>
 
@@ -323,17 +403,65 @@
         <el-button type="primary" @click="addWebhook">Create</el-button>
       </template>
     </el-dialog>
+
+    <!-- Conflict Queue Modal -->
+    <el-dialog v-model="showConflictModal" title="Sync Conflict Queue" width="800px">
+      <div v-if="conflictQueue.length === 0" class="text-center py-8 text-secondary">
+         <el-icon :size="40" class="mb-2"><InfoFilled /></el-icon>
+         <p>No sync conflicts detected within the last 24h. All systems synchronized.</p>
+      </div>
+      <div v-else>
+         <p class="text-sm text-secondary mb-4">The following items have data conflicts between GitHub and GitMesh. Select a version to keep.</p>
+         
+         <div v-for="conflict in conflictQueue" :key="conflict.id" class="border rounded p-4 mb-3">
+            <div class="flex justify-between items-start mb-2">
+               <div>
+                  <span class="font-bold text-sm">{{ conflict.title }}</span>
+                  <span class="text-xs text-secondary ml-2">issue #{{ conflict.issueId }}</span>
+               </div>
+               <el-tag type="danger" size="small">Field: {{ conflict.field }}</el-tag>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div class="p-2 rounded border" style="background: var(--el-fill-color-light); border-color: var(--el-border-color-light);">
+                    <div class="font-bold text-xs mb-1 flex items-center gap-1" style="color: var(--el-text-color-secondary)">
+                        <div class="site-icon github-small">G</div> 
+                        GitHub (Incoming)
+                    </div>
+                    <div class="whitespace-pre-wrap font-mono text-xs" style="color: var(--el-text-color-regular)">{{ conflict.remoteValue }}</div>
+                    <div class="text-xs mt-1" style="color: var(--el-text-color-secondary)">By {{ conflict.remoteAuthor }}</div>
+                </div>
+                <div class="p-2 rounded border" style="background: var(--el-color-primary-light-9); border-color: var(--el-color-primary-light-8);">
+                    <div class="font-bold text-xs mb-1 flex items-center gap-1" style="color: var(--el-text-color-secondary)">
+                        <div class="site-icon gitmesh-small">M</div> 
+                        GitMesh (Current)
+                    </div>
+                    <div class="whitespace-pre-wrap font-mono text-xs" style="color: var(--el-text-color-regular)">{{ conflict.localValue }}</div>
+                    <div class="text-xs mt-1" style="color: var(--el-text-color-secondary)">By {{ conflict.localAuthor }}</div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-2 mt-3">
+                <el-button size="small" @click="resolveConflict(conflict.id, 'local')">Keep GitMesh Version</el-button>
+                <el-button size="small" type="primary" @click="resolveConflict(conflict.id, 'remote')">Accept GitHub Version</el-button>
+            </div>
+         </div>
+      </div>
+      <template #footer>
+        <el-button @click="showConflictModal = false">Close</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { Setting, Link, Cpu, Connection, Plus, InfoFilled } from '@element-plus/icons-vue';
+import { Setting, Link, Cpu, Connection, Plus, InfoFilled, Check, Loading } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import DevtelService from '@/modules/devspace/services/devtel-api';
 
 export default {
   name: 'SettingsPage',
-  components: { Setting, Link, Cpu, Connection, Plus, InfoFilled },
+  components: { Setting, Link, Cpu, Connection, Plus, InfoFilled, Check, Loading },
   data() {
     return {
       activeSection: 'general',
@@ -354,8 +482,24 @@ export default {
         cycleLength: 14,
         storyPointScale: 'fibonacci',
         githubRepo: '',
+        // GitHub Sync Advanced Settings
+        githubSync: {
+          direction: 'dominant', // 'dominant' (GitHub -> GitMesh) or 'bidirectional'
+          publishableDefault: false,
+          conflictResolution: 'github-wins', // 'github-wins', 'manual'
+          roleVisibility: {
+             admin: 'override',
+             team: 'approval',
+             private: 'never'
+          },
+          autoPush: false, // Force disabled for dominant sync
+        }
       },
       webhooks: [],
+      conflictQueue: [],
+      showConflictModal: false,
+      syncing: false,
+      syncProgress: '',
       aiSettings: {
         enabledAgents: ['prioritize', 'suggest-sprint'],
         approvalRequired: true,
@@ -419,6 +563,21 @@ export default {
       this.settings.cycleLength = project.settings?.cycleLength || 14;
       this.settings.storyPointScale = project.settings?.storyPointScale || 'fibonacci';
       this.settings.githubRepo = project.settings?.githubRepo || '';
+      
+      // Populate GitHub Sync Settings
+      const ghSettings = project.settings?.githubSync || {};
+      this.settings.githubSync = {
+          direction: ghSettings.direction || 'dominant',
+          publishableDefault: ghSettings.publishableDefault ?? false,
+          conflictResolution: ghSettings.conflictResolution || 'github-wins',
+          roleVisibility: ghSettings.roleVisibility || {
+             admin: 'override',
+             team: 'approval',
+             private: 'never'
+          },
+          autoPush: ghSettings.autoPush ?? false
+      };
+
       this.projectData = project;
     },
     isWorkspaceIntegrationConnected(provider) {
@@ -542,11 +701,19 @@ export default {
       }
     },
     async saveIntegrationSettings() {
+      console.log('[Settings] Starting saveIntegrationSettings');
+      console.log('[Settings] Active Project:', this.activeProject?.id, this.activeProject?.name);
+      console.log('[Settings] Current Settings:', JSON.stringify(this.settings.githubSync, null, 2));
+      
       try {
-        if (!this.activeProject) return;
+        if (!this.activeProject) {
+          console.error('[Settings] No active project found');
+          return;
+        }
 
         // Strip URL if present
         let cleanRepo = this.settings.githubRepo.trim();
+        console.log('[Settings] GitHub Repo (raw):', cleanRepo);
         if (cleanRepo.startsWith('http')) {
              try {
                  const url = new URL(cleanRepo);
@@ -571,22 +738,67 @@ export default {
         this.settings.githubRepo = cleanRepo;
 
         this.loading = true;
+        this.syncing = true;
+        this.syncProgress = 'Saving settings...';
         const projectUpdate = {
             settings: {
                 ...this.activeProject.settings,
                 githubRepo: cleanRepo,
+                githubSync: this.settings.githubSync,
             }
         };
+        
+        console.log('[Settings] Project Update Payload:', JSON.stringify(projectUpdate, null, 2));
+        console.log('[Settings] Calling updateProject for:', this.activeProject.id);
 
-        await DevtelService.updateProject(this.activeProject.id, projectUpdate);
+        const updateResult = await DevtelService.updateProject(this.activeProject.id, projectUpdate);
+        console.log('[Settings] Update Result:', updateResult);
+        
+        // Trigger sync
+        this.syncProgress = 'Syncing issues from GitHub...';
+        console.log('[Settings] Triggering sync for project:', this.activeProject.id);
+        try {
+            const syncResult = await DevtelService.triggerSync(this.activeProject.id);
+            console.log('[Settings] Sync completed:', syncResult);
+            
+            // Show detailed success message
+            if (syncResult.result) {
+                const { createdCount, updatedCount, syncedCount } = syncResult.result;
+                ElMessage.success({
+                    message: `Sync completed! Created: ${createdCount}, Updated: ${updatedCount}, Total: ${syncedCount}`,
+                    duration: 5000,
+                    showClose: true
+                });
+            } else {
+                ElMessage.success({
+                    message: 'Settings saved and sync triggered successfully!',
+                    duration: 5000,
+                    showClose: true
+                });
+            }
+        } catch (syncError) {
+             console.error('[Settings] Sync failed:', syncError);
+             console.error('[Settings] Sync error details:', syncError.response?.data);
+             
+             // Show specific error message
+             const errorMsg = syncError.response?.data?.error || syncError.message || 'Unknown error';
+             ElMessage.error({
+                 message: `Sync failed: ${errorMsg}`,
+                 duration: 8000,
+                 showClose: true
+             });
+             throw syncError; // Rethrow to skip success message
+        }
+
+        this.syncProgress = 'Refreshing project list...';
+        console.log('[Settings] Fetching updated projects...');
         await this.$store.dispatch('devspace/fetchProjects'); // re-fetch to update state
-        ElMessage.success({
-            message: 'Settings saved. Initial sync and backfill started in background.',
-            duration: 5000,
-            showClose: true
-        });
+        console.log('[Settings] Projects refreshed successfully');
+        
       } catch (e) {
-        console.error(e);
+        console.error('[Settings] SAVE FAILED:', e);
+        console.error('[Settings] Error Stack:', e.stack);
+        console.error('[Settings] Error Response:', e.response?.data);
         ElMessage.error('Failed to save integration settings: ' + (e.message || 'Unknown error'));
       } finally {
         this.loading = false;
@@ -658,6 +870,41 @@ export default {
       } catch (e) {
         ElMessage.error('Failed to delete webhook');
       }
+    },
+    async openConflictQueue() {
+       this.showConflictModal = true;
+       if (!this.activeProject?.id) return;
+       
+       try {
+         const conflicts = await DevtelService.getConflicts(this.activeProject.id);
+         this.conflictQueue = conflicts || [];
+       } catch (e) {
+         console.error('Failed to fetch conflicts', e);
+         ElMessage.error('Failed to load conflict queue');
+         this.conflictQueue = [];
+       }
+    },
+    async resolveConflict(id, winner) {
+        try {
+            if (!this.activeProject?.id) return;
+            
+            await DevtelService.resolveConflict(this.activeProject.id, id, winner);
+            
+            const action = winner === 'remote' ? 'Overwritten with GitHub version' : 'Kept GitMesh version';
+            ElMessage.success(`Conflict resolved: ${action}`);
+            
+            // Remove from queue locally
+            this.conflictQueue = this.conflictQueue.filter(c => c.id !== id);
+            
+            if (this.conflictQueue.length === 0) {
+                setTimeout(() => {
+                    this.showConflictModal = false;
+                }, 1000);
+            }
+        } catch (e) {
+            console.error('Failed to resolve conflict', e);
+            ElMessage.error('Failed to resolve conflict');
+        }
     },
   },
 };
@@ -848,13 +1095,13 @@ export default {
   align-items: center;
   padding: 16px;
   border: 1px solid var(--el-color-danger);
-  background: #1a1a1a; /* Dark background matching the requested theme */
+  background: var(--el-color-danger-light-9);
   border-radius: 8px;
 }
 .danger-action h4 {
   margin: 0 0 4px;
   font-weight: 600;
-  color: var(--el-color-white); /* Ensure text is visible on dark background */
+  color: var(--el-color-danger);
 }
 .danger-action p {
   margin: 0;
@@ -895,6 +1142,20 @@ export default {
 .integration-icon-small.github { background: #333; }
 .integration-icon-small.jira { background: #0052CC; }
 .integration-icon-small.slack { background: #4A154B; }
+
+.site-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+}
+.site-icon.github-small { background: #333; }
+.site-icon.gitmesh-small { background: #6366f1; }
 
 .checkbox-list {
   display: flex;

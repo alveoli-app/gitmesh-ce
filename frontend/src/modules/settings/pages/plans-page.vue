@@ -11,6 +11,7 @@
         <span class="text-2xs text-zinc-200">Active since {{ moment(currentTenant.createdAt).format('MMMM DD, YYYY') }}</span>
       </div>
       <el-button
+        v-if="!isCommunityVersion"
         class="btn btn--bordered flex items-center gap-2 w-fit !shadow !border-zinc-700"
         @click="onManageBillingClick"
       >
@@ -200,7 +201,7 @@ onMounted(() => {
 });
 
 const getBadge = (plan) => {
-  if (plan === gitmeshHostedPlans.scale && [gitmeshHostedPlans.essential, gitmeshHostedPlans.signals].includes(activePlan.value)) {
+  if (plan === gitmeshHostedPlans.teamsPlus && [gitmeshHostedPlans.pro].includes(activePlan.value)) {
     // Recommended plan
     return {
       class: 'text-brand-600 bg-brand-50',
@@ -218,6 +219,12 @@ const getBadge = (plan) => {
 };
 
 const onManageBillingClick = () => {
+  // Prevent billing access in Community Edition
+  if (isCommunityVersion) {
+    console.warn('Community Edition user attempted to access billing management');
+    return;
+  }
+  
   window.open(config.stripe.customerPortalLink, '_blank');
 };
 
@@ -226,6 +233,18 @@ const displayCalDialog = () => {
 };
 
 const handleOnCtaClick = ({ key, ctaAction }) => {
+  // Prevent access to enterprise plan actions in Community Edition
+  if (isCommunityVersion && Object.values(gitmeshHostedPlans).includes(key)) {
+    console.warn('Community Edition user attempted to access enterprise plan:', key);
+    // Show appropriate message for Community Edition users
+    window.analytics.track('Community Edition Plan Access Attempt', {
+      tenantId: currentTenant.value?.id,
+      tenantName: currentTenant.value?.name,
+      attemptedPlan: key,
+    });
+    return;
+  }
+
   // Send an event with plan request
   window.analytics.track('Change Plan Request', {
     tenantId: currentTenant.value.id,

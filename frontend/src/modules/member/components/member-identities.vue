@@ -55,7 +55,7 @@ const platformContent = (platform) => {
 };
 
 const hasSocialIdentities = computed(
-  () => Object.values(props.username).some((k) => k.length > 0),
+  () => props.username && Object.values(props.username).some((k) => k.length > 0),
 );
 </script>
 

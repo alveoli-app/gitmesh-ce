@@ -78,9 +78,9 @@ export const processStripeWebhook = async (message: any) => {
       let productPlan
 
       if ((subscription as any).plan.product === PLANS_CONFIG.stripeSignalsPlanProductId) {
-        productPlan = Plans.values.signals
+        productPlan = Plans.values.pro
       } else if ((subscription as any).plan.product === PLANS_CONFIG.stripeGrowthPlanProductId) {
-        productPlan = Plans.values.growth
+        productPlan = Plans.values.teamsPlus
       } else {
         log.error({ subscription }, `Unknown product in subscription`)
         process.exit(1)

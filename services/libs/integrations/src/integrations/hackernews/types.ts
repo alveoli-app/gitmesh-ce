@@ -62,17 +62,19 @@ export interface HackerNewsSearchResult {
 }
 
 export interface HackerNewsPost {
-  by: string
-  descendants: number
+  by?: string
+  descendants?: number
   id: number
   kids?: number[]
   parent?: number
-  score: number
+  score?: number
   time: number
-  title: string
-  text: string
+  title?: string
+  text?: string
   type: string
-  url: string
+  url?: string
+  deleted?: boolean
+  dead?: boolean
 }
 
 export interface HackerNewsUser {

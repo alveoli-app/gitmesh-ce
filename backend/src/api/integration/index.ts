@@ -27,6 +27,7 @@ export default (app) => {
   )
   app.get(`/tenant/:tenantId/integration`, safeWrap(require('./integrationList').default))
   app.get(`/tenant/:tenantId/integration/:id`, safeWrap(require('./integrationFind').default))
+  app.get(`/tenant/:tenantId/integration/:id/progress`, safeWrap(require('./integrationProgress').default))
 
   app.put(
     `/authenticate/:tenantId/:code`,

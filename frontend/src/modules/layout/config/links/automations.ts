@@ -5,7 +5,7 @@ const automations: MenuLink = {
   id: 'automations',
   label: 'Automations',
   icon: 'ri-mind-map',
-  routeName: 'automations',
+  routeName: 'signals-automations',
   display: ({ user, tenant }) => {
     const automationPermissions = new AutomationPermissions(
       tenant,

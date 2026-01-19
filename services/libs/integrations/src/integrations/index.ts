@@ -23,6 +23,10 @@ export * from './hackernews/grid'
 export * from './hackernews/types'
 export * from './hackernews/memberAttributes'
 
+// Premium integrations (Enterprise Edition only)
+// Note: Premium features are added via setup-ee.sh script for EE deployments
+// CE deployments work without these imports
+
 export * from './reddit/grid'
 export * from './reddit/types'
 export * from './reddit/memberAttributes'
@@ -43,4 +47,3 @@ export * from './groupsio/grid'
 export * from './groupsio/types'
 export * from './groupsio/memberAttributes'
 export * from './activityDisplayService'
-export * from "./nango"

@@ -40,10 +40,16 @@ export class PermissionChecker {
     }
 
     if (!this.planMatchOneOf(permission.allowedPlans)) {
+      console.log(`[PermissionChecker] Plan denied for ${permission.id}. Current: ${this.currentTenantPlan}`);
       return false;
     }
 
-    return this.rolesMatchOneOf(permission.allowedRoles);
+    if (!this.rolesMatchOneOf(permission.allowedRoles)) {
+      console.log(`[PermissionChecker] Role denied for ${permission.id}. Current: ${JSON.stringify(this.currentUserRolesIds)}`);
+      return false;
+    }
+
+    return true;
   }
 
   lockedForCurrentPlan(permission) {
@@ -113,12 +119,16 @@ export class PermissionChecker {
   }
 
   get currentTenantPlan() {
-    if (!this.currentTenant) {
-      return plans.essential;
+    if (!this.currentTenant || !this.currentTenant.plan) {
+      return plans.pro;
     }
 
-    if (!this.currentTenant.plan) {
-      return plans.essential;
+    if (['Essential', 'Growth'].includes(this.currentTenant.plan)) {
+      return plans.pro;
+    }
+
+    if (['Scale', 'Signals'].includes(this.currentTenant.plan)) {
+      return plans.teamsPlus;
     }
 
     return this.currentTenant.plan;

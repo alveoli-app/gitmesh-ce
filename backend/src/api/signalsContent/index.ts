@@ -28,6 +28,11 @@ export default (app) => {
   )
 
   app.get(
+    `/tenant/:tenantId/signalsContent/debug`,
+    safeWrap(require('./signalsContentDebug').default),
+  )
+
+  app.get(
     `/tenant/:tenantId/signalsContent/search`,
     featureFlagMiddleware(FeatureFlag.SIGNALS, 'entities.signals.errors.planLimitExceeded'),
     safeWrap(require('./signalsContentSearch').default),

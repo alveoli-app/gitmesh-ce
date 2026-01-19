@@ -1,0 +1,15 @@
+onlyBuiltDependencies:
+  - '@cubejs-backend/cubestore'
+  - '@cubejs-backend/native'
+  - '@gitmesh/cubejs'
+  - '@opentelemetry/sdk-node'
+  - aws-sdk
+  - bcrypt
+  - bufferutil
+  - core-js
+  - dtrace-provider
+  - es5-ext
+  - protobufjs
+  - utf-8-validate
+  - yarn
+  - zlib-sync

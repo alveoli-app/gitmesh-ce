@@ -425,6 +425,8 @@ export default class IntegrationService {
         { tenantId: integration.tenantId },
         'Sending GitHub message to int-run-worker!',
       )
+      
+      let workerTriggered = false
       try {
         const emitter = await getIntegrationRunWorkerEmitter()
         await emitter.triggerIntegrationRun(
@@ -433,8 +435,15 @@ export default class IntegrationService {
           integration.id,
           true,
         )
+        workerTriggered = true
       } catch (err) {
-        this.options.log.error(err, 'Failed to trigger integration run worker')
+        this.options.log.error(err, 'Failed to trigger integration run worker - setting status to done')
+        // If worker trigger fails, set status directly to 'done' so integration doesn't get stuck
+        await IntegrationRepository.update(
+          integrationId,
+          { status: 'done' },
+          txOptions,
+        )
       }
 
       await SequelizeRepository.commitTransaction(transaction)

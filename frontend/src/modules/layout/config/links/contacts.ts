@@ -5,7 +5,7 @@ const contacts: MenuLink = {
   id: 'contacts',
   label: 'Contacts',
   icon: 'ri-group-2-line',
-  routeName: 'member',
+  routeName: 'signals-contacts',
   display: ({ user, tenant }) => {
     const memberPermission = new MemberPermissions(
       tenant,

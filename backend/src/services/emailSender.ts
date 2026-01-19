@@ -1,8 +1,7 @@
 import { LoggerBase } from '@gitmesh/logging'
-import sendgridMail from '@sendgrid/mail'
+import * as brevo from '@getbrevo/brevo'
 import assert from 'assert'
-import { API_CONFIG, SENDGRID_CONFIG } from '../conf'
-import { AdvancedSuppressionManager } from './helpers/sendgridAsmType'
+import { API_CONFIG, BREVO_CONFIG } from '../conf'
 
 export default class EmailSender extends LoggerBase {
   templateId: string
@@ -11,13 +10,18 @@ export default class EmailSender extends LoggerBase {
 
   tenantId: string
 
+  private static brevoApi: brevo.TransactionalEmailsApi
+
   constructor(templateId, variables, tenantId = null) {
     super()
     this.templateId = templateId
     this.variables = variables
     this.tenantId = tenantId
-    if (SENDGRID_CONFIG.key) {
-      sendgridMail.setApiKey(SENDGRID_CONFIG.key)
+    
+    if (BREVO_CONFIG.apiKey && !EmailSender.brevoApi) {
+      const apiInstance = new brevo.TransactionalEmailsApi()
+      apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, BREVO_CONFIG.apiKey)
+      EmailSender.brevoApi = apiInstance
     }
   }
 
@@ -27,64 +31,63 @@ export default class EmailSender extends LoggerBase {
     }
 
     return {
-      EMAIL_ADDRESS_VERIFICATION: SENDGRID_CONFIG.templateEmailAddressVerification,
-      INVITATION: SENDGRID_CONFIG.templateInvitation,
-      PASSWORD_RESET: SENDGRID_CONFIG.templatePasswordReset,
-      WEEKLY_ANALYTICS: SENDGRID_CONFIG.templateWeeklyAnalytics,
-      INTEGRATION_DONE: SENDGRID_CONFIG.templateIntegrationDone,
-      CSV_EXPORT: SENDGRID_CONFIG.templateCsvExport,
-      SIGNALS_DIGEST: SENDGRID_CONFIG.templateSignalsDigest,
+      EMAIL_ADDRESS_VERIFICATION: BREVO_CONFIG.templateEmailAddressVerification,
+      INVITATION: BREVO_CONFIG.templateInvitation,
+      PASSWORD_RESET: BREVO_CONFIG.templatePasswordReset,
+      WEEKLY_ANALYTICS: BREVO_CONFIG.templateWeeklyAnalytics,
+      INTEGRATION_DONE: BREVO_CONFIG.templateIntegrationDone,
+      CSV_EXPORT: BREVO_CONFIG.templateCsvExport,
+      SIGNALS_DIGEST: BREVO_CONFIG.templateSignalsDigest,
     }
   }
 
   /**
-   * Sends an email to given recipient using sendgrid dynamic templates.
+   * Sends an email to given recipient using Brevo transactional templates.
    * @param {string} recipient recipient email address
-   * @param asm sendgrid advanced suppression manager for managing unsubscribe groups
+   * @param listIds optional list IDs for contact management
    * @returns
    */
-  async sendTo(recipient: string, asm?: AdvancedSuppressionManager): Promise<any> {
+  async sendTo(recipient: string, listIds?: number[]): Promise<any> {
     if (!EmailSender.isConfigured) {
       this.log.error('Email provider is not configured.')
       return undefined
     }
 
     assert(recipient, 'to is required')
-    assert(SENDGRID_CONFIG.emailFrom, 'SENDGRID_EMAIL_FROM is required')
+    assert(BREVO_CONFIG.emailFrom, 'BREVO_EMAIL_FROM is required')
     assert(this.templateId, 'templateId is required')
 
-    const msg = {
-      to: recipient,
-      from: {
-        name: SENDGRID_CONFIG.nameFrom,
-        email: SENDGRID_CONFIG.emailFrom,
-      },
-      templateId: this.templateId,
-      dynamicTemplateData: {
-        ...this.variables,
-        appHost: API_CONFIG.frontendUrl,
-      },
-    } as any
-
-    if (this.tenantId) {
-      msg.custom_args = {
-        tenantId: this.tenantId,
-      }
+    const sendSmtpEmail = new brevo.SendSmtpEmail()
+    sendSmtpEmail.to = [{ email: recipient }]
+    sendSmtpEmail.sender = {
+      name: BREVO_CONFIG.nameFrom,
+      email: BREVO_CONFIG.emailFrom,
+    }
+    sendSmtpEmail.templateId = parseInt(this.templateId, 10)
+    sendSmtpEmail.params = {
+      ...this.variables,
+      appHost: API_CONFIG.frontendUrl,
     }
 
-    if (asm) {
-      msg.asm = asm
+    if (this.tenantId) {
+      sendSmtpEmail.tags = [`tenant:${this.tenantId}`]
+    }
+
+    if (listIds && listIds.length > 0) {
+      // Add contact to lists for unsubscribe management
+      sendSmtpEmail.params.listIds = listIds
     }
 
     try {
-      return await sendgridMail.send(msg)
+      const result = await EmailSender.brevoApi.sendTransacEmail(sendSmtpEmail)
+      return result
     } catch (error) {
-      this.log.error(error, 'Error sending SendGrid email.')
+      this.log.error(error, 'Error sending Brevo email.')
       throw error
     }
   }
 
   static get isConfigured() {
-    return Boolean(SENDGRID_CONFIG.emailFrom && SENDGRID_CONFIG.key)
+    return Boolean(BREVO_CONFIG.emailFrom && BREVO_CONFIG.apiKey)
   }
 }

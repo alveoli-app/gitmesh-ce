@@ -5,6 +5,7 @@ import { store } from '@/store';
 
 export const FEATURE_FLAGS = {
   signals: 'signals',
+  signalsSentinel: 'signals-sentinel', // Premium-only sentinel page
   organizations: 'organizations',
   automations: 'automations',
   linkedin: 'linkedin',
@@ -22,8 +23,19 @@ class FeatureFlagService {
   constructor() {
     this.flags = FEATURE_FLAGS;
 
-    console.log('FeatureFlagService: config.isCommunityVersion', config.isCommunityVersion);
-    console.log('FeatureFlagService: config.unleash.url', config.unleash.url);
+    console.log('FeatureFlagService: Initializing with config', {
+      edition: config.edition,
+      isCommunityVersion: config.isCommunityVersion,
+      hasPremiumModules: config.hasPremiumModules,
+      unleashUrl: config.unleash.url
+    });
+
+    // Log edition status for debugging purposes
+    if (config.isCommunityVersion) {
+      console.log('FeatureFlagService: Running in Community Edition (gitmesh) - premium features disabled');
+    } else {
+      console.log(`FeatureFlagService: Running in Enterprise Edition (${config.edition}) - all features enabled`);
+    }
 
     if (!config.isCommunityVersion && config.unleash.url?.length > 0) {
       const unleashConfig = {
@@ -109,49 +121,89 @@ class FeatureFlagService {
   }
 
   isFlagEnabled(flag) {
+    // Log edition status for debugging
+    console.log('FeatureFlagService: Edition check', {
+      edition: config.edition,
+      isCommunityVersion: config.isCommunityVersion,
+      flag: flag
+    });
+
+    // Edition-based logic takes precedence over external services
     if (config.isCommunityVersion) {
-      // Disable premium features in Community Edition
-      if (flag === FEATURE_FLAGS.agenticChat) {
+      // Community Edition (gitmesh): Handle signals and premium features differently
+      
+      // Signals base functionality is available in Community Edition
+      if (flag === FEATURE_FLAGS.signals) {
+        console.log(`FeatureFlagService: Community Edition - enabling signals base functionality`);
+        return true;
+      }
+      
+      // Premium-only features disabled in Community Edition
+      if (flag === FEATURE_FLAGS.signalsSentinel || flag === FEATURE_FLAGS.agenticChat) {
+        console.log(`FeatureFlagService: Community Edition - disabling premium feature ${flag}`);
         return false;
       }
+      
+      // Other features enabled in Community Edition
+      console.log(`FeatureFlagService: Community Edition - enabling non-premium feature ${flag}`);
       return true;
     }
 
-    // Enable all features for Enterprise Edition (including local dev)
-    if (!config.isCommunityVersion) {
-      return true;
-    }
-
-    // If Unleash client isn't initialized, default to enabled
-    if (!this.unleash) {
-      return true;
-    }
-
-    // Temporary workaround for Unleash connectivity issues
-    // Check if user has premium plans for specific features
-    let currentTenant = null;
+    // Enterprise Edition (ee/premium): enable all features by default
+    console.log(`FeatureFlagService: Enterprise Edition - evaluating feature ${flag}`);
     
-    // Try multiple ways to get current tenant
-    if (window.store?.state?.auth?.currentTenant) {
-      currentTenant = window.store.state.auth.currentTenant;
-    } else if (store?.state?.auth?.currentTenant) {
-      currentTenant = store.state.auth.currentTenant;
+    // For Enterprise Edition, check plan-based access for premium signals features
+    if (flag === FEATURE_FLAGS.signals || flag === FEATURE_FLAGS.signalsSentinel) {
+      console.log(`🏢 Enterprise Edition - checking ${flag} feature access`);
+      
+      let currentTenant = null;
+      
+      // Try multiple ways to get current tenant
+      if (window.store?.state?.auth?.currentTenant) {
+        currentTenant = window.store.state.auth.currentTenant;
+      } else if (store?.state?.auth?.currentTenant) {
+        currentTenant = store.state.auth.currentTenant;
+      }
+      
+      console.log('- Current tenant:', currentTenant);
+      
+      if (currentTenant) {
+        // All enterprise edition plans have access to signals: Pro, Teams+, Enterprise
+        const enterprisePlans = ['Pro', 'Teams+', 'Enterprise'];
+        const hasEnterprisePlan = enterprisePlans.includes(currentTenant.plan);
+        console.log(`- Plan check for ${flag} - Plan="${currentTenant.plan}", HasAccess=${hasEnterprisePlan}`);
+        console.log('- Enterprise plans:', enterprisePlans);
+        
+        if (!hasEnterprisePlan) {
+          console.log(`❌ Plan ${currentTenant.plan} does not have access to ${flag}`);
+          return false;
+        }
+        
+        console.log(`✅ Plan ${currentTenant.plan} has access to ${flag}`);
+        return true;
+      } else {
+        console.log(`⚠️ No tenant found, defaulting to enabled for Enterprise Edition feature ${flag}`);
+        // In Enterprise Edition, if no tenant is found, enable signals by default
+        return true;
+      }
     }
     
-    if (currentTenant && flag === 'signals') {
-      const premiumPlans = ['Growth', 'Signals', 'Scale', 'Enterprise'];
-      const hasPremiumPlan = premiumPlans.includes(currentTenant.plan);
-      console.log(`📡 Signals Workaround: Plan="${currentTenant.plan}", HasAccess=${hasPremiumPlan}`);
-      if (hasPremiumPlan) return true;
+    // For other features in Enterprise Edition, check Unleash if available
+    if (this.unleash) {
+      try {
+        const unleashResult = this.unleash.isEnabled(flag);
+        console.log(`FeatureFlagService: Unleash result for ${flag}: ${unleashResult}`);
+        return unleashResult;
+      } catch (err) {
+        // If Unleash throws, default to enabled for Enterprise Edition
+        console.warn(`FeatureFlagService: Unleash check failed for ${flag}, defaulting to enabled`, err);
+        return true;
+      }
     }
-
-    try {
-      return this.unleash.isEnabled(flag);
-    } catch (err) {
-      // If Unleash throws, default to enabled
-      console.warn(`Feature flag check failed for ${flag}, defaulting to enabled`);
-      return true;
-    }
+    
+    // If Unleash client isn't initialized, default to enabled for Enterprise Edition
+    console.log(`FeatureFlagService: No Unleash client, defaulting to enabled for Enterprise Edition feature ${flag}`);
+    return true;
   }
 
   updateContext(tenant) {
@@ -190,14 +242,14 @@ class FeatureFlagService {
     if (config.isCommunityVersion) {
       return 'Enterprise';
     }
-    return 'Scale';
+    return 'Teams+';
   }
 
   scaleFeatureCopy() {
     if (config.isCommunityVersion) {
       return 'Enterprise';
     }
-    return 'Scale';
+    return 'Teams+';
   }
 }
 

@@ -14,6 +14,7 @@ const getRepositoriesFromGH = async (page: number, installToken: string): Promis
     headers: {
       Authorization: `Bearer ${installToken}`,
     },
+    timeout: 30000, // 30 seconds timeout
   } as AxiosRequestConfig
 
   const response = await axios(requestConfig)

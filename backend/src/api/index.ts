@@ -65,6 +65,46 @@ setImmediate(async () => {
   // Store chat socket globally for service access
   global.devtelWebSocket = chatSocketInstance
 
+  // Fix stuck integrations on startup - only mark as error if truly stuck
+  try {
+    const { sequelize } = await databaseInit()
+    
+    // Only mark integrations as stuck if:
+    // 1. They have no active runs (PENDING, PROCESSING, DELAYED)
+    // 2. Their last run is in a final state (PROCESSED, ERROR)
+    // 3. They've been in this state for over 1 hour
+    const stuckIntegrations = await sequelize.query(
+      `UPDATE integrations i
+       SET status = CASE 
+         WHEN EXISTS (
+           SELECT 1 FROM "integrationRuns" ir 
+           WHERE ir."integrationId" = i.id 
+           AND ir.state = 'processed'
+           ORDER BY ir."createdAt" DESC 
+           LIMIT 1
+         ) THEN 'done'
+         ELSE 'error'
+       END,
+       "updatedAt" = NOW()
+       WHERE i.status IN ('mapping', 'in-progress', 'processing')
+       AND i."updatedAt" < NOW() - INTERVAL '1 hour'
+       AND i."deletedAt" IS NULL
+       AND NOT EXISTS (
+         SELECT 1 FROM "integrationRuns" ir2
+         WHERE ir2."integrationId" = i.id
+         AND ir2.state IN ('pending', 'processing', 'delayed')
+       )
+       RETURNING id, platform, status`,
+      { type: QueryTypes.UPDATE }
+    )
+    
+    if (stuckIntegrations && stuckIntegrations[0] && stuckIntegrations[0].length > 0) {
+      serviceLogger.info({ count: stuckIntegrations[0].length, integrations: stuckIntegrations[0] }, 'Fixed stuck integrations on startup')
+    }
+  } catch (err) {
+    serviceLogger.warn(err, 'Failed to fix stuck integrations on startup')
+  }
+
   const pubSubReceiver = new RedisPubSubReceiver(
     'api-pubsub',
     redisPubSubPair.subClient,
@@ -167,8 +207,8 @@ setImmediate(async () => {
       limit: '5mb',
       verify(req, res, buf) {
         const url = (<any>req).originalUrl
-        if (url.startsWith('/webhooks/stripe') || url.startsWith('/webhooks/sendgrid')) {
-          // Stripe and sendgrid webhooks needs the body raw
+        if (url.startsWith('/webhooks/stripe') || url.startsWith('/webhooks/brevo')) {
+          // Stripe and Brevo webhooks needs the body raw
           // for verifying the webhook with signing secret
           ; (<any>req).rawBody = buf.toString()
         }

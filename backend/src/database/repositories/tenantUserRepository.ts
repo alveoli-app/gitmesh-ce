@@ -179,17 +179,26 @@ export default class TenantUserRepository {
     return tenantUser
   }
 
-  static async updateSignalsSettings(userId: string, data, options: IRepositoryOptions) {
+  static async updateSignalsSettings(
+    userId: string,
+    data,
+    options: IRepositoryOptions,
+    feature: 'signals' | 'sentinel' = 'signals',
+  ) {
     const currentUser = SequelizeRepository.getCurrentUser(options)
     const transaction = SequelizeRepository.getTransaction(options)
 
     const tenantUser = await this.findByTenantAndUser(options.currentTenant.id, userId, options)
 
+    // Get existing settings for this feature, default to empty object if undefined
+    const existingFeatureSettings = tenantUser.settings?.[feature] || {}
+
+    // Update the appropriate feature settings (signals or sentinel)
     await tenantUser.update(
       {
         settings: {
           ...tenantUser.settings,
-          signals: { ...tenantUser.settings.signals, ...data },
+          [feature]: { ...existingFeatureSettings, ...data },
         },
         updatedById: currentUser.id,
       },

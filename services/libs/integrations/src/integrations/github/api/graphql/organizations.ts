@@ -25,6 +25,9 @@ const getOrganization = async (
       headers: {
         authorization: `token ${token}`,
       },
+      request: {
+        timeout: 60000, // 60 seconds timeout for GraphQL queries
+      },
     })
 
     const sanitizedName = name.replaceAll('\\', '').replaceAll('"', '')
@@ -97,6 +100,9 @@ const getOrganizationWithTokenRotation = async (
     const graphqlWithTokenRotation = graphql.defaults({
       headers: {
         authorization: `token ${token}`,
+      },
+      request: {
+        timeout: 60000, // 60 seconds timeout for GraphQL queries
       },
     })
 

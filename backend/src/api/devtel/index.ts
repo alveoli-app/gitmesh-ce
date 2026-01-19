@@ -52,6 +52,37 @@ export default (app) => {
         `/tenant/:tenantId/devtel/projects/:projectId`,
         safeWrap(require('./projects/projectDestroy').default),
     )
+
+    // ============================================
+    // Sync Routes
+    // ============================================
+    try {
+        app.post(
+            `/tenant/:tenantId/devtel/projects/:projectId/sync/trigger`,
+            safeWrap(require('./sync/syncTrigger').default),
+        )
+        console.log('[DevTel] Successfully registered sync/trigger route')
+    } catch (err) {
+        console.error('[DevTel] Failed to register sync/trigger route:', err?.message, err?.stack)
+    }
+    
+    try {
+        app.get(
+            `/tenant/:tenantId/devtel/projects/:projectId/sync/conflicts`,
+            safeWrap(require('./sync/conflictList').default),
+        )
+    } catch (err) {
+        console.error('[DevTel] Failed to register sync/conflicts route:', err?.message)
+    }
+    
+    try {
+        app.post(
+            `/tenant/:tenantId/devtel/projects/:projectId/sync/conflicts/:conflictId/resolve`,
+            safeWrap(require('./sync/conflictResolve').default),
+        )
+    } catch (err) {
+        console.error('[DevTel] Failed to register conflict/resolve route:', err?.message)
+    }
     app.get(
         `/tenant/:tenantId/devtel/projects/:projectId/overview`,
         safeWrap(require('./projects/projectOverview').default),

@@ -24,7 +24,7 @@ import webhookWorker from './automation/workers/webhookWorker'
 import slackWorker from './automation/workers/slackWorker'
 import { csvExportWorker } from './csv-export/csvExportWorker'
 import { processStripeWebhook } from '../../integrations/workers/stripeWebhookWorker'
-import { processSendgridWebhook } from '../../integrations/workers/sendgridWebhookWorker'
+import { processBrevoWebhook } from '../../integrations/workers/brevoWebhookWorker'
 import { bulkEnrichmentWorker } from './bulk-enrichment/bulkEnrichmentWorker'
 import { signalsEmailDigestWorker } from './signals-email-digest/signalsEmailDigestWorker'
 import { integrationDataCheckerWorker } from './integration-data-checker/integrationDataCheckerWorker'
@@ -52,8 +52,8 @@ async function workerFactory(event: NodeMicroserviceMessage): Promise<any> {
   switch (service.toLowerCase()) {
     case 'stripe-webhooks':
       return processStripeWebhook(event)
-    case 'sendgrid-webhooks':
-      return processSendgridWebhook(event)
+    case 'brevo-webhooks':
+      return processBrevoWebhook(event)
     case 'weekly-analytics-emails':
       if (
         isFeatureEnabled(

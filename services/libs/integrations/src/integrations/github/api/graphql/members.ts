@@ -22,6 +22,9 @@ const getMember = async (
       headers: {
         authorization: `token ${token}`,
       },
+      request: {
+        timeout: 60000, // 60 seconds timeout for GraphQL queries
+      },
     })
 
     const process = async () => {
@@ -74,6 +77,9 @@ const getMemberWithTokenRotation = async (
     const graphqlWithTokenRotation = graphql.defaults({
       headers: {
         authorization: `token ${token}`,
+      },
+      request: {
+        timeout: 60000, // 60 seconds timeout for GraphQL queries
       },
     })
 

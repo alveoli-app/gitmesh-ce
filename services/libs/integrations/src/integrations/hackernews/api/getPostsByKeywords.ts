@@ -27,6 +27,7 @@ async function getPostsByKeyword(
           tags: '(story,ask_hn,show_hn,poll)',
         },
         headers: {},
+        timeout: 30000, // 30 seconds timeout
       }
 
       const response = await axios(config)

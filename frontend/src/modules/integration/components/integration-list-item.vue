@@ -37,6 +37,14 @@
 
             <span class="text-xs text-gray-200 mr-2">In progress</span>
             <el-tooltip
+              v-if="progressData && progressData.hasRun && progressData.statusMessage"
+              :content="progressData.statusMessage"
+              placement="top"
+            >
+              <i class="ri-question-line text-gray-400" />
+            </el-tooltip>
+            <el-tooltip
+              v-else
               content="Fetching first activities from an integration might take a few minutes"
               placement="top"
             >
@@ -52,6 +60,17 @@
           >
             <span class="text-3xs italic text-gray-500">{{ lastSynced.relative }}</span>
           </el-tooltip>
+          <div v-else-if="isConnected && progressData && progressData.hasRun" class="text-3xs italic text-gray-500">
+            <div v-if="progressData.stats && progressData.stats.total > 0 && progressData.progress > 0">
+              {{ progressData.progress }}% complete ({{ progressData.stats.processed }}/{{ progressData.stats.total }} streams)
+            </div>
+            <div v-else-if="progressData.stats && progressData.stats.total === 0">
+              Initializing...
+            </div>
+            <div v-if="progressData.isStuck" class="text-yellow-600 mt-1">
+              ⚠ May be stuck - check logs
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -115,11 +134,12 @@
 
 <script setup>
 import { useStore } from 'vuex';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { FeatureFlag } from '@/utils/featureFlag';
 import AppIntegrationConnect from '@/modules/integration/components/integration-connect.vue';
 import { isCurrentDateAfterGivenWorkingDays } from '@/utils/date';
 import { ERROR_BANNER_WORKING_DAYS_DISPLAY } from '@/modules/integration/integration-store';
+import { IntegrationService } from '@/modules/integration/integration-service';
 import moment from 'moment';
 
 const store = useStore();
@@ -129,6 +149,26 @@ const props = defineProps({
     default: () => {},
   },
 });
+
+const progressData = ref(null);
+let progressInterval = null;
+
+const fetchProgress = async () => {
+  if (!isConnected.value || isDone.value || isError.value) {
+    return;
+  }
+  
+  try {
+    const data = await IntegrationService.getProgress(props.integration.id);
+    // Only update if we got valid data
+    if (data && typeof data === 'object') {
+      progressData.value = data;
+    }
+  } catch (error) {
+    // Silently fail - integration might not have a run yet
+    console.debug('Integration progress not available yet:', error.message);
+  }
+};
 
 onMounted(() => {
   moment.updateLocale('en', {
@@ -143,6 +183,19 @@ onMounted(() => {
       dd: '%dd',
     },
   });
+  
+  // Fetch progress immediately if in progress
+  if (isConnected.value && !isDone.value && !isError.value) {
+    fetchProgress();
+    // Poll every 10 seconds
+    progressInterval = setInterval(fetchProgress, 10000);
+  }
+});
+
+onUnmounted(() => {
+  if (progressInterval) {
+    clearInterval(progressInterval);
+  }
 });
 
 const computedClass = computed(() => ({

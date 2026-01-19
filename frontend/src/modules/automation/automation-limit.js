@@ -4,7 +4,7 @@ import ConfirmDialog from '@/shared/dialog/confirm-dialog';
 import { planLimits } from '@/security/plans-limits';
 
 /**
- * @param {*} plan tenant plan (Essential | Growth | Enterprise)
+ * @param {*} plan tenant plan (Pro | Teams+ | Enterprise)
  * @returns maximum number of workflows
  */
 export const getWorkflowMax = (plan) => planLimits.automation[plan];

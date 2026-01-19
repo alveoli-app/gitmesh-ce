@@ -60,11 +60,15 @@ services/libs/premium
 # Vibe Coding Symlinks (actual configs are in .vibe/)
 .symlinks
 .cursorrules
+.kirorules
 .clinerules
 .windsurfrules
 .supermavenrules
 .aider.conf.yml
 .geminiconfig
-.github/copilot-instructions.yml
-.cody/context.md
+.github/copilot-instructions.md
+.cody/context.json
 .continue/config.json
+
+# Vibe Memory (task-scoped, not version-controlled)
+.vibe-memory/

@@ -21,6 +21,7 @@ export const getAppToken = async (
         Authorization: `Bearer ${jwt}`,
         Accept: 'application/vnd.github+json',
       },
+      timeout: 30000, // 30 seconds timeout
     } as AxiosRequestConfig
 
     const response = await axios(config)

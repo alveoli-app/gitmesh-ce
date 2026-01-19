@@ -21,7 +21,7 @@ const job: GitmeshJob = {
 
     for (const tenant of expiredTrialTenants[0]) {
       await dbOptions.database.tenant.update(
-        { isTrialPlan: false, trialEndsAt: null, plan: Plans.values.essential },
+        { isTrialPlan: false, trialEndsAt: null, plan: Plans.values.pro },
         { returning: true, raw: true, where: { id: tenant.id } },
       )
     }
@@ -29,12 +29,12 @@ const job: GitmeshJob = {
     log.info('Downgrading expired non-trial plans')
     const expiredNonTrialTenants = await dbOptions.database.sequelize.query(
       `select t.id, t.name from tenants t
-      where (t.plan = ${Plans.values.growth} or t.plan = ${Plans.values.signals} or t.plan = ${Plans.values.scale}) and t."planSubscriptionEndsAt" is not null and t."planSubscriptionEndsAt" + interval '3 days' < now()`,
+      where t.plan = '${Plans.values.teamsPlus}' and t."planSubscriptionEndsAt" is not null and t."planSubscriptionEndsAt" + interval '3 days' < now()`,
     )
 
     for (const tenant of expiredNonTrialTenants[0]) {
       await dbOptions.database.tenant.update(
-        { plan: Plans.values.essential },
+        { plan: Plans.values.pro },
         { returning: true, raw: true, where: { id: tenant.id } },
       )
     }

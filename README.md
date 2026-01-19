@@ -202,7 +202,7 @@ Read our detailed [Contributing Guide](CONTRIBUTING.md) for best practices and g
 
 ---
 
-## The Alpha Pack
+## Maintainers
 
 <table width="100%">
   <tr align="center">

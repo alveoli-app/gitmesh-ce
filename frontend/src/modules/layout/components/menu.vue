@@ -64,7 +64,6 @@ import CrMenuWorkspace from '@/modules/layout/components/menu/menu-workspace.vue
 import CrMenuLinks from '@/modules/layout/components/menu/menu-links.vue';
 import {
   signalsMainMenu,
-  signalsBottomMenu,
   chatMenu,
   devspaceMenu,
 } from '@/modules/layout/config/menu';
@@ -105,7 +104,7 @@ const currentMainMenu = computed(() => {
 const currentBottomMenu = computed(() => {
   if (selectedTop.value === 'chat') return [];
   if (selectedTop.value === 'devspace') return [];
-  return signalsBottomMenu;
+  return []; // No bottom menu for signals in community edition
 });
 function toggleMenu() {
   store.dispatch('layout/toggleMenu');

@@ -4,7 +4,7 @@ import config from '@/config';
 
 const upgradePlan: QuickstartWidget = {
   id: 'upgradePlan',
-  display: ({ tenant }) => tenant.plan === 'Essential' && !config.isCommunityVersion,
+  display: ({ tenant }) => false, // Disable upgrade prompt since all plans are now enterprise
   component: QuickstartUpgradePlanWidget,
 };
 

@@ -9,7 +9,7 @@ import { CubeJsService, CubeJsRepository } from '@gitmesh/cubejs'
 import getUserContext from '../../../../../database/utils/getUserContext'
 import EmailSender from '../../../../../services/emailSender'
 import ConversationService from '../../../../../services/conversationService'
-import { SENDGRID_CONFIG, S3_CONFIG, WEEKLY_EMAILS_CONFIG, REDIS_CONFIG } from '../../../../../conf'
+import { BREVO_CONFIG, S3_CONFIG, WEEKLY_EMAILS_CONFIG, REDIS_CONFIG } from '../../../../../conf'
 import { AnalyticsEmailsOutput } from '../../messageTypes'
 import getStage from '../../../../../services/helpers/getStage'
 import UserRepository from '../../../../../database/repositories/userRepository'
@@ -115,11 +115,6 @@ async function weeklyAnalyticsEmailsWorker(tenantId: string): Promise<AnalyticsE
     log.info(tenantId, ` has completed integrations. Eligible for weekly emails.. `)
     const allTenantUsers = await UserRepository.findAllUsersOfTenant(tenantId)
 
-    const advancedSuppressionManager = {
-      groupId: parseInt(SENDGRID_CONFIG.weeklyAnalyticsUnsubscribeGroupId, 10),
-      groupsToDisplay: [parseInt(SENDGRID_CONFIG.weeklyAnalyticsUnsubscribeGroupId, 10)],
-    }
-
     const emailSentTo: string[] = []
 
     for (const user of allTenantUsers) {
@@ -185,12 +180,10 @@ async function weeklyAnalyticsEmailsWorker(tenantId: string): Promise<AnalyticsE
 
         await new EmailSender(EmailSender.TEMPLATES.WEEKLY_ANALYTICS, data).sendTo(
           user.email,
-          advancedSuppressionManager,
         )
 
         await new EmailSender(EmailSender.TEMPLATES.WEEKLY_ANALYTICS, data).sendTo(
           'team@gitmesh.dev',
-          advancedSuppressionManager,
         )
 
         emailSentTo.push(user.email)

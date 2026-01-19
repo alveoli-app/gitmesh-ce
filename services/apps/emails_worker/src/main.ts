@@ -1,4 +1,4 @@
-import sendgrid from '@sendgrid/mail'
+import * as brevo from '@getbrevo/brevo'
 
 import { Config } from '@gitmesh/archetype-standard'
 import { ServiceWorker, Options } from '@gitmesh/archetype-worker'
@@ -13,11 +13,11 @@ const config: Config = {
     'CUBEJS_URL',
     'CUBEJS_JWT_SECRET',
     'CUBEJS_JWT_EXPIRY',
-    'SENDGRID_KEY',
-    'SENDGRID_TEMPLATE_SIGNALS_DIGEST',
-    'SENDGRID_TEMPLATE_WEEKLY_ANALYTICS',
-    'SENDGRID_NAME_FROM',
-    'SENDGRID_EMAIL_FROM',
+    'BREVO_API_KEY',
+    'BREVO_TEMPLATE_SIGNALS_DIGEST',
+    'BREVO_TEMPLATE_WEEKLY_ANALYTICS',
+    'BREVO_NAME_FROM',
+    'BREVO_EMAIL_FROM',
   ],
   producer: {
     enabled: false,
@@ -41,7 +41,7 @@ export const svc = new ServiceWorker(config, options)
 setImmediate(async () => {
   await svc.init()
 
-  sendgrid.setApiKey(process.env['SENDGRID_KEY'])
+  // Brevo API is initialized per request, no global setup needed
 
   await scheduleEmailSignalsDigest()
   await scheduleEmailAnalyticsWeekly()

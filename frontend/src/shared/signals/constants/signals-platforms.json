@@ -1,0 +1,46 @@
+{
+  "platforms": [
+    {
+      "id": "github",
+      "name": "GitHub",
+      "icon": "github",
+      "color": "#333",
+      "enabled": true
+    },
+    {
+      "id": "discord",
+      "name": "Discord",
+      "icon": "discord",
+      "color": "#5865F2",
+      "enabled": true
+    },
+    {
+      "id": "slack",
+      "name": "Slack",
+      "icon": "slack",
+      "color": "#4A154B",
+      "enabled": true
+    },
+    {
+      "id": "twitter",
+      "name": "Twitter",
+      "icon": "twitter",
+      "color": "#1DA1F2",
+      "enabled": true
+    },
+    {
+      "id": "linkedin",
+      "name": "LinkedIn",
+      "icon": "linkedin",
+      "color": "#0077B5",
+      "enabled": true
+    },
+    {
+      "id": "reddit",
+      "name": "Reddit",
+      "icon": "reddit",
+      "color": "#FF4500",
+      "enabled": true
+    }
+  ]
+}

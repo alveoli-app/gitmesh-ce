@@ -4,11 +4,9 @@
 class Plans {
   static get values() {
     return {
-      essential: 'Essential',
-      growth: 'Growth',
+      pro: 'Pro',
+      teamsPlus: 'Teams+',
       enterprise: 'Enterprise',
-      scale: 'Scale',
-      signals: 'Signals',
     };
   }
 

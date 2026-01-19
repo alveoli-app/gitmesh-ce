@@ -71,6 +71,9 @@ class BaseQuery {
       headers: {
         authorization: `token ${this.githubToken}`,
       },
+      request: {
+        timeout: 60000, // 60 seconds timeout for GraphQL queries
+      },
     })
   }
 
@@ -158,6 +161,9 @@ class BaseQuery {
       const graphqlWithTokenRotation = graphql.defaults({
         headers: {
           authorization: `token ${token}`,
+        },
+        request: {
+          timeout: 60000, // 60 seconds timeout for GraphQL queries
         },
       })
       const result = await graphqlWithTokenRotation(paginatedQuery)

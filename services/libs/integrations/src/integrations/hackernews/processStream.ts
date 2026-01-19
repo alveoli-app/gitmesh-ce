@@ -37,6 +37,12 @@ const processMainStream: ProcessStreamHandler = async (ctx) => {
   const metadata = ctx.stream.data as HackerNewsMainStreamMetadata
 
   const post = await getPost(metadata.postId.toString(), ctx)
+  
+  // Skip deleted or non-existent posts
+  if (!post) {
+    ctx.log.warn({ postId: metadata.postId }, 'Skipping deleted or non-existent post')
+    return
+  }
 
   if (post.kids !== undefined) {
     for (const kid of post.kids) {

@@ -55,6 +55,19 @@ check_prerequisites() {
     log_success "All prerequisites met."
 }
 
+# Check premium directories for EE build
+check_premium_directories() {
+    log_info "Checking premium directories..."
+    
+    if node "$SCRIPT_DIR/check-premium-dirs.js" > /dev/null 2>&1; then
+        log_success "Premium directories found - Enterprise Edition available."
+        return 0
+    else
+        log_warning "Premium directories not found or incomplete."
+        return 1
+    fi
+}
+
 # Setup chat-orchestrator Python environment
 setup_python_env() {
     log_info "Setting up Python environment for chat-orchestrator..."
@@ -307,6 +320,15 @@ main() {
     echo ""
     
     check_prerequisites
+    
+    # Check premium directories if EE edition is requested
+    if [ "$EDITION" == "ee" ]; then
+        if ! check_premium_directories; then
+            log_warning "Premium directories not available, falling back to Community Edition"
+            EDITION="ce"
+        fi
+    fi
+    
     setup_python_env
     check_env_file
     check_critical_vars

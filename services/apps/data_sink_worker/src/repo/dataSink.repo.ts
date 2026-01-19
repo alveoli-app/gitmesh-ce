@@ -72,7 +72,7 @@ export default class DataSinkRepository extends RepositoryBase<DataSinkRepositor
         `,
         {
           pendingState: IntegrationResultState.PENDING,
-          plans: [TenantPlans.Growth, TenantPlans.Scale],
+          plans: [TenantPlans.TeamsPlus, TenantPlans.Enterprise],
         },
       )
 

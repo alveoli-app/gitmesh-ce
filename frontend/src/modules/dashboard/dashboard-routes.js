@@ -5,17 +5,6 @@ const DashboardPage = () => import('@/modules/dashboard/pages/dashboard-page.vue
 export default [
   {
     path: '/dashboard',
-    exact: true,
-    component: Layout,
-    meta: { auth: true },
-    children: [
-      {
-        name: 'dashboard',
-        path: '',
-        component: DashboardPage,
-        exact: true,
-        meta: { auth: true },
-      },
-    ],
+    redirect: '/signals/dashboard', // Redirect to signals dashboard following tab_name/page_name rule
   },
 ];

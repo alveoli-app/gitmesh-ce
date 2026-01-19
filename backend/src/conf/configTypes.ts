@@ -150,9 +150,9 @@ export interface GithubConfiguration {
   callbackUrl: string
 }
 
-export interface SendgridConfiguration {
-  key: string
-  webhookSigningSecret: string
+export interface BrevoConfiguration {
+  apiKey: string
+  webhookSecret: string
   emailFrom: string
   nameFrom: string
   templateEmailAddressVerification: string
@@ -162,7 +162,6 @@ export interface SendgridConfiguration {
   templateIntegrationDone: string
   templateCsvExport: string
   templateSignalsDigest: string
-  weeklyAnalyticsUnsubscribeGroupId: string
 }
 
 export interface NetlifyConfiguration {

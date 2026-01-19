@@ -11,15 +11,15 @@ contributors:
   assigned_by: EE-board
   assigned_at: '2025-12-01T00:01:00'
   last_activity: '2026-01-19'
-  notes: Final authority on enterprise decisions.
+  notes: Lab Leader CE, Final authority on enterprise decisions.
 - username: ronit-raj9
-  role: CTO
-  team: EE
-  status: active
-  assigned_by: EE-board
+  role: Maintainer
+  team: CE
+  status: Inactive
+  assigned_by: rawx18
   assigned_at: '2025-12-01T00:01:00'
   last_activity: '2026-01-14'
-  notes: Technical owner. Approves CE changes affecting EE.
+  notes: CE maintainer; own signals subsystem.
 - username: parvm1102
   role: Maintainer
   team: CE
@@ -27,11 +27,11 @@ contributors:
   assigned_by: rawx18
   assigned_at: '2025-12-01T00:01:00'
   last_activity: '2026-01-11'
-  notes: Lead CE maintainer; handles community PR triage.
+  notes: CE maintainer; handles community PR triage.
 - username: ruriazz
   role: Newbie Contributor
   team: CE
-  status: active
+  status: Inactive
   assigned_by: GitMesh-Steward-bot
   assigned_at: '2025-09-14T06:29:39Z'
   last_activity: '2025-12-24'
@@ -79,7 +79,7 @@ contributors:
 - username: SK8-infi
   role: Newbie Contributor
   team: CE
-  status: active
+  status: Inactive
   assigned_by: GitMesh-Steward-bot
   assigned_at: '2025-10-24T13:57:43Z'
   last_activity: '2026-01-18'
@@ -87,7 +87,7 @@ contributors:
 - username: berkaymuratt
   role: Newbie Contributor
   team: CE
-  status: active
+  status: Inactive
   assigned_by: GitMesh-Steward-bot
   assigned_at: '2025-10-25T16:08:25Z'
   last_activity: '2025-12-06'
@@ -103,7 +103,7 @@ contributors:
 - username: jason2000-cpu
   role: Newbie Contributor
   team: CE
-  status: active
+  status: Inactive
   assigned_by: GitMesh-Steward-bot
   assigned_at: '2025-11-05T09:08:14Z'
   last_activity: '2025-11-29'

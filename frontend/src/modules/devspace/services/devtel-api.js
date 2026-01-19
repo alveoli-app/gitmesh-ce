@@ -651,5 +651,33 @@ export default class DevtelService {
         );
         return response.data;
     }
+
+    // ============================================
+    // Sync & Conflicts
+    // ============================================
+    static async getConflicts(projectId) {
+        const tenantId = getTenantId();
+        const response = await authAxios.get(
+            `/tenant/${tenantId}/devtel/projects/${projectId}/sync/conflicts`
+        );
+        return response.data;
+    }
+
+    static async resolveConflict(projectId, conflictId, resolution) {
+        const tenantId = getTenantId();
+        const response = await authAxios.post(
+            `/tenant/${tenantId}/devtel/projects/${projectId}/sync/conflicts/${conflictId}/resolve`,
+            { resolution }
+        );
+        return response.data;
+    }
+
+    static async triggerSync(projectId) {
+        const tenantId = getTenantId();
+        const response = await authAxios.post(
+            `/tenant/${tenantId}/devtel/projects/${projectId}/sync/trigger`
+        );
+        return response.data;
+    }
 }
 

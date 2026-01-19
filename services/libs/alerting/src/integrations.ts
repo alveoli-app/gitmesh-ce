@@ -84,7 +84,7 @@ function getBlocks(
   frameworkVersion: 'old' | 'new',
 ) {
   const tenantName = userContext.currentTenant.name
-  const isPayingCustomer = userContext.currentTenant.plan !== 'Essential'
+  const isPayingCustomer = userContext.currentTenant.plan !== Plans.values.pro // Pro is the base plan
   const isTrial = userContext.currentTenant.isTrial
   const payingCustomerMarker = `✅ ${isTrial ? ' (trial)' : ''}`
   switch (alertType) {

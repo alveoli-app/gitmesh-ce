@@ -1,6 +1,6 @@
 FROM node:20-alpine
 
-RUN apk add --update --no-cache bash python3 build-base py3-pip && ln -sf python3 /usr/bin/python
+RUN apk add --update --no-cache bash python3 build-base py3-pip curl && ln -sf python3 /usr/bin/python
 
 WORKDIR /usr/gitmesh/app
 

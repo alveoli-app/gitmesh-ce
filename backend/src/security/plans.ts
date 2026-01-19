@@ -3,10 +3,8 @@ import { PLANS_CONFIG } from '../conf'
 class Plans {
   static get values() {
     return {
-      essential: 'Essential',
-      growth: 'Growth',
-      signals: 'Signals',
-      scale: 'Scale',
+      pro: 'Pro',
+      teamsPlus: 'Teams+',
       enterprise: 'Enterprise',
     }
   }
@@ -15,14 +13,14 @@ class Plans {
     const premiumStripePriceId = PLANS_CONFIG.stripePricePremium
 
     if (premiumStripePriceId === stripePriceId) {
-      return Plans.values.growth
+      return Plans.values.pro
     }
 
-    return Plans.values.essential
+    return Plans.values.pro
   }
 
   static selectStripePriceIdByPlan(plan) {
-    if (plan === Plans.values.growth) {
+    if (plan === Plans.values.pro || plan === Plans.values.teamsPlus || plan === Plans.values.enterprise) {
       return PLANS_CONFIG.stripePricePremium
     }
 
@@ -64,11 +62,11 @@ class Plans {
    * because future charges might occur
    */
   static allowTenantDestroy(plan, planStatus) {
-    if (plan === Plans.values.essential || plan === Plans.values.growth) {
-      return true
+    if (plan === Plans.values.pro || plan === Plans.values.teamsPlus || plan === Plans.values.enterprise) {
+      return planStatus === 'cancel_at_period_end'
     }
 
-    return planStatus === 'cancel_at_period_end'
+    return true
   }
 }
 

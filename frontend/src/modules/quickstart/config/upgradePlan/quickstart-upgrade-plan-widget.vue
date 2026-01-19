@@ -3,7 +3,7 @@
     <div class="flex justify-center pb-4">
       <div class="bg-brand-500 flex items-center rounded-2xl py-1 px-2">
         <i class="ri-vip-crown-2-fill text-white text-base h-4 flex items-center" />
-        <span class="text-xs text-white font-medium leading-4 pl-2">Scale plan</span>
+        <span class="text-xs text-white font-medium leading-4 pl-2">Teams+ plan</span>
       </div>
     </div>
     <h6 class="text-center text-sm font-semibold pb-4">

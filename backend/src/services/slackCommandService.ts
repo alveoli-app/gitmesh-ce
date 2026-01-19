@@ -42,7 +42,7 @@ export default class SlackCommandService {
       {
         command: SlackCommand.SET_TENANT_PLAN,
         shortVersion: 'stp',
-        description: 'Sets tenant plan to Growth or Essential',
+        description: 'Sets tenant plan to Pro, Teams+, or Enterprise',
         parameters: [
           {
             name: 'tenantId',
@@ -57,7 +57,7 @@ export default class SlackCommandService {
             required: true,
             description: 'Plan to set',
             type: SlackCommandParameterType.STRING,
-            allowedValues: [Plans.values.growth, Plans.values.essential],
+            allowedValues: [Plans.values.pro, Plans.values.teamsPlus, Plans.values.enterprise],
           },
           {
             name: 'trialEndsAt',

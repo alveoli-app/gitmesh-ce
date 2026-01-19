@@ -73,7 +73,7 @@ Avoid sending live secrets (such as real private keys or production credentials)
 
 We ask all reporters to follow responsible disclosure principles:
 
-* Report vulnerabilities **privately and confidentially** through the appropriate channel (CE → Lab Leader / LFDT; EE → Alveoli CTO).
+* Report vulnerabilities **privately and confidentially** through the appropriate channel (CE → Lab Leader / LFDT; EE → Alveoli CEO).
 * Allow the relevant team (GitMesh CE maintainers or Alveoli for EE) a reasonable period to investigate, fix, and coordinate disclosures.
 * Do not intentionally exploit the vulnerability beyond what is necessary to confirm its existence.
 * Do not access, modify, or destroy data that does not belong to you.
@@ -107,7 +107,7 @@ If escalation is needed (for example, for broader LFDT concerns), CE issues may 
 
 ### For EE Reports
 
-When you report a potential vulnerability in GitMesh EE to the CTO of Alveoli, it will be handled through Alveoli’s internal security and product processes. This includes triage, validation, remediation, and any appropriate communication to GitMesh EE operators or customers, managed exclusively by Alveoli.
+When you report a potential vulnerability in GitMesh EE to the CEO of Alveoli, it will be handled through Alveoli’s internal security and product processes. This includes triage, validation, remediation, and any appropriate communication to GitMesh EE operators or customers, managed exclusively by Alveoli.
 
 While specific timelines cannot be guaranteed, all reports are taken seriously and handled in good faith.
 
@@ -214,7 +214,7 @@ Users should keep GitMesh, underlying operating systems, and related infrastruct
 * **GitMesh CE Security – Lab Leader (Ryan Madhuwala)**
   `rawx18.dev@gmail.com`
 
-* **GitMesh EE Security – CTO of Alveoli (Ryan Madhuwala)**
+* **GitMesh EE Security – CEO of Alveoli (Ryan Madhuwala)**
   `rawx18.dev@gmail.com`
 
 * **LFDT (Escalation for CE only)**

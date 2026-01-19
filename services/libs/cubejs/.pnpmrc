@@ -1,0 +1,9 @@
+# Prevent cache conflicts with CubeJS
+prefer-frozen-lockfile=true
+strict-peer-dependencies=false
+
+# Handle symlink issues
+symlink=false
+
+# Ignore optional dependencies that might cause issues
+optional=false

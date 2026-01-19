@@ -19,7 +19,7 @@ describe('OrganizationService tests', () => {
     it('Should create organization', async () => {
       const mockIServiceOptions = await SequelizeTestUtils.getTestIServiceOptions(
         db,
-        Plans.values.growth,
+        Plans.values.teamsPlus,
       )
       const service = new OrganizationService(mockIServiceOptions)
 
@@ -39,7 +39,7 @@ describe('OrganizationService tests', () => {
     it('Should throw an error when name is not sent', async () => {
       const mockIServiceOptions = await SequelizeTestUtils.getTestIServiceOptions(
         db,
-        Plans.values.growth,
+        Plans.values.teamsPlus,
       )
       const service = new OrganizationService(mockIServiceOptions)
 

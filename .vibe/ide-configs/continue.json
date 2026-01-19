@@ -1,0 +1,141 @@
+{
+  "models": [
+    {
+      "title": "GPT-4",
+      "provider": "openai",
+      "model": "gpt-4",
+      "apiKey": ""
+    },
+    {
+      "title": "GPT-3.5 Turbo",
+      "provider": "openai",
+      "model": "gpt-3.5-turbo",
+      "apiKey": ""
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "GPT-3.5 Turbo",
+    "provider": "openai",
+    "model": "gpt-3.5-turbo"
+  },
+  "customCommands": [
+    {
+      "name": "architecture",
+      "description": "Explain architecture",
+      "prompt": "Explain the architecture of {{{ input }}} in the context of GitMesh CE. Reference .vibe/core/architecture.md for system overview."
+    },
+    {
+      "name": "security",
+      "description": "Review security",
+      "prompt": "Review {{{ input }}} for security vulnerabilities. Check for: SQL injection, XSS, hardcoded secrets, improper input validation. Reference .vibe/core/security.md."
+    },
+    {
+      "name": "test",
+      "description": "Generate tests",
+      "prompt": "Generate comprehensive tests for {{{ input }}}. Include unit tests, integration tests (if applicable), and property-based tests (if applicable). Follow .vibe/core/testing.md."
+    },
+    {
+      "name": "refactor",
+      "description": "Suggest refactoring",
+      "prompt": "Suggest refactoring improvements for {{{ input }}}. Look for code duplication, long functions, complex conditionals, poor naming. Follow .vibe/core/coding-style.md."
+    },
+    {
+      "name": "optimize",
+      "description": "Optimize performance",
+      "prompt": "Analyze {{{ input }}} for performance issues and suggest optimizations. Look for N+1 queries, inefficient algorithms, missing indexes, unnecessary computations."
+    },
+    {
+      "name": "ce-check",
+      "description": "Check CE/EE boundaries",
+      "prompt": "Check {{{ input }}} for CE/EE boundary violations. Look for EE code references, proprietary dependencies, non-Apache 2.0 licenses. Reference .vibe/core/ce-ee-boundaries.md."
+    }
+  ],
+  "slashCommands": [
+    {
+      "name": "edit",
+      "description": "Edit highlighted code"
+    },
+    {
+      "name": "comment",
+      "description": "Add comments to code"
+    },
+    {
+      "name": "share",
+      "description": "Share code snippet"
+    },
+    {
+      "name": "cmd",
+      "description": "Generate shell command"
+    },
+    {
+      "name": "commit",
+      "description": "Generate commit message"
+    }
+  ],
+  "contextProviders": [
+    {
+      "name": "code",
+      "params": {}
+    },
+    {
+      "name": "docs",
+      "params": {}
+    },
+    {
+      "name": "diff",
+      "params": {}
+    },
+    {
+      "name": "terminal",
+      "params": {}
+    },
+    {
+      "name": "problems",
+      "params": {}
+    },
+    {
+      "name": "folder",
+      "params": {}
+    },
+    {
+      "name": "codebase",
+      "params": {}
+    }
+  ],
+  "allowAnonymousTelemetry": false,
+  "docs": [
+    {
+      "title": "GitMesh Architecture",
+      "startUrl": ".vibe/core/architecture.md"
+    },
+    {
+      "title": "Coding Style",
+      "startUrl": ".vibe/core/coding-style.md"
+    },
+    {
+      "title": "Security Guidelines",
+      "startUrl": ".vibe/core/security.md"
+    },
+    {
+      "title": "Testing Strategy",
+      "startUrl": ".vibe/core/testing.md"
+    },
+    {
+      "title": "CE/EE Boundaries",
+      "startUrl": ".vibe/core/ce-ee-boundaries.md"
+    },
+    {
+      "title": "Memory Management",
+      "startUrl": ".vibe/core/memory-management.md"
+    }
+  ],
+  "systemMessage": "You are an AI assistant helping with GitMesh Community Edition development.\n\n## Architecture\n- Backend: Node.js/Express/TypeScript/Sequelize/PostgreSQL\n- Frontend: Vue 3/Vite/TypeScript/Tailwind CSS\n- Services: Python/Temporal/Redis/OpenSearch/SQS\n- Infrastructure: Docker/Docker Compose/Nginx\n\nFull details: .vibe/core/architecture.md\n\n## Coding Standards\n- TypeScript/JavaScript: ES6+, async/await, explicit types, no any\n- Python: PEP 8, type hints, async/await\n- Shell: POSIX compliance, error handling\n\nFull details: .vibe/core/coding-style.md\n\n## Critical Rules\n- ✅ Apache 2.0 only (CE code)\n- ❌ Never access EE code\n- ✅ Validate all inputs\n- ✅ Parameterized queries only\n- ✅ Hash passwords (bcrypt, 12+ rounds)\n- ❌ No secrets in code\n\nFull details: .vibe/core/ce-ee-boundaries.md, .vibe/core/security.md\n\n## Testing\n- Write unit tests for all functions\n- Write integration tests for APIs\n- Write property-based tests for universal properties\n- Coverage should be 70%+\n\nFull details: .vibe/core/testing.md\n\n## Memory Management\n- Memory is scoped to current task only\n- Use .vibe-memory/prd.json for task definition\n- Use .vibe-memory/progress.txt for debugging\n- NEVER create extra markdown files\n\nFull details: .vibe/core/memory-management.md\n\n## CRITICAL: Always Update PRD and Progress\nBEFORE starting ANY task, you MUST:\n1. Update .vibe-memory/prd.json - Add task with status \"in_progress\"\n2. Log to .vibe-memory/progress.txt - Log start, attempts, solution\n\nThis is MANDATORY for all code changes.\n\nWorkflow:\n1. Update PRD with task status\n2. Log task start to progress file\n3. Work on task and log attempts\n4. Update PRD when complete\n5. Clean failed attempts from progress file\n\n## Slash Commands\nUse slash commands for common tasks:\n- /edit - Edit highlighted code\n- /comment - Add comments\n- /cmd - Generate shell command\n- /commit - Generate commit message\n- /architecture - Explain architecture\n- /security - Review security\n- /test - Generate tests\n- /refactor - Suggest refactoring\n- /optimize - Optimize performance\n- /ce-check - Check CE/EE boundaries\n\n## Context Providers\nUse @ to reference context:\n- @code - Reference code files\n- @docs - Reference documentation\n- @diff - Reference git diff\n- @terminal - Reference terminal output\n- @problems - Reference IDE problems\n- @folder - Reference folder contents\n- @codebase - Search entire codebase\n\n## Best Practices\n- Use context providers for relevant information\n- Use slash commands for common tasks\n- Follow existing patterns\n- Write tests for new code\n- Review security implications\n- Keep CE and EE separate\n\n## Resources\n- Architecture: .vibe/core/architecture.md\n- Coding Style: .vibe/core/coding-style.md\n- Security: .vibe/core/security.md\n- Testing: .vibe/core/testing.md\n- Skills: .vibe/skills/\n- Evaluations: .vibe/evals/",
+  "embeddingsProvider": {
+    "provider": "openai"
+  },
+  "experimental": {
+    "modelRoles": {
+      "inlineEdit": "gpt-4"
+    }
+  }
+}

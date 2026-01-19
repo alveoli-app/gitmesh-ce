@@ -171,7 +171,7 @@ describe('TenantService tests', () => {
         id: tenantCreatedPlain.id,
         name: 'testName',
         url: 'testUrl',
-        plan: Plans.values.essential,
+        plan: Plans.values.pro,
         isTrialPlan: false,
         trialEndsAt: null,
         onboardedAt: null,

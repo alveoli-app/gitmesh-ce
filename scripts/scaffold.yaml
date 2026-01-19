@@ -18,6 +18,15 @@ services:
       - CUBEJS_API_SECRET=137ea167812145c6d77452a58d7dd29b
       - CUBEJS_EXTERNAL_DEFAULT=true
       - CUBEJS_SCHEDULED_REFRESH_DEFAULT=true
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:4000/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - gitmesh-bridge
 
@@ -32,6 +41,12 @@ services:
     volumes:
       - pgdata-dev:/var/lib/postgresql/data
     shm_size: 1gb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     networks:
       - gitmesh-bridge
 
@@ -55,6 +70,12 @@ services:
       - 9600:9600
     volumes:
       - opensearch-dev:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
     networks:
       - gitmesh-bridge
 
@@ -86,6 +107,12 @@ services:
     ports:
       - 9324:9324
       - 9325:9325
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9325 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - gitmesh-bridge
 
@@ -112,6 +139,12 @@ services:
       - redis-dev:/data
     ports:
       - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "gitmeshtest", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
     networks:
       - gitmesh-bridge
 
@@ -130,6 +163,15 @@ services:
       - SERVER_PORT=3003
     ports:
       - '3003:3003'
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - gitmesh-bridge
 
@@ -147,6 +189,12 @@ services:
       - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
     ports:
       - '9094:9092'
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
     networks:
       - gitmesh-bridge
 
@@ -157,6 +205,12 @@ services:
     ports:
       - '7233:7233'
       - '8233:8233'
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "localhost:7233", "cluster", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - gitmesh-bridge
 
@@ -168,6 +222,12 @@ services:
       - '11434:11434'
     volumes:
       - ollama-dev:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - gitmesh-bridge
     # Uncomment below for GPU support (NVIDIA)

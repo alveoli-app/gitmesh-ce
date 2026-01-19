@@ -388,7 +388,7 @@ export default class TenantService {
   }
 
   async updatePlanToFree(planStripeCustomerId) {
-    return this.updatePlanStatus(planStripeCustomerId, Plans.values.essential, 'active')
+    return this.updatePlanStatus(planStripeCustomerId, Plans.values.pro, 'active')
   }
 
   async updatePlanStatus(planStripeCustomerId, plan, planStatus) {

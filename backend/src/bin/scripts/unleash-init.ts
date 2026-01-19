@@ -15,14 +15,14 @@ const constaintConfiguration = {
   [FeatureFlag.AUTOMATIONS]: [
     [
       {
-        values: [Plans.values.scale],
+        values: [Plans.values.pro],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
         caseInsensitive: false,
       },
       {
-        value: PLAN_LIMITS[Plans.values.scale][FeatureFlag.AUTOMATIONS].toString(),
+        value: PLAN_LIMITS[Plans.values.pro][FeatureFlag.AUTOMATIONS].toString(),
         values: [],
         inverted: false,
         operator: 'NUM_LT',
@@ -32,14 +32,14 @@ const constaintConfiguration = {
     ],
     [
       {
-        values: [Plans.values.growth],
+        values: [Plans.values.teamsPlus],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
         caseInsensitive: false,
       },
       {
-        value: PLAN_LIMITS[Plans.values.growth][FeatureFlag.AUTOMATIONS].toString(),
+        value: PLAN_LIMITS[Plans.values.teamsPlus][FeatureFlag.AUTOMATIONS].toString(),
         values: [],
         inverted: false,
         operator: 'NUM_LT',
@@ -49,14 +49,14 @@ const constaintConfiguration = {
     ],
     [
       {
-        values: [Plans.values.essential],
+        values: [Plans.values.enterprise],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
         caseInsensitive: false,
       },
       {
-        value: PLAN_LIMITS[Plans.values.essential][FeatureFlag.AUTOMATIONS].toString(),
+        value: PLAN_LIMITS[Plans.values.enterprise][FeatureFlag.AUTOMATIONS].toString(),
         values: [],
         inverted: false,
         operator: 'NUM_LT',
@@ -68,14 +68,14 @@ const constaintConfiguration = {
   [FeatureFlag.CSV_EXPORT]: [
     [
       {
-        values: [Plans.values.scale],
+        values: [Plans.values.pro],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
         caseInsensitive: false,
       },
       {
-        value: PLAN_LIMITS[Plans.values.scale][FeatureFlag.CSV_EXPORT].toString(),
+        value: PLAN_LIMITS[Plans.values.pro][FeatureFlag.CSV_EXPORT].toString(),
         values: [],
         inverted: false,
         operator: 'NUM_LT',
@@ -85,14 +85,14 @@ const constaintConfiguration = {
     ],
     [
       {
-        values: [Plans.values.growth],
+        values: [Plans.values.teamsPlus],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
         caseInsensitive: false,
       },
       {
-        value: PLAN_LIMITS[Plans.values.growth][FeatureFlag.CSV_EXPORT].toString(),
+        value: PLAN_LIMITS[Plans.values.teamsPlus][FeatureFlag.CSV_EXPORT].toString(),
         values: [],
         inverted: false,
         operator: 'NUM_LT',
@@ -102,14 +102,14 @@ const constaintConfiguration = {
     ],
     [
       {
-        values: [Plans.values.essential],
+        values: [Plans.values.enterprise],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
         caseInsensitive: false,
       },
       {
-        value: PLAN_LIMITS[Plans.values.essential][FeatureFlag.CSV_EXPORT].toString(),
+        value: PLAN_LIMITS[Plans.values.enterprise][FeatureFlag.CSV_EXPORT].toString(),
         values: [],
         inverted: false,
         operator: 'NUM_LT',
@@ -121,7 +121,7 @@ const constaintConfiguration = {
   [FeatureFlag.SIGNALS]: [
     [
       {
-        values: [Plans.values.growth, Plans.values.signals, Plans.values.scale, Plans.values.enterprise],
+        values: [Plans.values.pro, Plans.values.teamsPlus, Plans.values.enterprise],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
@@ -132,7 +132,7 @@ const constaintConfiguration = {
   [FeatureFlag.LINKEDIN]: [
     [
       {
-        values: [Plans.values.growth, Plans.values.scale, Plans.values.enterprise],
+        values: [Plans.values.pro, Plans.values.teamsPlus, Plans.values.enterprise],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
@@ -143,7 +143,7 @@ const constaintConfiguration = {
   [FeatureFlag.HUBSPOT]: [
     [
       {
-        values: [Plans.values.scale, Plans.values.enterprise],
+        values: [Plans.values.teamsPlus, Plans.values.enterprise],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
@@ -154,14 +154,14 @@ const constaintConfiguration = {
   [FeatureFlag.MEMBER_ENRICHMENT]: [
     [
       {
-        values: [Plans.values.scale],
+        values: [Plans.values.pro],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
         caseInsensitive: false,
       },
       {
-        value: PLAN_LIMITS[Plans.values.scale][FeatureFlag.MEMBER_ENRICHMENT].toString(),
+        value: PLAN_LIMITS[Plans.values.pro][FeatureFlag.MEMBER_ENRICHMENT].toString(),
         values: [],
         inverted: false,
         operator: 'NUM_LT',
@@ -171,14 +171,14 @@ const constaintConfiguration = {
     ],
     [
       {
-        values: [Plans.values.growth],
+        values: [Plans.values.teamsPlus],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
         caseInsensitive: false,
       },
       {
-        value: PLAN_LIMITS[Plans.values.growth][FeatureFlag.MEMBER_ENRICHMENT].toString(),
+        value: PLAN_LIMITS[Plans.values.teamsPlus][FeatureFlag.MEMBER_ENRICHMENT].toString(),
         values: [],
         inverted: false,
         operator: 'NUM_LT',
@@ -190,14 +190,14 @@ const constaintConfiguration = {
   [FeatureFlag.ORGANIZATION_ENRICHMENT]: [
     [
       {
-        values: [Plans.values.scale],
+        values: [Plans.values.pro],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
         caseInsensitive: false,
       },
       {
-        value: PLAN_LIMITS[Plans.values.scale][FeatureFlag.ORGANIZATION_ENRICHMENT].toString(),
+        value: PLAN_LIMITS[Plans.values.pro][FeatureFlag.ORGANIZATION_ENRICHMENT].toString(),
         values: [],
         inverted: false,
         operator: 'NUM_LT',
@@ -207,14 +207,14 @@ const constaintConfiguration = {
     ],
     [
       {
-        values: [Plans.values.growth],
+        values: [Plans.values.teamsPlus],
         inverted: false,
         operator: 'IN',
         contextName: 'plan',
         caseInsensitive: false,
       },
       {
-        value: PLAN_LIMITS[Plans.values.growth][FeatureFlag.ORGANIZATION_ENRICHMENT].toString(),
+        value: PLAN_LIMITS[Plans.values.teamsPlus][FeatureFlag.ORGANIZATION_ENRICHMENT].toString(),
         values: [],
         inverted: false,
         operator: 'NUM_LT',
@@ -230,11 +230,9 @@ const constaintConfiguration = {
     [
       {
         values: [
-          Plans.values.scale,
-          Plans.values.signals,
+          Plans.values.pro,
+          Plans.values.teamsPlus,
           Plans.values.enterprise,
-          Plans.values.essential,
-          Plans.values.growth,
         ],
         inverted: false,
         operator: 'IN',
@@ -247,11 +245,9 @@ const constaintConfiguration = {
     [
       {
         values: [
-          Plans.values.scale,
-          Plans.values.signals,
+          Plans.values.pro,
+          Plans.values.teamsPlus,
           Plans.values.enterprise,
-          Plans.values.essential,
-          Plans.values.growth,
         ],
         inverted: false,
         operator: 'IN',
@@ -265,11 +261,9 @@ const constaintConfiguration = {
     [
       {
         values: [
-          Plans.values.scale,
-          Plans.values.signals,
+          Plans.values.pro,
+          Plans.values.teamsPlus,
           Plans.values.enterprise,
-          Plans.values.essential,
-          Plans.values.growth,
         ],
         inverted: false,
         operator: 'IN',
@@ -321,29 +315,36 @@ setImmediate(async () => {
 
 async function createApiToken(token: string, name: string, type: string): Promise<void> {
   const results = await seq.query(
-    'select * from api_tokens where secret = :token and type = :type and username = :name;',
+    'select * from api_tokens where secret = :token;',
     {
       replacements: {
         token,
-        name,
-        type,
       },
       type: QueryTypes.SELECT,
     },
   )
   if (results.length === 0) {
     log.info(`${name} token not found - creating...`)
-    await seq.query(
-      `insert into api_tokens(secret, username, type, environment) values (:token, :name, :type, 'production')`,
-      {
-        replacements: {
-          token,
-          name,
-          type,
+    try {
+      await seq.query(
+        `insert into api_tokens(secret, username, type, environment) values (:token, :name, :type, 'production')`,
+        {
+          replacements: {
+            token,
+            name,
+            type,
+          },
+          type: QueryTypes.INSERT,
         },
-        type: QueryTypes.INSERT,
-      },
-    )
+      )
+      log.info(`${name} token created successfully!`)
+    } catch (err) {
+      if (err.name === 'SequelizeUniqueConstraintError') {
+        log.info(`${name} token already exists (created by another process)`)
+      } else {
+        throw err
+      }
+    }
   } else {
     log.info(`${name} token found!`)
   }

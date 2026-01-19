@@ -170,11 +170,15 @@ export default class SignalsSettingsService extends LoggerBase {
   /**
    * Validate, normalize and update Signals settings.
    * @param data Input of type SignalsSettings
+   * @param feature Feature name ('signals' or 'sentinel')
    * @returns Normalized SignalsSettings if the input is valid. Otherwise a 400 Error.
    */
-  async update(data: SignalsSettings): Promise<SignalsSettings> {
+  async update(data: SignalsSettings, feature: 'signals' | 'sentinel' = 'signals'): Promise<SignalsSettings> {
     const transaction = await SequelizeRepository.createTransaction(this.options)
     try {
+      console.log('🔧 SignalsSettingsService: Updating feature:', feature)
+      console.log('🔧 Data to save:', { onboarded: data.onboarded, feed: data.feed })
+      
       // At this point onboarded is true always
       data.onboarded = true
 
@@ -196,21 +200,26 @@ export default class SignalsSettingsService extends LoggerBase {
         'aiReplies',
       ])
 
-      // Update the user's Signals settings
+      console.log('🔧 Calling updateSignalsSettings with feature:', feature)
+
+      // Update the user's settings for the specified feature (signals or sentinel)
       const tenantUserOut = await TenantUserRepository.updateSignalsSettings(
         this.options.currentUser.id,
         data,
         { ...this.options, transaction },
+        feature,
       )
+
+      console.log('🔧 Settings updated. Result:', tenantUserOut.settings[feature])
 
       await SequelizeRepository.commitTransaction(transaction)
 
       // Track the events in Segment
-      const settingsOut: SignalsSettings = tenantUserOut.settings.signals
+      const settingsOut: SignalsSettings = tenantUserOut.settings[feature]
 
       if (data.emailDigestActive) {
         track(
-          'Signals email settings updated',
+          `${feature === 'sentinel' ? 'Sentinel' : 'Signals'} email settings updated`,
           {
             email: settingsOut.emailDigest.email,
             frequency: settingsOut.emailDigest.frequency,
@@ -226,7 +235,7 @@ export default class SignalsSettingsService extends LoggerBase {
         )
       } else {
         track(
-          'Signals settings updated',
+          `${feature === 'sentinel' ? 'Sentinel' : 'Signals'} settings updated`,
           {
             onboarded: settingsOut.onboarded,
             emailDigestActive: settingsOut.emailDigestActive,
@@ -240,7 +249,7 @@ export default class SignalsSettingsService extends LoggerBase {
         )
       }
 
-      return tenantUserOut.settings.signals
+      return tenantUserOut.settings[feature]
     } catch (error) {
       await SequelizeRepository.rollbackTransaction(transaction)
 

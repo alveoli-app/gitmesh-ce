@@ -64,7 +64,7 @@ onMounted(async () => {
     const currentUser = store.getters['auth/currentUser'];
     
     if (currentUser) {
-      router.push('/dashboard');
+      router.push('/signals/dashboard');
     }
   } catch (error) {
     // If auth init fails, just show the landing page

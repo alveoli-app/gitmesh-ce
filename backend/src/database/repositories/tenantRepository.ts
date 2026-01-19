@@ -24,15 +24,17 @@ class TenantRepository {
     const query = `
       SELECT "id"
       FROM "tenants"
-      WHERE tenants."plan" IN (:growth)
-        OR (tenants."isTrialPlan" is true AND tenants."plan" = :growth)
+      WHERE tenants."plan" IN (:pro, :teamsPlus, :enterprise)
+        OR (tenants."isTrialPlan" is true AND tenants."plan" IN (:pro, :teamsPlus, :enterprise))
       ;
     `
     return database.query(query, {
       type: QueryTypes.SELECT,
       transaction,
       replacements: {
-        growth: plans.growth,
+        pro: plans.pro,
+        teamsPlus: plans.teamsPlus,
+        enterprise: plans.enterprise,
       },
     })
   }
@@ -71,7 +73,7 @@ class TenantRepository {
           'integrationsRequired',
           'importHash',
         ]),
-        plan: API_CONFIG.edition === Edition.COMMUNITY ? Plans.values.enterprise : Plans.values.essential,
+        plan: API_CONFIG.edition === Edition.COMMUNITY ? Plans.values.enterprise : Plans.values.pro,
         createdById: currentUser.id,
         updatedById: currentUser.id,
       },

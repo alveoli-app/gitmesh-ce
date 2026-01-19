@@ -1,0 +1,124 @@
+{
+  "cody.contextFilters": {
+    "include": [
+      {
+        "repoNamePattern": ".*",
+        "filePathPatterns": [
+          "**/*.ts",
+          "**/*.js",
+          "**/*.vue",
+          "**/*.py",
+          "**/*.md",
+          "**/*.json",
+          "**/*.yml",
+          "**/*.yaml"
+        ]
+      }
+    ],
+    "exclude": [
+      {
+        "repoNamePattern": ".*",
+        "filePathPatterns": [
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**",
+          "**/.git/**",
+          "**/coverage/**",
+          "**/*.min.js",
+          "**/*.bundle.js"
+        ]
+      }
+    ]
+  },
+  "cody.customCommands": {
+    "explain-architecture": {
+      "description": "Explain GitMesh CE architecture",
+      "prompt": "Explain the architecture of this component in the context of GitMesh CE. Reference .vibe/core/architecture.md for system overview.",
+      "context": {
+        "codebase": true,
+        "openTabs": true,
+        "selection": true
+      }
+    },
+    "review-security": {
+      "description": "Review code for security issues",
+      "prompt": "Review this code for security vulnerabilities. Check for: SQL injection, XSS, hardcoded secrets, improper input validation, weak authentication. Reference .vibe/core/security.md for security guidelines.",
+      "context": {
+        "selection": true,
+        "openTabs": false,
+        "codebase": false
+      }
+    },
+    "check-ce-ee": {
+      "description": "Check for CE/EE boundary violations",
+      "prompt": "Check this code for CE/EE boundary violations. Look for: EE code references, proprietary dependencies, non-Apache 2.0 licenses. Reference .vibe/core/ce-ee-boundaries.md for rules.",
+      "context": {
+        "selection": true,
+        "codebase": false,
+        "openTabs": false
+      }
+    },
+    "generate-tests": {
+      "description": "Generate tests for selected code",
+      "prompt": "Generate comprehensive tests for this code. Include: unit tests, integration tests (if applicable), property-based tests (if applicable). Follow patterns in .vibe/core/testing.md.",
+      "context": {
+        "selection": true,
+        "openTabs": true,
+        "codebase": true
+      }
+    },
+    "find-similar": {
+      "description": "Find similar code patterns",
+      "prompt": "Find similar code patterns in the codebase. Show me other implementations that follow the same pattern or solve similar problems.",
+      "context": {
+        "selection": true,
+        "codebase": true,
+        "openTabs": false
+      }
+    },
+    "explain-data-flow": {
+      "description": "Explain data flow through system",
+      "prompt": "Explain how data flows through this component and related components. Trace the data from input to output, including database operations, API calls, and transformations.",
+      "context": {
+        "selection": true,
+        "codebase": true,
+        "openTabs": true
+      }
+    },
+    "optimize-performance": {
+      "description": "Suggest performance optimizations",
+      "prompt": "Analyze this code for performance issues and suggest optimizations. Look for: N+1 queries, inefficient algorithms, missing indexes, unnecessary computations, memory leaks.",
+      "context": {
+        "selection": true,
+        "openTabs": true,
+        "codebase": false
+      }
+    },
+    "refactor-code": {
+      "description": "Suggest refactoring improvements",
+      "prompt": "Suggest refactoring improvements for this code. Look for: code duplication, long functions, complex conditionals, poor naming, missing abstractions. Follow patterns in .vibe/core/coding-style.md.",
+      "context": {
+        "selection": true,
+        "openTabs": true,
+        "codebase": true
+      }
+    }
+  },
+  "cody.experimental.symf": {
+    "enabled": true
+  },
+  "cody.autocomplete.enabled": true,
+  "cody.autocomplete.languages": {
+    "typescript": true,
+    "javascript": true,
+    "python": true,
+    "vue": true,
+    "markdown": true,
+    "json": true,
+    "yaml": true
+  },
+  "cody.chat.preInstruction": "You are an AI assistant helping with GitMesh Community Edition development.\n\n## Architecture\n- Backend: Node.js/Express/TypeScript/Sequelize/PostgreSQL\n- Frontend: Vue 3/Vite/TypeScript/Tailwind CSS\n- Services: Python/Temporal/Redis/OpenSearch/SQS\n- Infrastructure: Docker/Docker Compose/Nginx\n\nFull details: .vibe/core/architecture.md\n\n## Coding Standards\n- TypeScript/JavaScript: ES6+, async/await, explicit types, no any\n- Python: PEP 8, type hints, async/await\n- Shell: POSIX compliance, error handling\n\nFull details: .vibe/core/coding-style.md\n\n## Critical Rules\n- ✅ Apache 2.0 only (CE code)\n- ❌ Never access EE code\n- ✅ Validate all inputs\n- ✅ Parameterized queries only\n- ✅ Hash passwords (bcrypt, 12+ rounds)\n- ❌ No secrets in code\n\nFull details: .vibe/core/ce-ee-boundaries.md, .vibe/core/security.md\n\n## Testing\n- Write unit tests for all functions\n- Write integration tests for APIs\n- Write property-based tests for universal properties\n- Coverage should be 70%+\n\nFull details: .vibe/core/testing.md\n\n## Memory Management\n- Memory is scoped to current task only\n- Use .vibe-memory/prd.json for task definition\n- Use .vibe-memory/progress.txt for debugging\n- NEVER create extra markdown files\n\nFull details: .vibe/core/memory-management.md\n\n## CRITICAL: Always Update PRD and Progress\nBEFORE starting ANY task, you MUST:\n1. Update .vibe-memory/prd.json - Add task with status \"in_progress\"\n2. Log to .vibe-memory/progress.txt - Log start, attempts, solution\n\nThis is MANDATORY for all code changes.\n\nWorkflow:\n1. Update PRD with task status\n2. Log task start to progress file\n3. Work on task and log attempts\n4. Update PRD when complete\n5. Clean failed attempts from progress file\n\n## Search Patterns\nWhen searching the codebase:\n- Use semantic search for concepts and functionality\n- Use exact search for specific identifiers\n- Search across related files (model + service + controller)\n- Look for similar patterns in existing code\n\n## Code Navigation\nWhen navigating code:\n- Follow imports to understand dependencies\n- Check usages to understand impact\n- Review related files for context\n- Look for tests to understand behavior\n\n## Best Practices\n- Search before implementing (avoid duplication)\n- Follow existing patterns\n- Write tests for new code\n- Review security implications\n- Keep CE and EE separate\n- Document complex logic\n\n## Resources\n- Architecture: .vibe/core/architecture.md\n- Coding Style: .vibe/core/coding-style.md\n- Security: .vibe/core/security.md\n- Testing: .vibe/core/testing.md\n- Skills: .vibe/skills/\n- Evaluations: .vibe/evals/",
+  "cody.codebase": ".",
+  "cody.useContext": "embeddings",
+  "cody.experimental.guardrails": true
+}

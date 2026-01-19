@@ -1,0 +1,266 @@
+# Aider Configuration for GitMesh CE
+# Optimized for CLI workflow and git integration
+
+# Core Configuration
+model: claude-sonnet-4.5
+edit-format: whole
+auto-commits: true
+dirty-commits: true
+attribute-author: true
+attribute-committer: true
+attribute-commit-message-author: true
+attribute-commit-message-committer: true
+
+# Git Integration
+git: true
+gitignore: true
+auto-lint: true
+auto-test: false  # Run tests manually for control
+
+# File Operations
+read: []
+write: []
+
+# Instructions for Aider AI
+instructions: |
+  # GitMesh CE Development Guidelines
+  
+  ## Architecture
+  - Backend: Node.js/Express/TypeScript/Sequelize/PostgreSQL
+  - Frontend: Vue 3/Vite/TypeScript/Tailwind CSS
+  - Services: Python/Temporal/Redis/OpenSearch/SQS
+  - Infrastructure: Docker/Docker Compose/Nginx
+  
+  Full details: .vibe/core/architecture.md
+  
+  ## Coding Standards
+  
+  ### TypeScript/JavaScript
+  - Use ES6+ features (arrow functions, async/await, destructuring)
+  - Prefer const over let, never use var
+  - Always use explicit types, avoid any
+  - Use async/await for asynchronous operations
+  - Proper error handling with try-catch
+  
+  ### Python
+  - Follow PEP 8 style guide
+  - Use type hints for all functions
+  - Use async/await for async operations
+  - Proper error handling with try-except
+  
+  ### Shell Scripts
+  - POSIX compliant
+  - Use set -e for error handling
+  - Quote all variables
+  - Validate inputs
+  
+  Full details: .vibe/core/coding-style.md
+  
+  ## Security Requirements
+  - Validate all user input
+  - Use parameterized queries (never string concatenation)
+  - Hash passwords with bcrypt (12+ rounds)
+  - Never log sensitive data
+  - Store secrets in environment variables only
+  - No hardcoded credentials
+  
+  Full details: .vibe/core/security.md
+  
+  ## CE/EE Boundaries
+  CRITICAL: Never access, reference, or incorporate Enterprise Edition (EE) code.
+  - All code in this repository is Community Edition (Apache 2.0)
+  - If EE code is detected: STOP, ALERT, REPORT
+  - Contact: security@gitmesh.com
+  
+  Full details: .vibe/core/ce-ee-boundaries.md
+  
+  ## Testing Strategy
+  - Write unit tests for all new functions
+  - Write integration tests for API endpoints
+  - Write property-based tests for universal properties
+  - Test coverage should be 70%+
+  - All tests must pass before committing
+  
+  Full details: .vibe/core/testing.md
+  
+  ## Git Commit Patterns
+  
+  ### Commit Message Format
+  Use conventional commit format with type, scope, subject, body, and footer
+  
+  ### Types
+  - feat: New feature
+  - fix: Bug fix
+  - docs: Documentation changes
+  - style: Code style changes (formatting, no logic change)
+  - refactor: Code refactoring
+  - test: Adding or updating tests
+  - chore: Maintenance tasks
+  
+  ### Guidelines
+  - Use imperative mood in subject line
+  - Include scope when applicable
+  - Provide detailed body explaining what and why
+  - Reference issues in footer
+  - Keep subject line under 72 characters
+  
+  ## File Operation Guidelines
+  
+  ### Before Editing
+  1. Read related files to understand context
+  2. Check for existing patterns to follow
+  3. Identify affected components
+  4. Plan changes incrementally
+  
+  ### While Editing
+  1. Make small, focused changes
+  2. Follow existing code patterns
+  3. Add tests for new functionality
+  4. Update documentation if needed
+  
+  ### After Editing
+  1. Run linter: npm run lint
+  2. Run tests: npm test
+  3. Verify build: npm run build
+  4. Review changes: git diff
+  5. Commit with descriptive message
+  
+  ## Common Patterns
+  
+  ### API Endpoint Pattern
+  Follow the layered architecture:
+  - Controller: Handle HTTP request/response, validate input, call service
+  - Service: Implement business logic, validate data, interact with database
+  - Test: Verify service behavior with unit tests
+  
+  ### Vue Component Pattern
+  Use Vue 3 Composition API:
+  - Template: Define component structure and user interface
+  - Script setup: Use reactive state, computed properties, and methods
+  - Style scoped: Apply component-specific styling
+  
+  ### Temporal Workflow Pattern
+  Define workflows with activities:
+  - Use workflow decorator for workflow definitions
+  - Use activity decorator for activity definitions
+  - Execute activities with appropriate timeouts
+  - Handle errors and retries appropriately
+  
+  ## Memory Management
+  - Memory is scoped to current task only
+  - Use .vibe-memory/prd.json for task definition
+  - Use .vibe-memory/progress.txt for debugging attempts
+  - NEVER create extra markdown files (SUMMARY.md, NOTES.md, etc.)
+  - Clean failed attempts when solution works
+  
+  Full details: .vibe/core/memory-management.md
+  
+  ### CRITICAL: Always Update PRD and Progress
+  BEFORE starting ANY task, you MUST:
+  1. Update .vibe-memory/prd.json - Add task with status "in_progress"
+  2. Log to .vibe-memory/progress.txt - Log start, attempts, solution
+  
+  This is MANDATORY for all code changes.
+  
+  Workflow:
+  1. Update PRD with task status
+  2. Log task start to progress file
+  3. Work on task and log attempts
+  4. Update PRD when complete
+  5. Clean failed attempts from progress file
+  
+  ## CLI Workflow
+  
+  ### Starting Work
+  Start aider with relevant files or let aider discover files automatically
+  
+  ### Making Changes
+  Use aider commands to add files, request changes, review diffs, and commit
+  
+  ### Running Tests
+  Exit aider, run tests, and return to aider to fix any failures
+  
+  ### Best Practices
+  - Add only files you're actively editing
+  - Commit frequently with clear messages
+  - Run tests after each change
+  - Review diffs before committing
+  - Use undo command if changes are wrong
+  
+  ## Troubleshooting
+  
+  ### Common Issues
+  
+  **Issue**: Aider makes too many changes
+  **Solution**: Be more specific in requests, add fewer files
+  
+  **Issue**: Tests failing after changes
+  **Solution**: Review changes with /diff, use /undo, fix manually
+  
+  **Issue**: Commit message unclear
+  **Solution**: Use /commit with custom message
+  
+  **Issue**: Wrong files modified
+  **Solution**: Use /add and /drop to control file list
+  
+  ## Quick Commands
+  
+  ### File Management
+  - /add <file>: Add file to chat
+  - /drop <file>: Remove file from chat
+  - /ls: List files in chat
+  - /read-only <file>: Add file as read-only context
+  
+  ### Git Operations
+  - /commit: Commit changes
+  - /diff: Show uncommitted changes
+  - /undo: Undo last change
+  - /git <command>: Run git command
+  
+  ### Other
+  - /help: Show help
+  - /exit: Exit aider
+  - /clear: Clear chat history
+  - /tokens: Show token usage
+  
+  ## Resources
+  
+  ### Internal Documentation
+  - Architecture: .vibe/core/architecture.md
+  - Coding Style: .vibe/core/coding-style.md
+  - Security: .vibe/core/security.md
+  - Testing: .vibe/core/testing.md
+  - Memory: .vibe/core/memory-management.md
+  
+  ### Skills
+  - Backend: .vibe/skills/backend-engineer.md
+  - Frontend: .vibe/skills/frontend-engineer.md
+  - Testing: .vibe/skills/tester.md
+  - Security: .vibe/skills/security-engineer.md
+  
+  ### Evaluations
+  - Code Quality: .vibe/evals/code-quality.md
+  - Test Coverage: .vibe/evals/test-coverage.md
+  - Security: .vibe/evals/security-scan.md
+  - CE/EE: .vibe/evals/ce-ee-separation.md
+  
+  ### External Resources
+  - GitMesh Docs: https://docs.gitmesh.com
+  - Aider Docs: https://aider.chat/docs/
+  
+  ## Summary
+  
+  Remember:
+  - Follow coding standards strictly
+  - Write tests for all changes
+  - Commit frequently with clear messages
+  - Never mix CE and EE code
+  - Keep memory clean and task-focused
+  - Run tests before committing
+  - Review changes before committing
+  
+  When in doubt:
+  - Check architecture documentation
+  - Follow existing patterns
+  - Ask for clarification
+  - Make small, incremental changes

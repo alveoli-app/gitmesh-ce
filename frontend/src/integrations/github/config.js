@@ -6,10 +6,10 @@ export default {
   backgroundColor: '#E5E7EB',
   borderColor: '#E5E7EB',
   description:
-    'Connect GitHub to sync profile information, stars, forks, pull requests, issues, and discussions.',
+    'Connect GitHub to sync stars, forks, pull requests, issues, discussions, and associated member data.',
   onboard: {
     description: `GitHub is one of the richest places for developer activity and information. 
-      Connect GitHub to track all relevant activities with no historical import limitations like repo stars, discussions, comments, and more.`,
+      Connect GitHub to track stars, forks, pull requests, issues, discussions, and all associated comments and events with no historical import limitations.`,
     image: '/images/integrations/onboard/onboard-github-preview.png',
     highlight: true,
   },

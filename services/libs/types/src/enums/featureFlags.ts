@@ -1,6 +1,7 @@
 export enum FeatureFlag {
   AUTOMATIONS = 'automations',
   SIGNALS = 'signals',
+  SIGNALS_SENTINEL = 'signals-sentinel',
   CSV_EXPORT = 'csv-export',
   LINKEDIN = 'linkedin',
   HUBSPOT = 'hubspot',

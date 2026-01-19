@@ -4,7 +4,7 @@ const organizations: MenuLink = {
   id: 'organizations',
   label: 'Organizations',
   icon: 'ri-community-line',
-  routeName: 'organization',
+  routeName: 'signals-organizations',
   display: () => true,
   disable: () => false,
 };

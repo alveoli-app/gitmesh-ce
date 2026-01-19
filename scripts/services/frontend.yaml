@@ -32,6 +32,12 @@ services:
       - BACKEND_URL=http://api:8080
     ports:
       - '8081:8081'
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     networks:
       - gitmesh-bridge
     hostname: frontend
@@ -42,9 +48,9 @@ services:
       npm run start:dev
       "
     volumes:
-      - ../../frontend/src:/usr/gitmesh/frontend/src
-      - ../../frontend/public:/usr/gitmesh/frontend/public
-      - ../../../premium-frontend/src/premium:/usr/gitmesh/frontend/src/premium
+      - ../../frontend/src:/usr/gitmesh/frontend/src:z
+      - ../../frontend/public:/usr/gitmesh/frontend/public:z
+      - ../../../premium-frontend/src/premium:/usr/gitmesh/frontend/src/premium:z
 
 networks:
   gitmesh-bridge:

@@ -45,7 +45,7 @@ export const hubspot: AutomationTypeConfig = {
   name: 'HubSpot',
   description: 'Send contacts or organizations to HubSpot',
   icon: '/images/automation/hubspot.png',
-  plan: 'Scale',
+  plan: 'Teams+',
   featureFlag: FeatureFlag.flags.hubspot,
   emptyScreen: {
     title: 'No HubSpot automations yet',

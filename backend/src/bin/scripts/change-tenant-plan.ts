@@ -22,7 +22,7 @@ const options = [
     name: 'plan',
     alias: 'p',
     type: String,
-    description: `Plan that will be applied to the tenant. Accepted values are 'Growth' and 'Essential'.`,
+    description: `Plan that will be applied to the tenant. Accepted values are 'Pro', 'Teams+', and 'Enterprise'.`,
   },
   {
     name: 'trialEndsAt',
@@ -59,7 +59,7 @@ const parameters = commandLineArgs(options)
 
 if (parameters.help || !parameters.tenant || !parameters.plan) {
   console.log(usage)
-} else if (parameters.plan !== 'Growth' && parameters.plan !== 'Essential') {
+} else if (parameters.plan !== 'Pro' && parameters.plan !== 'Teams+' && parameters.plan !== 'Enterprise') {
   console.log(usage)
   console.log(`Invalid plan ${parameters.plan}`)
 } else {

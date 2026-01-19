@@ -148,6 +148,12 @@ export class IntegrationRunProcessor extends LoggerBase {
 
       await this.integrationRunRepository.markProcessing(req.runId)
       run.state = IntegrationRunState.PROCESSING
+      
+      logger.info({ 
+        runId: req.runId, 
+        integrationId: integration.id, 
+        platform: integration.platform 
+      }, 'Integration run marked as PROCESSING, starting stream detection and processing')
 
       if (integration.settings.updateMemberAttributes) {
         logger.trace('Updating member attributes!')
@@ -242,6 +248,12 @@ export class IntegrationRunProcessor extends LoggerBase {
           logger.trace('Detecting streams!')
           try {
             const pendingStreams = await intService.getStreams(stepContext)
+            logger.info({ count: pendingStreams.length }, 'Detected streams for integration run')
+            
+            if (pendingStreams.length === 0) {
+              logger.warn('No streams detected for integration run! This may indicate a configuration issue.')
+            }
+            
             const createStreams: DbIntegrationStreamCreateData[] = pendingStreams.map((s) => ({
               runId: req.runId,
               tenantId: run.tenantId,
@@ -252,6 +264,8 @@ export class IntegrationRunProcessor extends LoggerBase {
             }))
             await this.integrationStreamRepository.bulkCreate(createStreams)
             await this.integrationRunRepository.touch(run.id)
+            
+            logger.info({ count: createStreams.length }, 'Created streams in database')
           } catch (err) {
             if (err.rateLimitResetSeconds) {
               // need to delay integration processing
@@ -260,6 +274,7 @@ export class IntegrationRunProcessor extends LoggerBase {
               return
             }
 
+            logger.error(err, 'Error detecting streams for integration run')
             throw err
           }
         }
@@ -274,6 +289,12 @@ export class IntegrationRunProcessor extends LoggerBase {
         nextStream = forcedStream
       } else {
         nextStream = await this.integrationStreamRepository.getNextStreamToProcess(req.runId)
+      }
+      
+      if (!nextStream) {
+        logger.warn('No streams to process for this integration run')
+      } else {
+        logger.info('Starting stream processing loop')
       }
 
       while (nextStream) {
@@ -501,9 +522,17 @@ export class IntegrationRunProcessor extends LoggerBase {
         case IntegrationRunState.ERROR:
           status = 'error'
           break
+        case IntegrationRunState.DELAYED:
+          status = 'in-progress' // Keep as in-progress when delayed
+          break
+        case IntegrationRunState.PROCESSING:
+          status = 'in-progress' // Keep as in-progress when processing
+          break
         default:
           status = integration.status
       }
+
+      logger.info({ newState, status, runId: req.runId }, 'Integration run completed, updating integration status')
 
       await IntegrationRepository.update(
         integration.id,

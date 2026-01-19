@@ -163,7 +163,7 @@ const en = {
       noOrganizationFound: 'No organization found for given id!',
     },
     hubspot: {
-      notInPlan: 'Hubspot integration requires Scale plan.',
+      notInPlan: 'Hubspot integration requires Teams+ plan.',
     },
     members: {
       activeList: {
@@ -228,7 +228,7 @@ const en = {
     signals: {
       errors: {
         planLimitExceeded:
-          'Signals is only available in the Growth and Custom plans. Please upgrade your plan.',
+          'Signals is only available in the Teams+ and Enterprise plans. Please upgrade your plan.',
       },
     },
   },

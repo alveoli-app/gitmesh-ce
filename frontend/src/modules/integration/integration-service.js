@@ -73,6 +73,16 @@ export class IntegrationService {
     return response.data;
   }
 
+  static async getProgress(id) {
+    const tenantId = AuthCurrentTenant.get();
+
+    const response = await authAxios.get(
+      `/tenant/${tenantId}/integration/${id}/progress`,
+    );
+
+    return response.data;
+  }
+
   static async listAutocomplete(query, limit) {
     const params = {
       query,

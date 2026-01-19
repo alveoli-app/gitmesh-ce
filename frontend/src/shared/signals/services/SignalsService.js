@@ -93,13 +93,27 @@ export class SignalsService {
     return response.data;
   }
 
-  static async updateSettings(data) {
+  static async updateSettings(data, isSentinel = false) {
     const tenantId = AuthCurrentTenant.get();
 
+    const endpoint = `/tenant/${tenantId}/signalsContent/settings`;
+    
+    // Use axios params for query parameters
+    const config = isSentinel ? { params: { feature: 'sentinel' } } : {};
+
+    console.log('🚀 SignalsService.updateSettings called');
+    console.log('  - isSentinel:', isSentinel);
+    console.log('  - config.params:', config.params);
+    console.log('  - endpoint:', endpoint);
+    console.log('  - data:', data);
+
     const response = await authAxios.put(
-      `/tenant/${tenantId}/signalsContent/settings`,
+      endpoint,
       data,
+      config,
     );
+
+    console.log('✅ SignalsService.updateSettings response:', response.data);
 
     return response.data;
   }

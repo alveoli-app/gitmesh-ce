@@ -360,14 +360,20 @@ export default {
 
   async doUpdateSettings(
     { commit, dispatch },
-    { data, fetchNewResults = true },
+    { data, fetchNewResults = true, isSentinel = false },
   ) {
+    console.log('🔵 Store action: doUpdateSettings called');
+    console.log('  - isSentinel:', isSentinel);
+    console.log('  - data:', data);
+    
     commit('UPDATE_SIGNALS_SETTINGS_STARTED');
-    return SignalsService.updateSettings(data)
+    return SignalsService.updateSettings(data, isSentinel)
       .then(() => {
+        console.log('🔵 Store action: updateSettings success, refreshing user...');
         dispatch('auth/doRefreshCurrentUser', null, {
           root: true,
         }).then(() => {
+          console.log('🔵 Store action: user refreshed, committing success');
           commit('UPDATE_SIGNALS_SETTINGS_SUCCESS');
 
           if (fetchNewResults) {
@@ -379,6 +385,7 @@ export default {
         });
       })
       .catch((error) => {
+        console.error('❌ Store action: updateSettings error:', error);
         Errors.handle(error);
         commit('UPDATE_SIGNALS_SETTINGS_ERROR');
         return Promise.reject();

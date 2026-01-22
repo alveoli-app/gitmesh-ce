@@ -475,3 +475,15 @@ events:
   username: focuzd
   details: 'Role changed from ''Newbie Contributor'' to ''Active Contributor'' by
     @RAWx18 via PR #343'
+- timestamp: '2026-01-22T15:12:45+05:30'
+  type: PR_MERGED
+  username: RAWx18
+  details: 'PR #343: chore(gov): automated governance registry & history sync'
+- timestamp: '2026-01-22T15:12:45+05:30'
+  type: PR_MERGED
+  username: RAWx18
+  details: 'PR #344: fixed'
+- timestamp: '2026-01-22T15:12:45+05:30'
+  type: PR_MERGED
+  username: focuzd
+  details: 'PR #352: Add Bot Management for a clean separation between bots and contributor'

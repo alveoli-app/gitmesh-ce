@@ -1,8 +1,8 @@
 metadata:
   version: 1.0.0
   total_contributors: 14
-  active_contributors: 14
-  last_sync: '2026-01-19T13:53:18+05:30'
+  active_contributors: 9
+  last_sync: '2026-01-22T15:12:50+05:30'
 contributors:
 - username: rawx18
   role: CEO
@@ -10,7 +10,7 @@ contributors:
   status: active
   assigned_by: EE-board
   assigned_at: '2025-12-01T00:01:00'
-  last_activity: '2026-01-19'
+  last_activity: '2026-01-22'
   notes: Lab Leader CE, Final authority on enterprise decisions.
 - username: ronit-raj9
   role: Maintainer
@@ -18,7 +18,7 @@ contributors:
   status: Inactive
   assigned_by: rawx18
   assigned_at: '2025-12-01T00:01:00'
-  last_activity: '2026-01-14'
+  last_activity: '2026-01-21'
   notes: CE maintainer; own signals subsystem.
 - username: parvm1102
   role: Maintainer
@@ -50,7 +50,7 @@ contributors:
   status: active
   assigned_by: GitMesh-Steward-bot
   assigned_at: '2025-09-15T08:26:46Z'
-  last_activity: '2026-01-19'
+  last_activity: '2026-01-22'
   notes: Automatically onboarded after first merged PR.
 - username: gagan-ahlawat-0
   role: Newbie Contributor
@@ -74,7 +74,7 @@ contributors:
   status: active
   assigned_by: RAWx18
   assigned_at: '2026-01-19T13:55:27+05:30'
-  last_activity: '2026-01-19'
+  last_activity: '2026-01-22'
   notes: Automatically onboarded after first merged PR.
 - username: SK8-infi
   role: Newbie Contributor
@@ -82,7 +82,7 @@ contributors:
   status: Inactive
   assigned_by: GitMesh-Steward-bot
   assigned_at: '2025-10-24T13:57:43Z'
-  last_activity: '2026-01-18'
+  last_activity: '2026-01-22'
   notes: Automatically onboarded after first merged PR.
 - username: berkaymuratt
   role: Newbie Contributor
@@ -98,7 +98,7 @@ contributors:
   status: active
   assigned_by: GitMesh-Steward-bot
   assigned_at: '2025-10-27T09:08:23Z'
-  last_activity: '2026-01-18'
+  last_activity: '2026-01-20'
   notes: Automatically onboarded after first merged PR.
 - username: jason2000-cpu
   role: Newbie Contributor
@@ -114,5 +114,5 @@ contributors:
   status: active
   assigned_by: GitMesh-Steward-bot
   assigned_at: '2026-01-14T15:00:37Z'
-  last_activity: '2026-01-19'
+  last_activity: '2026-01-21'
   notes: Automatically onboarded after first merged PR.

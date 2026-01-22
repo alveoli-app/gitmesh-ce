@@ -38,22 +38,25 @@ export default {
   computed: {
     ...mapGetters('widget', ['cubejsToken', 'cubejsApi']),
     computedQuery() {
-      // Exclude team members in all queries
-      const widgetQuery = this.query;
-      const isTeamMemberFilter = {
-        member: 'Members.isTeamMember',
-        operator: 'equals',
-        values: ['0'],
-      };
-      const isBot = {
-        member: 'Members.isBot',
-        operator: 'equals',
-        values: ['0'],
-      };
-
-      if (!widgetQuery.filters) {
-        widgetQuery.filters = [isTeamMemberFilter, isBot];
-      } else {
+      // Clone query to avoid mutating the prop
+      const widgetQuery = { ...this.query, filters: [...(this.query.filters || [])] };
+      
+      // Only add Members filters for Members cube queries
+      // (Organizations and other cubes don't have a join to Members)
+      const measureCube = widgetQuery.measures?.[0]?.split('.')[0];
+      
+      if (measureCube === 'Members') {
+        const isTeamMemberFilter = {
+          member: 'Members.isTeamMember',
+          operator: 'equals',
+          values: ['0'],
+        };
+        const isBot = {
+          member: 'Members.isBot',
+          operator: 'equals',
+          values: ['0'],
+        };
+        
         widgetQuery.filters.push(isTeamMemberFilter);
         widgetQuery.filters.push(isBot);
       }

@@ -9,7 +9,16 @@ DOCKER_NETWORK_GATEWAY="${NETWORK_GATEWAY:-10.90.0.1}"
 DOCKET_TEST_NETWORK_SUBNET="${TEST_NETWORK_SUBNET:-10.91.0.0/24}"
 DOCKER_TEST_NETWORK_GATEWAY="${TEST_NETWORK_GATEWAY:-10.91.0.1}"
 
-CLI_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+CLI_HOME="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+
+echo "DEBUG: CLI_HOME resolved to $CLI_HOME"
+echo "DEBUG: Checking for Nango config at $CLI_HOME/../backend/docker-compose.nango.yml"
 source $CLI_HOME/utils
 
 CONTAINERS=`ls -p $CLI_HOME/services | grep -v / | sed 's/\.[^.]*$//'`
@@ -161,7 +170,11 @@ function restore_db_backup() {
 
 function clean_orphans_silent() {
     # Clean orphans from scaffold silently
-    $_DC --compatibility -p $PROJECT_NAME -f $CLI_HOME/scaffold.yaml down --remove-orphans >/dev/null 2>&1 || true
+    COMPOSE_ARGS="-f $CLI_HOME/scaffold.yaml"
+    if [[ -f "$CLI_HOME/../backend/docker-compose.nango.yml" ]]; then
+        COMPOSE_ARGS="$COMPOSE_ARGS -f $CLI_HOME/../backend/docker-compose.nango.yml"
+    fi
+    $_DC --compatibility -p $PROJECT_NAME $COMPOSE_ARGS down --remove-orphans >/dev/null 2>&1 || true
     
     # Clean orphans from premium scaffold if it exists
     if [ -f "$CLI_HOME/premium-scaffold.yaml" ]; then
@@ -182,7 +195,11 @@ function clean_orphans() {
     say "Cleaning up orphan containers..."
     
     # Clean orphans from scaffold
-    $_DC --compatibility -p $PROJECT_NAME -f $CLI_HOME/scaffold.yaml down --remove-orphans
+    COMPOSE_ARGS="-f $CLI_HOME/scaffold.yaml"
+    if [[ -f "$CLI_HOME/../backend/docker-compose.nango.yml" ]]; then
+        COMPOSE_ARGS="$COMPOSE_ARGS -f $CLI_HOME/../backend/docker-compose.nango.yml"
+    fi
+    $_DC --compatibility -p $PROJECT_NAME $COMPOSE_ARGS down --remove-orphans
     
     # Clean orphans from premium scaffold if it exists
     if [ -f "$CLI_HOME/premium-scaffold.yaml" ]; then
@@ -430,7 +447,21 @@ function init_unleash() {
 
 function up_scaffold() {
     scaffold_set_up_network "$PROJECT_NAME-bridge" $DOCKER_NETWORK_SUBNET $DOCKER_NETWORK_GATEWAY
-    $_DC --compatibility -p $PROJECT_NAME -f $CLI_HOME/scaffold.yaml up -d --build --remove-orphans
+    
+    COMPOSE_ARGS="-f $CLI_HOME/scaffold.yaml"
+    echo "DEBUG: Checking for Nango config at: $CLI_HOME/../backend/docker-compose.nango.yml"
+    # Force inclusion if file exists, or warn if missing.
+    if [[ -f "$CLI_HOME/../backend/docker-compose.nango.yml" ]]; then
+        echo "DEBUG: Found Nango config! Adding to compose args."
+        COMPOSE_ARGS="$COMPOSE_ARGS -f $CLI_HOME/../backend/docker-compose.nango.yml"
+    else
+        echo "DEBUG: Nango config NOT found. Trying alternate path..."
+         if [[ -f "$CLI_HOME/docker-compose.nango.yml" ]]; then
+             COMPOSE_ARGS="$COMPOSE_ARGS -f $CLI_HOME/docker-compose.nango.yml"
+         fi
+    fi
+
+    $_DC --compatibility -p $PROJECT_NAME $COMPOSE_ARGS up -d --build --remove-orphans
 }
 
 function post_up_scaffold() {
@@ -440,13 +471,20 @@ function post_up_scaffold() {
 }
 
 function down_scaffold() {
-    $_DC --compatibility -p $PROJECT_NAME -f $CLI_HOME/scaffold.yaml down --remove-orphans
+    COMPOSE_ARGS="-f $CLI_HOME/scaffold.yaml"
+    if [[ -f "$CLI_HOME/../backend/docker-compose.nango.yml" ]]; then
+        COMPOSE_ARGS="$COMPOSE_ARGS -f $CLI_HOME/../backend/docker-compose.nango.yml"
+    fi
+
+    $_DC --compatibility -p $PROJECT_NAME $COMPOSE_ARGS down --remove-orphans
+
     if [ -f "$CLI_HOME/premium-scaffold.yaml" ]; then
             $_DC --compatibility -p $PROJECT_NAME -f $CLI_HOME/premium-scaffold.yaml down --remove-orphans
     fi
 }
 
 function scaffold_destroy() {
+
     say "\nWill delete all local state data (docker volumes) if you have any. Are you sure?"
     select reset_system_condition in "Yes" "No"; do
         case $reset_system_condition in
@@ -480,12 +518,27 @@ function kill_all_containers() {
     done
 }
 
+function clean_cubestore() {
+    say "Cleaning up cubestore directories with admin privileges..."
+    
+    # Clean cubestore in services/libs/cubejs
+    if [ -d "$CLI_HOME/../services/libs/cubejs/.cubestore" ]; then
+        sudo rm -rf "$CLI_HOME/../services/libs/cubejs/.cubestore" || true
+        say "✅ Cubestore directory cleaned up successfully."
+    else
+        say "ℹ️  No cubestore directory found to clean."
+    fi
+}
+
 function scaffold_destroy_confirmed() {
     kill_all_containers
     $_DC --compatibility -p $PROJECT_NAME -f $CLI_HOME/scaffold.yaml down --remove-orphans
     if [ -f "$CLI_HOME/premium-scaffold.yaml" ]; then
             $_DC --compatibility -p $PROJECT_NAME -f $CLI_HOME/premium-scaffold.yaml down --remove-orphans
     fi
+
+    # Clean up cubestore directories with proper permissions
+    clean_cubestore
 
     # needed because if there are no volumes this might cause the script to exit
     set +eo pipefail
@@ -577,6 +630,7 @@ function check_container_health() {
     if [[ "$status" == "running" ]]; then
         # Check health status if available
         local health_status=$(docker inspect --format='{{.State.Health.Status}}' "$container_id" 2>/dev/null || echo "none")
+        [[ -z "$health_status" ]] && health_status="none"
         
         if [[ "$health_status" == "healthy" ]]; then
             echo "${GREEN}healthy${RESET}"
@@ -698,7 +752,7 @@ function print_success_and_ports() {
     # Check Search Sync API
     if should_check_service "search-sync-api"; then
         local search_sync_api_status=$(check_application_service_health "search-sync-api")
-        echo -e "${BLUE}Search Sync API:${RESET}      http://localhost:8082 - $search_sync_api_status"
+        echo -e "${BLUE}Search Sync API:${RESET}      http://localhost:8083 - $search_sync_api_status"
         [[ "$search_sync_api_status" == *"unhealthy"* ]] && ((unhealthy_count++))
         [[ "$search_sync_api_status" != *"not running"* ]] && ((total_services++))
     fi
@@ -706,7 +760,7 @@ function print_success_and_ports() {
     # Check Webhook API
     if should_check_service "webhook-api"; then
         local webhook_api_status=$(check_application_service_health "webhook-api")
-        echo -e "${BLUE}Webhook API:${RESET}          http://localhost:8083 - $webhook_api_status"
+        echo -e "${BLUE}Webhook API:${RESET}          http://localhost:8082 - $webhook_api_status"
         [[ "$webhook_api_status" == *"unhealthy"* ]] && ((unhealthy_count++))
         [[ "$webhook_api_status" != *"not running"* ]] && ((total_services++))
     fi
@@ -926,7 +980,7 @@ function start() {
     print_success_and_ports
 }
 
-SCRIPT_USAGE="${YELLOW}${PROJECT_NAME} CLI ${RESET}\n\nExample usage: ./cli [ prod, dev, clean-dev, prod-ee, dev-ee, clean-dev-ee, prod-backend, dev-backend, clean-dev-backend, clean-orphans, scaffold =>, service =>, build =>, build-and-push ]"
+SCRIPT_USAGE="${YELLOW}${PROJECT_NAME} CLI ${RESET}\n\nExample usage: ./cli [ prod, dev, clean-dev, prod-ee, dev-ee, clean-dev-ee, prod-backend, dev-backend, clean-dev-backend, clean-orphans, clean-cubestore, scaffold =>, service =>, build =>, build-and-push ]"
 
 [[ -z "$1" ]] && say "$SCRIPT_USAGE" && exit 1
 while test $# -gt 0
@@ -934,6 +988,10 @@ do
     case "$1" in
         clean-orphans)
             clean_orphans
+            exit;
+        ;;
+        clean-cubestore)
+            clean_cubestore
             exit;
         ;;
         scaffold) scaffold $2 $3 $4 $5
@@ -974,8 +1032,6 @@ do
             exit;
         ;;
         clean-dev)
-            # Clean up cache files and old compiled JS to prevent stale code issues
-            bash $CLI_HOME/cleanup-cache.sh
             
             if [[ "$2" == "--ee" ]]; then
                 if grep -q "VUE_APP_EDITION=" $CLI_HOME/../frontend/.env.override.local; then
@@ -1020,8 +1076,6 @@ do
             exit;
         ;;
         clean-dev-backend)
-            # Clean up cache files and old compiled JS to prevent stale code issues
-            bash $CLI_HOME/cleanup-cache.sh
             
             declare -a INGORED_SERVICES=("frontend")
             CLEAN_START=1
@@ -1065,8 +1119,6 @@ do
             
             say "Premium directories found - starting Enterprise Edition..."
             
-            # Clean up cache files to prevent ENOENT errors
-            bash $CLI_HOME/cleanup-cache.sh
             
             sed -i 's/VUE_APP_EDITION=gitmesh-ce/VUE_APP_EDITION=gitmesh-ee/g' $CLI_HOME/../frontend/.env.override.local
             if grep -q "EDITION=" $CLI_HOME/../backend/.env.override.local; then

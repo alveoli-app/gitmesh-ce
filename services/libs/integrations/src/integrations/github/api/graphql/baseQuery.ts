@@ -21,26 +21,11 @@ class BaseQuery {
         name
         avatarUrl
         id
-        isHireable
-        twitterUsername
-        url
-        websiteUrl
-        email
-        bio
-        company
-        location
-        followers {
-          totalCount
-        }
     }`
 
   static ORGANIZATION_SELECT = `{
-    email
     url
-    location
     name
-    twitterUsername
-    websiteUrl
     description
     avatarUrl
   }`
@@ -104,6 +89,8 @@ class BaseQuery {
     const paginatedQuery = BaseQuery.interpolate(this.query, {
       beforeCursor: BaseQuery.getPagination(beforeCursor),
     })
+    
+    logger.debug({ query: paginatedQuery }, 'Executing GraphQL query')
 
     const process = async () => {
       const result = await this.graphQL(paginatedQuery)
@@ -137,7 +124,7 @@ class BaseQuery {
           throw BaseQuery.processGraphQLError(err)
         }
       } else {
-        logger.error('Error in getSinglePage: other error')
+        logger.error({ err, msg: err.message, stack: err.stack }, 'Error in getSinglePage: other error')
         throw BaseQuery.processGraphQLError(err)
       }
     }

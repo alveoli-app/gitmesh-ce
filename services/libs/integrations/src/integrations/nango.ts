@@ -13,7 +13,7 @@ export const getNangoToken = async (
     const secretKey = ctx.serviceSettings.nangoSecretKey
     const headers = {
       'Content-Type': 'application/json',
-      Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString('base64')}`,
+      Authorization: `Bearer ${secretKey}`,
     }
 
     ctx.log.debug({ secretKey, connectionId, providerConfigKey }, 'Fetching Nango token!')

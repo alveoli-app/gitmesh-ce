@@ -2,6 +2,7 @@ export * from './activityTypes'
 export * from './prettyActivityTypes'
 export * from './services'
 export * from './memberAttributes'
+export * from './nango'
 
 export * from './devto/grid'
 export * from './devto/types'

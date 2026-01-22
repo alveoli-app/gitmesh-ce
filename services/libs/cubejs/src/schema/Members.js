@@ -56,16 +56,16 @@ cube('Members', {
     },
 
     isTeamMember: {
-      sql: `${CUBE}."isTeamMember"`,
-      type: 'boolean',
+      sql: `CASE WHEN ${CUBE}."isTeamMember" = true THEN '1' ELSE '0' END`,
+      type: 'string',
     },
     isBot: {
-      sql: `${CUBE}."isBot"`,
-      type: 'boolean',
+      sql: `CASE WHEN ${CUBE}."isBot" = true THEN '1' ELSE '0' END`,
+      type: 'string',
     },
     isOrganization: {
-      sql: `${CUBE}."isOrganization"`,
-      type: 'boolean',
+      sql: `CASE WHEN ${CUBE}."isOrganization" = true THEN '1' ELSE '0' END`,
+      type: 'string',
     },
 
     joinedAt: {

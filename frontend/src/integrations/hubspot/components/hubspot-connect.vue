@@ -36,16 +36,20 @@ const openSettingsDrawer = ref<boolean>(false);
 
 const isHubspotEnabled = ref(false);
 
-const connect = () => {
-  const nango = new Nango({ host: config.nangoUrl });
-  nango.auth(
-    'hubspot',
-    `${currentTenant.value.id}-hubspot`,
-  )
-    .then(() => doHubspotConnect(null))
-    .then(() => {
-      openSettingsDrawer.value = true;
-    });
+const connect = async () => {
+  const nango = new Nango({ host: config.nangoUrl, publicKey: config.nangoPublicKey });
+  try {
+    await nango.auth(
+      'hubspot',
+      `${currentTenant.value.id}-hubspot`,
+    );
+    // Small delay to ensure Nango has persisted the connection
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await doHubspotConnect(null);
+    openSettingsDrawer.value = true;
+  } catch (err) {
+    console.error('HubSpot OAuth error:', err);
+  }
 };
 
 const upgradePlan = () => {

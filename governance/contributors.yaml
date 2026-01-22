@@ -36,14 +36,6 @@ contributors:
   assigned_at: '2025-09-14T06:29:39Z'
   last_activity: '2025-12-24'
   notes: Automatically onboarded after first merged PR.
-- username: Copilot
-  role: Newbie Contributor
-  team: CE
-  status: active
-  assigned_by: GitMesh-Steward-bot
-  assigned_at: '2025-09-15T06:38:06Z'
-  last_activity: '2025-09-15'
-  notes: Automatically onboarded after first merged PR.
 - username: dependabot[bot]
   role: Newbie Contributor
   team: CE

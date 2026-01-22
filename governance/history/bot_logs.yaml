@@ -1,0 +1,48 @@
+events:
+- timestamp: '2025-12-27T10:32:14+05:30'
+  type: ONBOARDING
+  username: Copilot
+  details: 'First merged PR: https://github.com/LF-Decentralized-Trust-labs/gitmesh/pull/64'
+- timestamp: '2025-12-27T10:32:14+05:30'
+  type: PR_MERGED
+  username: Copilot
+  details: 'PR #64: Fix import popup not closing after pressing import button'
+- timestamp: '2025-12-27T10:32:14+05:30'
+  type: PR_MERGED
+  username: Copilot
+  details: 'PR #63: Fix branch selector showing stale branches when switching projects'
+- timestamp: '2025-12-27T10:32:14+05:30'
+  type: PR_MERGED
+  username: Copilot
+  details: 'PR #62: Enhance branch selection UI with search and better ordering using
+    real repository data'
+- timestamp: '2025-12-27T10:32:14+05:30'
+  type: PR_MERGED
+  username: Copilot
+  details: 'PR #111: feat: Enforce signed commits with reliable commit-msg hook'
+- timestamp: '2025-12-27T10:32:16+05:30'
+  type: PR_MERGED
+  username: Copilot
+  details: 'PR #202: fix(workflows): enable push permissions for governance auto-sync
+    workflow'
+- timestamp: '2025-12-27T10:32:16+05:30'
+  type: PR_MERGED
+  username: Copilot
+  details: 'PR #204: [WIP] Add auto-synced contributors registry with full contribution
+    history'
+- timestamp: '2025-12-27T10:32:16+05:30'
+  type: PR_MERGED
+  username: Copilot
+  details: 'PR #206: Add DCO workflow and fix governance sync for branch protection'
+- timestamp: '2025-12-27T10:32:16+05:30'
+  type: PR_MERGED
+  username: Copilot
+  details: 'PR #207: fix(dco): exempt merge commits from DCO sign-off requirement'
+- timestamp: '2025-12-27T10:32:16+05:30'
+  type: PR_MERGED
+  username: Copilot
+  details: 'PR #208: fix: resolve YAML syntax error in gov-sync workflow'
+- timestamp: '2025-12-27T10:32:16+05:30'
+  type: PR_MERGED
+  username: Copilot
+  details: 'PR #209: fix: handle missing labels in governance sync workflow'

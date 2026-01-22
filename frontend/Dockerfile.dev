@@ -10,3 +10,15 @@ RUN pnpm install --frozen-lockfile
 COPY .browserslistrc .eslintrc.js babel.config.js postcss.config.js tailwind.config.js vite.config.js tsconfig.json index.html ./
 COPY ./public ./public
 COPY ./src ./src
+
+# Copy scripts directory for cache management
+COPY ./scripts ./scripts
+
+# Copy environment files
+COPY .env.* ./
+
+# Expose the port
+EXPOSE 8081
+
+# Start the development server
+CMD ["pnpm", "run", "dev"]

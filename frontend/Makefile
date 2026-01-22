@@ -1,9 +1,9 @@
 
 build-test:
-	npm run build:staging
+	pnpm run build:staging
 
 build-prod:
-	npm run build:production
+	pnpm run build:production
 
 pull:
 	git pull

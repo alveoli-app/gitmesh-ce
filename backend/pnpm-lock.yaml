@@ -10537,10 +10537,13 @@ snapshots:
       '@gitmesh/logging': file:../services/libs/logging
       jsonwebtoken: 9.0.3
       moment: 2.29.4
+      pg: 8.17.1
+      uuid: 9.0.1
     transitivePeerDependencies:
       - aws-crt
       - bufferutil
       - encoding
+      - pg-native
       - supports-color
       - utf-8-validate
 

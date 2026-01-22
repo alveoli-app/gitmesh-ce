@@ -1,0 +1,40 @@
+services:
+  nango:
+    image: nangohq/nango-server:latest
+    ports:
+      - "3003:3003"
+    environment:
+      - NANGO_DB_HOST=nango-db
+      - NANGO_DB_PORT=5432
+      - NANGO_DB_NAME=nango
+      - NANGO_DB_USER=nango
+      - NANGO_DB_PASSWORD=nango
+      - NANGO_SECRET_KEY=66d1d19b-cf3a-4065-a5ec-35e7a3da56e3
+      - NANGO_SERVER_URL=http://localhost:3003
+      - NANGO_CALLBACK_URL=http://localhost:3003/oauth/callback
+      - LOG_LEVEL=debug
+    depends_on:
+      - nango-db
+    networks:
+      - gitmesh-bridge
+
+  nango-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=nango
+      - POSTGRES_PASSWORD=nango
+      - POSTGRES_DB=nango
+    volumes:
+      - nango_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nango"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gitmesh-bridge
+
+volumes:
+  nango_postgres_data:
+
+

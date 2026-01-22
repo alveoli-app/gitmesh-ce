@@ -102,31 +102,6 @@ events:
   username: Ronit-Raj9
   details: 'PR #66: feat: Add clickable GitHub links and discussions integration'
 - timestamp: '2025-12-27T10:32:14+05:30'
-  type: ONBOARDING
-  username: Copilot
-  details: 'First merged PR: https://github.com/LF-Decentralized-Trust-labs/gitmesh/pull/64'
-- timestamp: '2025-12-27T10:32:14+05:30'
-  type: PR_MERGED
-  username: Copilot
-  details: 'PR #64: Fix import popup not closing after pressing import button'
-- timestamp: '2025-12-27T10:32:14+05:30'
-  type: PR_MERGED
-  username: Copilot
-  details: 'PR #63: Fix branch selector showing stale branches when switching projects'
-- timestamp: '2025-12-27T10:32:14+05:30'
-  type: ONBOARDING
-  username: dependabot[bot]
-  details: 'First merged PR: https://github.com/LF-Decentralized-Trust-labs/gitmesh/pull/67'
-- timestamp: '2025-12-27T10:32:14+05:30'
-  type: PR_MERGED
-  username: dependabot[bot]
-  details: 'PR #67: Bump next from 14.2.30 to 14.2.32 in /ui'
-- timestamp: '2025-12-27T10:32:14+05:30'
-  type: PR_MERGED
-  username: Copilot
-  details: 'PR #62: Enhance branch selection UI with search and better ordering using
-    real repository data'
-- timestamp: '2025-12-27T10:32:14+05:30'
   type: PR_MERGED
   username: Parvm1102
   details: 'PR #68: bug: search repo card fix acc to bet 50 for #104 commit'
@@ -173,10 +148,6 @@ events:
   username: mithulcrafts
   details: 'PR #104: Improved user experience by making header logo redirect to home
     page'
-- timestamp: '2025-12-27T10:32:14+05:30'
-  type: PR_MERGED
-  username: Copilot
-  details: 'PR #111: feat: Enforce signed commits with reliable commit-msg hook'
 - timestamp: '2025-12-27T10:32:14+05:30'
   type: PR_MERGED
   username: RAWx18
@@ -315,34 +286,8 @@ events:
     ledger'
 - timestamp: '2025-12-27T10:32:16+05:30'
   type: PR_MERGED
-  username: Copilot
-  details: 'PR #202: fix(workflows): enable push permissions for governance auto-sync
-    workflow'
-- timestamp: '2025-12-27T10:32:16+05:30'
-  type: PR_MERGED
   username: RAWx18
   details: 'PR #203: sync check'
-- timestamp: '2025-12-27T10:32:16+05:30'
-  type: PR_MERGED
-  username: Copilot
-  details: 'PR #204: [WIP] Add auto-synced contributors registry with full contribution
-    history'
-- timestamp: '2025-12-27T10:32:16+05:30'
-  type: PR_MERGED
-  username: Copilot
-  details: 'PR #206: Add DCO workflow and fix governance sync for branch protection'
-- timestamp: '2025-12-27T10:32:16+05:30'
-  type: PR_MERGED
-  username: Copilot
-  details: 'PR #207: fix(dco): exempt merge commits from DCO sign-off requirement'
-- timestamp: '2025-12-27T10:32:16+05:30'
-  type: PR_MERGED
-  username: Copilot
-  details: 'PR #208: fix: resolve YAML syntax error in gov-sync workflow'
-- timestamp: '2025-12-27T10:32:16+05:30'
-  type: PR_MERGED
-  username: Copilot
-  details: 'PR #209: fix: handle missing labels in governance sync workflow'
 - timestamp: '2025-12-27T10:32:16+05:30'
   type: PR_MERGED
   username: RAWx18
@@ -475,3 +420,24 @@ events:
   username: focuzd
   details: 'Role changed from ''Newbie Contributor'' to ''Active Contributor'' by
     @RAWx18 via PR #343'
+- timestamp: '2026-01-22T15:12:45+05:30'
+  type: PR_MERGED
+  username: RAWx18
+  details: 'PR #343: chore(gov): automated governance registry & history sync'
+- timestamp: '2026-01-22T15:12:45+05:30'
+  type: PR_MERGED
+  username: RAWx18
+  details: 'PR #344: fixed'
+- timestamp: '2026-01-22T15:12:45+05:30'
+  type: PR_MERGED
+  username: focuzd
+  details: 'PR #352: Add Bot Management for a clean separation between bots and contributor'
+- timestamp: '2026-01-22T16:46:18+05:30'
+  type: BOT_ADD
+  username: copilot
+  details: Added @copilot to bots (migrated from contributors if existed) by @RAWx18
+- timestamp: '2026-01-22T16:48:49+05:30'
+  type: BOT_ADD
+  username: dependabot[bot]
+  details: Added @dependabot[bot] to bots (migrated from contributors if existed)
+    by @RAWx18

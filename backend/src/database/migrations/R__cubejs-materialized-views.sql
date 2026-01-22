@@ -20,10 +20,10 @@ SELECT
     a."isContribution",
     a."tenantId",
     a."memberId",
-    (a.platform)::VARCHAR(24),
-    (a.channel)::VARCHAR(256),
-    a.timestamp,
-    (a.type)::VARCHAR(256),
+    (a.platform)::VARCHAR(24) as platform,
+    (a.channel)::VARCHAR(256) as channel,
+    a.timestamp as date,
+    (a.type)::VARCHAR(256) as type,
     CASE
         WHEN a.sentiment->>'sentiment' is null THEN 'no data'
         WHEN (a.sentiment->>'sentiment')::integer < 34 THEN 'negative'
@@ -42,12 +42,11 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_organizations_cube AS
 SELECT
     o.id,
     o."tenantId",
-    o."createdAt",
+    o."createdAt" as "joinedAt",
     MIN(m."joinedAt") AS "earliestJoinedAt"
 FROM organizations o
-JOIN "memberOrganizations" mo ON o.id = mo."organizationId"
-JOIN members m ON mo."memberId" = m.id
-JOIN activities a ON o.id = a."organizationId"
+LEFT JOIN "memberOrganizations" mo ON o.id = mo."organizationId"
+LEFT JOIN members m ON mo."memberId" = m.id
 GROUP BY o.id
 ;
 
@@ -60,8 +59,8 @@ FROM segments
 ;
 
 CREATE INDEX IF NOT EXISTS mv_members_cube_tenant ON mv_members_cube ("tenantId");
-CREATE INDEX IF NOT EXISTS mv_activities_cube_timestamp ON mv_activities_cube (timestamp);
-CREATE INDEX IF NOT EXISTS mv_activities_cube_org_id ON mv_activities_cube ("organizationId");
+CREATE INDEX IF NOT EXISTS mv_activities_cube_date_idx ON mv_activities_cube ("date");
+CREATE INDEX IF NOT EXISTS mv_activities_cube_tenant ON mv_activities_cube ("tenantId");
 
 CREATE UNIQUE INDEX IF NOT EXISTS mv_members_cube_id ON mv_members_cube (id);
 CREATE UNIQUE INDEX IF NOT EXISTS mv_activities_cube_id ON mv_activities_cube (id);

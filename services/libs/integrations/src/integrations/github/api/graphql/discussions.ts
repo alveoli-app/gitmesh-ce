@@ -8,7 +8,7 @@ class DiscussionsQuery extends BaseQuery {
   constructor(repo: Repo, githubToken: string, perPage = 100) {
     const discussionsQuery = `{
         repository(owner: "${repo.owner}", name: "${repo.name}") {
-          discussions(last: ${perPage}, \${beforeCursor}) {
+          discussions(last: ${perPage} \${beforeCursor}) {
             pageInfo ${BaseQuery.PAGE_SELECT}
             nodes {
               author {

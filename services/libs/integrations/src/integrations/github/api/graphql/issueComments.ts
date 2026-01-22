@@ -9,7 +9,7 @@ class IssueCommentsQuery extends BaseQuery {
     const issueCommentsQuery = `{
       repository(name: "${repo.name}", owner: "${repo.owner}") {
         issue(number: ${issueNumber}) {
-          comments(first: ${perPage}, \${beforeCursor}) {
+          comments(first: ${perPage} \${beforeCursor}) {
             pageInfo ${BaseQuery.PAGE_SELECT}
             nodes {
               author {

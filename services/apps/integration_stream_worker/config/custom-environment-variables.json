@@ -23,9 +23,6 @@
     "url": "NANGO_URL",
     "secretKey": "NANGO_SECRET_KEY"
   },
-  "stackoverflow": {
-    "key": "STACKEXCHANGE_KEY"
-  },
   "discord": {
     "token": "DISCORD_TOKEN",
     "token2": "DISCORD_TOKEN_2"

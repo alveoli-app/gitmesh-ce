@@ -14,8 +14,10 @@ export enum PlatformType {
   MEDIUM = 'medium',
   PRODUCTHUNT = 'producthunt',
   YOUTUBE = 'youtube',
-  STACKOVERFLOW = 'stackoverflow',
   DISCOURSE = 'discourse',
+  // TODO: Git integration is temporarily disabled from the UI
+  // Will be re-enabled in the future to support syncing with different Git platforms
+  // (GitLab, Bitbucket, self-hosted Git servers, etc.)
   GIT = 'git',
   CRUNCHBASE = 'crunchbase',
   HUBSPOT = 'hubspot',
@@ -36,8 +38,9 @@ export enum IntegrationType {
   HACKER_NEWS = 'hackernews',
   LINKEDIN = 'linkedin',
   GITMESH = 'gitmesh',
-  STACKOVERFLOW = 'stackoverflow',
   DISCOURSE = 'discourse',
+  // TODO: Git integration is temporarily disabled from the UI
+  // Will be re-enabled in the future to support syncing with different Git platforms
   GIT = 'git',
   HUBSPOT = 'hubspot',
 }
@@ -53,7 +56,6 @@ export const integrationLabel: Record<IntegrationType, string> = {
   [IntegrationType.HACKER_NEWS]: 'Hacker news',
   [IntegrationType.LINKEDIN]: 'LinkedIn',
   [IntegrationType.GITMESH]: 'Gitmesh',
-  [IntegrationType.STACKOVERFLOW]: 'Stack Overflow',
   [IntegrationType.DISCOURSE]: 'Discourse',
   [IntegrationType.GIT]: 'Git',
   [IntegrationType.HUBSPOT]: 'HubSpot',
@@ -72,7 +74,6 @@ export const integrationProfileUrl: Record<IntegrationType, (username: string) =
   [IntegrationType.LINKEDIN]: (username) =>
     !username?.includes('private-') ? `https://linkedin.com/in/${username}` : null,
   [IntegrationType.GITMESH]: () => null,
-  [IntegrationType.STACKOVERFLOW]: (username) => `https://stackoverflow.com/users/${username}`,
   [IntegrationType.DISCOURSE]: () => null,
   [IntegrationType.GIT]: () => null,
   [IntegrationType.HUBSPOT]: () => null,

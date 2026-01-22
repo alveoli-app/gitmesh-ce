@@ -235,14 +235,6 @@ const identitiesForm = reactive({
     imgContainerClass:
       'h-8 w-8 rounded flex items-center justify-center text-base btn--hackernews',
   },
-  stackoverflow: {
-    enabled:
-      props.modelValue.username?.stackoverflow
-        !== undefined || false,
-    urlPrefix: 'stackoverflow.com/users/',
-    imgContainerClass:
-      'h-8 w-8 rounded flex items-center justify-center text-base btn--stackoverflow',
-  },
 });
 
 function findPlatform(platform) {

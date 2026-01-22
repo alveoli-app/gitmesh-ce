@@ -23,7 +23,7 @@ cube('Activities', {
     },
 
     iscontribution: {
-      sql: `${CUBE}."isContribution"`,
+      sql: `CASE WHEN ${CUBE}."isContribution" = true THEN '1' ELSE '0' END`,
       type: 'string',
     },
 
@@ -54,7 +54,7 @@ cube('Activities', {
     },
 
     date: {
-      sql: `${CUBE}.timestamp`,
+      sql: `${CUBE}.date`,
       type: 'time',
     },
   },

@@ -86,30 +86,37 @@ export default {
       cubejsApi: 'widget/cubejsApi',
     }),
     query() {
-      // Exclude team members in all queries
-      const widgetQuery = this.widget.settings.query;
-      const filters = widgetQuery.filters || [];
+      // Clone query to avoid mutating widget settings
+      const widgetQuery = { 
+        ...this.widget.settings.query, 
+        filters: [...(this.widget.settings.query.filters || [])] 
+      };
+      
+      // Only add Members filters for Members cube queries
+      // (Organizations and other cubes don't have a join to Members)
+      const measureCube = widgetQuery.measures?.[0]?.split('.')[0];
+      
+      if (measureCube === 'Members') {
+        const filters = widgetQuery.filters;
+        const hasTeamMemberFilter = filters.some((f) => f.member === 'Members.isTeamMember');
+        const hasBotFilter = filters.some((f) => f.member === 'Members.isBot');
 
-      const hasTeamMemberFilter = filters.some((f) => f.member === 'Members.isTeamMember');
-      const hasBotFilter = filters.some((f) => f.member === 'Members.isBot');
+        if (!hasTeamMemberFilter) {
+          filters.push({
+            member: 'Members.isTeamMember',
+            operator: 'equals',
+            values: ['0'],
+          });
+        }
 
-      if (!hasTeamMemberFilter) {
-        filters.push({
-          member: 'Members.isTeamMember',
-          operator: 'equals',
-          values: ['0'],
-        });
+        if (!hasBotFilter) {
+          filters.push({
+            member: 'Members.isBot',
+            operator: 'equals',
+            values: ['0'],
+          });
+        }
       }
-
-      if (!hasBotFilter) {
-        filters.push({
-          member: 'Members.isBot',
-          operator: 'equals',
-          values: ['0'],
-        });
-      }
-
-      widgetQuery.filters = filters;
 
       return widgetQuery;
     },

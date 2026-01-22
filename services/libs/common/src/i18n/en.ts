@@ -212,7 +212,8 @@ const en = {
         linkedin: 'LinkedIn',
         twitter: 'Twitter',
         devto: 'DEV',
-        stackoverflow: 'Stack Overflow',
+
+
         reddit: 'Reddit',
         discord: 'Discord',
         slack: 'Slack',

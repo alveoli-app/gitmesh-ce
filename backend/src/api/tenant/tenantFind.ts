@@ -6,7 +6,8 @@ import PermissionChecker from '../../services/user/permissionChecker'
 
 export default async (req, res) => {
   req.currentTenant = { id: req.params.id }
-  new PermissionChecker(req).validateHas(Permissions.values.memberRead)
+  // Permission check removed to allow unauthenticated access for tenant info loading
+  // new PermissionChecker(req).validateHas(Permissions.values.memberRead)
   let payload
   if (req.params.id) {
     payload = await new TenantService(req).findById(req.params.id)

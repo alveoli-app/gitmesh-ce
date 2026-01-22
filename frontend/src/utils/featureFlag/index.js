@@ -152,8 +152,9 @@ class FeatureFlagService {
     // Enterprise Edition (ee/premium): enable all features by default
     console.log(`FeatureFlagService: Enterprise Edition - evaluating feature ${flag}`);
     
-    // For Enterprise Edition, check plan-based access for premium signals features
-    if (flag === FEATURE_FLAGS.signals || flag === FEATURE_FLAGS.signalsSentinel) {
+    // For Enterprise Edition, check plan-based access for premium signals features AND integrations
+    if (flag === FEATURE_FLAGS.signals || flag === FEATURE_FLAGS.signalsSentinel ||
+        flag === FEATURE_FLAGS.linkedin || flag === FEATURE_FLAGS.hubspot || flag === FEATURE_FLAGS.twitter) {
       console.log(`🏢 Enterprise Edition - checking ${flag} feature access`);
       
       let currentTenant = null;
@@ -168,7 +169,7 @@ class FeatureFlagService {
       console.log('- Current tenant:', currentTenant);
       
       if (currentTenant) {
-        // All enterprise edition plans have access to signals: Pro, Teams+, Enterprise
+        // All enterprise edition plans have access to signals and integrations: Pro, Teams+, Enterprise
         const enterprisePlans = ['Pro', 'Teams+', 'Enterprise'];
         const hasEnterprisePlan = enterprisePlans.includes(currentTenant.plan);
         console.log(`- Plan check for ${flag} - Plan="${currentTenant.plan}", HasAccess=${hasEnterprisePlan}`);
@@ -183,7 +184,7 @@ class FeatureFlagService {
         return true;
       } else {
         console.log(`⚠️ No tenant found, defaulting to enabled for Enterprise Edition feature ${flag}`);
-        // In Enterprise Edition, if no tenant is found, enable signals by default
+        // In Enterprise Edition, if no tenant is found, enable signals/integrations by default
         return true;
       }
     }

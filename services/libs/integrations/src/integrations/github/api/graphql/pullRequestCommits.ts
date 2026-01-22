@@ -72,7 +72,7 @@ class PullRequestCommitsQuery extends BaseQuery {
           number
           baseRefName
           headRefName
-          commits(first: ${perPage}, \${beforeCursor}) {
+          commits(first: ${perPage} \${beforeCursor}) {
             pageInfo ${BaseQuery.PAGE_SELECT}
             nodes {
               commit {

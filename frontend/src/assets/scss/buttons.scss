@@ -79,7 +79,7 @@
       @apply cursor-not-allowed bg-black text-zinc-600 border-2 border-zinc-700 border-solid;
     }
 
-    &.btn{
+    &.btn {
       &--lg {
         @apply py-2.5;
       }
@@ -356,8 +356,6 @@
   &--slack:hover,
   &--linkedin,
   &--linkedin:hover,
-  &--stackoverflow,
-  &--stackoverflow:hover,
   &--git,
   &--git:hover {
     @apply bg-zinc-900 border border-zinc-700;

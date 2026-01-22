@@ -52,11 +52,8 @@ export default class ActivityPlatformField extends StringField {
         label: 'Other',
       },
       {
-        value: 'stackoverflow',
-        label: 'Stack Overflow',
-      },
-      {
         value: 'discourse',
+
         label: 'Discourse',
       },
     ];

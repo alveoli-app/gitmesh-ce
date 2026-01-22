@@ -9,7 +9,7 @@ class PullRequestReviewThreadCommentsQuery extends BaseQuery {
     const pullRequestReviewThreadCommentsQuery = `{
       node(id: "${reviewThreadId}") {
         ... on PullRequestReviewThread {
-          comments(first: ${perPage}, \${beforeCursor}) {
+          comments(first: ${perPage} \${beforeCursor}) {
             pageInfo ${BaseQuery.PAGE_SELECT}
             nodes {
               author {

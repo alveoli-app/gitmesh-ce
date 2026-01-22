@@ -10,7 +10,7 @@ class PullRequestCommentsQuery extends BaseQuery {
     const pullRequestCommentsQuery = `{
       repository(name: "${repo.name}", owner: "${repo.owner}") {
         pullRequest(number: ${pullRequestNumber}) {
-          comments(first: ${perPage}, \${beforeCursor}) {
+          comments(first: ${perPage} \${beforeCursor}) {
             pageInfo ${BaseQuery.PAGE_SELECT}
             nodes {
               author {

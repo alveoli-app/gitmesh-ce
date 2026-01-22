@@ -1097,6 +1097,11 @@ export default class IntegrationService {
       token = await getToken(nangoId, PlatformType.LINKEDIN, this.options.log)
     } catch (err) {
       this.options.log.error(err, 'Error while verifying LinkedIn tenant token in Nango!')
+      try {
+        require('fs').appendFileSync('/tmp/debug_error.txt', `[${new Date().toISOString()}] Error: ${err.message}\nStack: ${err.stack}\n`);
+      } catch (e) {
+        console.error('Failed to write debug log', e);
+      }
       throw new Error400(this.options.language, 'errors.noNangoToken.message')
     }
 
@@ -1110,18 +1115,21 @@ export default class IntegrationService {
       organizations = await getOrganizations(nangoId, this.options.log)
     } catch (err) {
       this.options.log.error(err, 'Error while fetching LinkedIn organizations!')
-      throw new Error400(this.options.language, 'errors.linkedin.noOrganization')
+      // Allow proceeding with empty organizations for personal profile usage
+      organizations = []
     }
 
+    // Allow LinkedIn integration even without organizations (for personal profiles)
+    let status = 'in-progress'
     if (organizations.length === 0) {
-      this.options.log.error('No organization found for LinkedIn integration!')
-      throw new Error400(this.options.language, 'errors.linkedin.noOrganization')
-    }
-
-    let status = 'pending-action'
-    if (organizations.length === 1) {
+      this.options.log.warn('No organization found for LinkedIn integration - using personal profile mode')
+      // Set status to in-progress to allow the integration to proceed
+      status = 'in-progress'
+    } else if (organizations.length === 1) {
       status = 'in-progress'
       organizations[0].inUse = true
+    } else {
+      status = 'pending-action'
     }
 
     const transaction = await SequelizeRepository.createTransaction(this.options)
@@ -1257,6 +1265,9 @@ export default class IntegrationService {
 
   /**
    * Adds/updates Git integration
+   * TODO: Git integration is temporarily disabled from the UI
+   * Will be re-enabled in the future to support syncing with different Git platforms
+   * (GitLab, Bitbucket, self-hosted Git servers, etc.)
    * @param integrationData  to create the integration object
    * @returns integration object
    */
@@ -1285,6 +1296,8 @@ export default class IntegrationService {
 
   /**
    * Get all remotes for the Git integration, by segment
+   * TODO: Git integration is temporarily disabled from the UI
+   * Will be re-enabled in the future to support syncing with different Git platforms
    * @returns Remotes for the Git integration
    */
   async gitGetRemotes() {
@@ -1443,55 +1456,6 @@ export default class IntegrationService {
     this.options.log.info(
       { tenantId: integration.tenantId },
       'Sending Twitter message to int-run-worker!',
-    )
-    try {
-      const emitter = await getIntegrationRunWorkerEmitter()
-      await emitter.triggerIntegrationRun(
-        integration.tenantId,
-        integration.platform,
-        integration.id,
-        true,
-      )
-    } catch (err) {
-      this.options.log.error(err, 'Failed to trigger integration run worker')
-    }
-
-    return integration
-  }
-
-  /**
-   * Adds/updates Stack Overflow integration
-   * @param integrationData  to create the integration object
-   * @returns integration object
-   */
-  async stackOverflowConnectOrUpdate(integrationData) {
-    const transaction = await SequelizeRepository.createTransaction(this.options)
-    let integration
-
-    try {
-      this.options.log.info('Creating Stack Overflow integration!')
-      integration = await this.createOrUpdate(
-        {
-          platform: PlatformType.STACKOVERFLOW,
-          settings: {
-            tags: integrationData.tags,
-            keywords: integrationData.keywords,
-            updateMemberAttributes: true,
-          },
-          status: 'in-progress',
-        },
-        transaction,
-      )
-
-      await SequelizeRepository.commitTransaction(transaction)
-    } catch (err) {
-      await SequelizeRepository.rollbackTransaction(transaction)
-      throw err
-    }
-
-    this.options.log.info(
-      { tenantId: integration.tenantId },
-      'Sending StackOverflow message to int-run-worker!',
     )
     try {
       const emitter = await getIntegrationRunWorkerEmitter()

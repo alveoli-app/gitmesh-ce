@@ -220,7 +220,7 @@ const callOnboard = useThrottleFn(async () => {
 }, 2000);
 
 const connect = async () => {
-  const nango = new Nango({ host: config.nangoUrl });
+  const nango = new Nango({ host: config.nangoUrl, publicKey: config.nangoPublicKey });
   try {
     await nango.auth('reddit', `${tenantId.value}-reddit`);
     await callOnboard();

@@ -15,7 +15,7 @@ class DiscussionCommentsQuery extends BaseQuery {
     const discussionCommentsQuery = `{
         repository(name: "${repo.name}", owner: "${repo.owner}") {
           discussion(number: ${discussionNumber}) {
-            comments(first: ${perPage}, \${beforeCursor}) {
+            comments(first: ${perPage} \${beforeCursor}) {
               pageInfo ${BaseQuery.PAGE_SELECT}
               nodes {
                 author {

@@ -62,7 +62,8 @@ export enum SignalsPlatforms {
   DEVTO = 'devto',
   REDDIT = 'reddit',
   MEDIUM = 'medium',
-  STACKOVERFLOW = 'stackoverflow',
+
+
   TWITTER = 'twitter',
   YOUTUBE = 'youtube',
   PRODUCTHUNT = 'producthunt',

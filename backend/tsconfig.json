@@ -16,7 +16,8 @@
       "@gitmesh/*": ["../../services/libs/*/src"],
       "@/*": ["./*"]
     },
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noEmit": true
   },
   "include": [
     "src",

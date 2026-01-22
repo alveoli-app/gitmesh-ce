@@ -8,7 +8,7 @@ class ForksQuery extends BaseQuery {
   constructor(repo: Repo, githubToken: string, perPage = 100) {
     const forksQuery = `{
         repository(owner: "${repo.owner}", name: "${repo.name}") {
-          forks(last: ${perPage}, \${beforeCursor}) {
+          forks(last: ${perPage} \${beforeCursor}) {
             pageInfo ${BaseQuery.PAGE_SELECT}
             nodes {
               owner {

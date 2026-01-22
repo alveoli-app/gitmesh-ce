@@ -11,7 +11,7 @@ class PullRequestReviewThreadsQuery extends BaseQuery {
           pullRequest(number: ${pullRequestNumber}) {
             id
             reviewDecision
-            reviewThreads(first: ${perPage}, \${beforeCursor}) {
+            reviewThreads(first: ${perPage} \${beforeCursor}) {
               pageInfo ${BaseQuery.PAGE_SELECT}
               nodes {
                 id

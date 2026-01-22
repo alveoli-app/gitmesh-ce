@@ -35,6 +35,13 @@ i18nInit();
 (async function () {
   const { captureException } = useLogRocket();
 
+  // Handle chunk preload failures globally (Vite 5+ emits this event)
+  // This catches stale chunk references after frontend rebuilds
+  window.addEventListener('vite:preloadError', (event: any) => {
+    console.warn('[Vite] Preload error detected, reloading to get fresh assets...', event.payload);
+    window.location.reload();
+  });
+
   const app = createApp(App);
   const pinia = createPinia();
   const router = await createRouter();

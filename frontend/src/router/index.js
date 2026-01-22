@@ -82,6 +82,25 @@ export const createRouter = () => {
     router.afterEach(() => {
       ProgressBar.done();
     });
+
+    // Handle chunk load errors - these occur when browser cache references
+    // chunks that no longer exist after a rebuild (e.g., chunk-FC46KIN6.js 404)
+    router.onError((error, to) => {
+      const isChunkLoadError = (
+        error.message?.includes('Failed to fetch dynamically imported module')
+        || error.message?.includes('Importing a module script failed')
+        || error.message?.includes('Unable to preload CSS')
+        || error.message?.includes('Loading chunk')
+        || error.message?.includes('Loading CSS chunk')
+        || error.name === 'ChunkLoadError'
+      );
+
+      if (isChunkLoadError) {
+        console.warn('[Router] Chunk load error detected, reloading to get fresh assets...', error);
+        // Reload to the target URL to get fresh chunk references
+        window.location.href = to.fullPath;
+      }
+    });
   }
 
   return router;

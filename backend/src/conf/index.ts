@@ -25,7 +25,7 @@ import {
   EnrichmentConfiguration,
   SignalsConfiguration,
   UnleashConfiguration,
-  StackExchangeConfiguration,
+
   SlackAlertingConfiguration,
   SampleDataConfiguration,
   IntegrationProcessingConfiguration,
@@ -117,10 +117,7 @@ export const UNLEASH_CONFIG: UnleashConfiguration = config.get<UnleashConfigurat
 
 export const OPENSEARCH_CONFIG: IOpenSearchConfig = config.get<IOpenSearchConfig>('opensearch')
 
-export const STACKEXCHANGE_CONFIG: StackExchangeConfiguration =
-  config.get<StackExchangeConfiguration>('stackexchange') ?? {
-    key: process.env.STACKEXCHANGE_KEY,
-  }
+
 
 export const SLACK_ALERTING_CONFIG: SlackAlertingConfiguration =
   config.get<SlackAlertingConfiguration>('slackAlerting')

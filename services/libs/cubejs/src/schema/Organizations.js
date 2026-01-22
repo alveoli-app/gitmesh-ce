@@ -28,8 +28,8 @@ cube('Organizations', {
       sql: `${CUBE}."tenantId"`,
       type: 'string',
     },
-    createdat: {
-      sql: `${CUBE}."createdAt"`,
+    createdAt: {
+      sql: `${CUBE}."joinedAt"`,
       type: 'time',
     },
     joinedAt: {

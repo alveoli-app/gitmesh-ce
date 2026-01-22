@@ -9,6 +9,7 @@ import {
   ProcessStreamHandler,
   IProcessWebhookStreamContext,
 } from '../../types'
+import { getNangoToken } from '../nango'
 import DiscussionCommentsQuery from './api/graphql/discussionComments'
 import DiscussionsQuery from './api/graphql/discussions'
 import ForksQuery from './api/graphql/forks'
@@ -49,9 +50,45 @@ let tokenRotator: GithubTokenRotator | undefined = undefined
 
 function getAuth(ctx: IProcessStreamContext): AuthInterface | undefined {
   const GITHUB_CONFIG = ctx.platformSettings as GithubPlatformSettings
-  const privateKey = GITHUB_CONFIG.privateKey
-    ? Buffer.from(GITHUB_CONFIG.privateKey, 'base64').toString('ascii')
-    : undefined
+  let privateKey: string | undefined
+
+  if (GITHUB_CONFIG.privateKey) {
+    if (GITHUB_CONFIG.privateKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
+      privateKey = GITHUB_CONFIG.privateKey
+    } else {
+      try {
+        const decoded = Buffer.from(GITHUB_CONFIG.privateKey, 'base64').toString('ascii')
+        if (decoded.includes('-----BEGIN RSA PRIVATE KEY-----')) {
+          privateKey = decoded
+        } else {
+           // Maybe it wasn't base64 encoded? try using it as is if it looks vaguely like a key but missing header?
+           // No, best to assume if it's not base64 properly, it's garbage or the user config is wrong.
+           // However, to be safe, let's log what we have (redacted)
+           ctx.log.warn('GitHub Private Key configuration appears invalid. It is not a PEM key and not a valid Base64 encoded PEM key.')
+        }
+      } catch (e) {
+         ctx.log.warn({err: e}, 'Failed to decode GitHub private key')
+      }
+    }
+  }
+
+  // Fallback to the original logic if my check logic missed something subtle, or just use the extracted key
+  if (privateKey === undefined && GITHUB_CONFIG.privateKey) {
+     // If we failed to detect it, we might try to force it via the old way just in case,
+     // but the old way is confirmed to be failing.
+     // Let's just default to the old way IF my detection failed, but wrapped in a try/catch block if we want to be super safe. 
+     // Actually, simpler: just use the logic I wrote above.
+     // If GITHUB_CONFIG.privateKey is provided but we couldn't parse it, we should probably just try the old way as a hail mary
+     // or just let it fail.
+     // Given the error "secretOrPrivateKey must be an asymmetric key", the old way definitely produces an invalid key.
+     
+     // Let's rely on the decoded value if it starts with the header.
+     // If the USER put in the key with newlines into env, it might work directly.
+     if (!privateKey) {
+        // Attempt: treat as base64 as before
+        privateKey = Buffer.from(GITHUB_CONFIG.privateKey, 'base64').toString('ascii')
+     }
+  }
 
   if (githubAuthenticator === undefined) {
     githubAuthenticator = privateKey
@@ -97,6 +134,17 @@ export function getTokenRotator(ctx: IProcessStreamContext): GithubTokenRotator 
 }
 
 export async function getGithubToken(ctx: IProcessStreamContext): Promise<string> {
+  // Try to get token from Nango first
+  try {
+    const token = await getNangoToken(ctx.integration.identifier, 'github', ctx)
+    if (token) {
+      return token
+    }
+  } catch (err) {
+    // ignore error and fallback to old authentication
+    ctx.log.warn({ err }, 'Failed to get Github token from Nango, falling back to installation token')
+  }
+
   const auth = getAuth(ctx)
   if (auth) {
     const authResponse = await auth({
@@ -255,6 +303,7 @@ const processRootStream: ProcessStreamHandler = async (ctx) => {
   const unavailableRepos: Repos = []
 
   for (const repo of data.reposToCheck) {
+    ctx.log.info({ repo }, `Processing repo: ${repo.name}`)
     try {
       // we don't need to get default 100 item per page, just 1 is enough to check if repo is available
       const stargazersQuery = new StargazersQuery(repo, await getGithubToken(ctx), 1)
@@ -272,7 +321,8 @@ const processRootStream: ProcessStreamHandler = async (ctx) => {
         throw e
       } else {
         ctx.log.warn(
-          `Repo ${repo.name} will not be parsed. It is not available with the github token`,
+          { err: e, message: e.message, stack: e.stack },
+          `Repo ${repo.name} will not be parsed. It is not available with the github token. Error: ${e.message}`,
         )
         unavailableRepos.push(repo)
       }

@@ -156,7 +156,6 @@ export const formatPlatformName = (platform) => {
   // Handle special cases
   const specialCases = {
     'github': 'GitHub',
-    'stackoverflow': 'Stack Overflow',
     'hackernews': 'Hacker News',
     'producthunt': 'Product Hunt',
     'devto': 'DEV Community',

@@ -5772,18 +5772,6 @@
                 "short": "mentioned you",
                 "channel": ""
               }
-            },
-            "stackoverflow": {
-              "question": {
-                "default": "Asked a question {self}",
-                "short": "asked a question",
-                "channel": ""
-              },
-              "answer": {
-                "default": "Answered a question {self}",
-                "short": "answered a question",
-                "channel": ""
-              }
             }
           },
           "custom": {

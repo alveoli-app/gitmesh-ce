@@ -53,6 +53,7 @@ services:
       - ../../services/libs/sqs/src:/usr/gitmesh/app/services/libs/sqs/src
       - ../../services/libs/types/src:/usr/gitmesh/app/services/libs/types/src
       - ../../services/apps/integration_data_worker/src:/usr/gitmesh/app/services/apps/integration_data_worker/src
+      - ../../../premium-libs/src:/usr/gitmesh/app/premium-libs/src
 
 networks:
   gitmesh-bridge:

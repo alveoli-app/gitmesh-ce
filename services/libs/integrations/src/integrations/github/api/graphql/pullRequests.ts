@@ -8,7 +8,7 @@ class PullRequestsQuery extends BaseQuery {
   constructor(repo: Repo, githubToken: string, perPage = 20) {
     const pullRequestsQuery = `{
             repository(owner: "${repo.owner}", name: "${repo.name}") {
-              pullRequests(last: ${perPage}, \${beforeCursor}) {
+              pullRequests(last: ${perPage} \${beforeCursor}) {
                 pageInfo ${BaseQuery.PAGE_SELECT}
                 nodes {
                     author {

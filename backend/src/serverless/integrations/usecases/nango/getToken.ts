@@ -8,7 +8,7 @@ async function getToken(connectionId: string, providerConfigKey: string, logger:
     const secretKey = NANGO_CONFIG.secretKey
     const headers = {
       'Content-Type': 'application/json',
-      Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString('base64')}`,
+      Authorization: `Bearer ${secretKey}`,
     }
 
     logger.debug({ secretKey, connectionId, providerConfigKey }, 'Fetching Nango token!')

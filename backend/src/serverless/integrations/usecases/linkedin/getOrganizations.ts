@@ -47,7 +47,8 @@ export const getOrganizations = async (
       }
     })
   } catch (err) {
-    const newErr = handleLinkedinError(err, config, { nangoId }, logger)
-    throw newErr
+    logger.warn(err, 'Failed to fetch LinkedIn organizations - proceeding without organization access')
+    // Return empty array instead of throwing error to allow personal profile usage
+    return []
   }
 }

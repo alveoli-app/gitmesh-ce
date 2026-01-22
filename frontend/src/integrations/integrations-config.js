@@ -6,7 +6,6 @@ import devto from './devto';
 import hackernews from './hackernews';
 import discourse from './discourse';
 import hubspot from './hubspot';
-import stackoverflow from './stackoverflow';
 import reddit from './reddit';
 import linkedin from './linkedin';
 import zapier from './zapier';
@@ -28,7 +27,6 @@ class IntegrationsConfig {
       hackernews,
       reddit,
       linkedin,
-      stackoverflow,
       zapier,
       n8n,
       git,

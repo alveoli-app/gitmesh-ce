@@ -1,6 +1,7 @@
 import authAxios from '@/shared/axios/auth-axios';
 import { tenantSubdomain } from '@/modules/tenant/tenant-subdomain';
 import AuthCurrentTenant from '@/modules/auth/auth-current-tenant';
+import { AuthToken } from '@/modules/auth/auth-token';
 import config from '@/config';
 
 export class TenantService {
@@ -35,7 +36,7 @@ export class TenantService {
     }
 
     const tenantId = AuthCurrentTenant.get();
-    if (tenantId && !tenantUrl) {
+    if (tenantId && !tenantUrl && AuthToken.get()) {
       try {
         const currentTenant = await this.find(tenantId);
 

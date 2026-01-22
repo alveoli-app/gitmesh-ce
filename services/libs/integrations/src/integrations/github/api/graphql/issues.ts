@@ -8,7 +8,7 @@ class IssuesQuery extends BaseQuery {
   constructor(repo: Repo, githubToken: string, perPage = 100) {
     const issuesQuery = `{
         repository(owner: "${repo.owner}", name: "${repo.name}") {
-            issues(last: ${perPage}, \${beforeCursor}) {
+            issues(last: ${perPage} \${beforeCursor}) {
                 pageInfo ${BaseQuery.PAGE_SELECT}
                 nodes {
                     author {

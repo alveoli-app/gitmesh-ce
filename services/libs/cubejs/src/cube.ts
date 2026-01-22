@@ -69,12 +69,15 @@ export default {
     ) {
       query.timeDimensions[0].dateRange = ['2020-01-01', new Date().toISOString()]
     }
-
-    query.filters.push({
-      member: `Members.isBot`,
-      operator: 'equals',
-      values: ['0'],
-    })
+    // Only add Members.isBot filter for Members cube queries
+    // (Organizations and other cubes don't have a join to Members)
+    if (measureCube[0] === 'Members') {
+      query.filters.push({
+        member: `Members.isBot`,
+        operator: 'equals',
+        values: ['0'],
+      })
+    }
 
     query.filters.push({
       member: `${measureCube[0]}.tenantId`,

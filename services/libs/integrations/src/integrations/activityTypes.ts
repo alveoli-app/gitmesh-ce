@@ -1,7 +1,6 @@
 import { ActivityTypeDisplayProperties, DefaultActivityTypes, PlatformType } from '@gitmesh/types'
 import { DevToActivityType } from './devto/types'
 import { GithubActivityType } from './github/types'
-import { StackOverflowActivityType } from './stackoverflow/types'
 import { TwitterActivityType } from './twitter/types'
 import { SlackActivityType } from './slack/types'
 import { GitActivityType } from './git/types'
@@ -16,7 +15,6 @@ import { HACKERNEWS_GRID } from './hackernews/grid'
 import { REDDIT_GRID } from './reddit/grid'
 import { SLACK_GRID } from './slack/grid'
 import { TWITTER_GRID } from './twitter/grid'
-import { STACKOVERFLOW_GRID } from './stackoverflow/grid'
 import { DiscourseActivityType } from './discourse/types'
 import { DISCOURSE_GRID } from './discourse/grid'
 import { Groupsio_GRID } from './groupsio/grid'
@@ -47,22 +45,6 @@ const defaultGithubChannelFormatter = (channel) => {
   const organization = channelSplit[3]
   const repo = channelSplit[4]
   return `<a href="${githubUrl}/${organization}/${repo}" target="_blank">${repo}</a>`
-}
-
-const defaultStackoverflowFormatter = (activity) => {
-  if (activity.attributes.keywordMentioned && activity.attributes.tagMentioned) {
-    return `<span class="gray notruncate">tagged with "${activity.attributes.tagMentioned}" and mentioning "${activity.attributes.keywordMentioned}"</span>`
-  }
-
-  if (activity.attributes.keywordMentioned) {
-    return `<span class="gray notruncate">mentioning "${activity.attributes.keywordMentioned}"</span>`
-  }
-
-  if (activity.attributes.tagMentioned) {
-    return `<span class="gray notruncate">tagged with "${activity.attributes.tagMentioned}"</span>`
-  }
-
-  return ''
 }
 
 const cleanDiscourseUrl = (url) => {
@@ -676,30 +658,7 @@ export const DEFAULT_ACTIVITY_TYPE_SETTINGS: DefaultActivityTypes = {
       isContribution: TWITTER_GRID[TwitterActivityType.MENTION].isContribution,
     },
   },
-  [PlatformType.STACKOVERFLOW]: {
-    [StackOverflowActivityType.QUESTION]: {
-      display: {
-        default: 'Asked a question {self}',
-        short: 'asked a question',
-        channel: '',
-        formatter: {
-          self: defaultStackoverflowFormatter,
-        },
-      },
-      isContribution: STACKOVERFLOW_GRID[StackOverflowActivityType.QUESTION].isContribution,
-    },
-    [StackOverflowActivityType.ANSWER]: {
-      display: {
-        default: 'Answered a question {self}',
-        short: 'answered a question',
-        channel: '',
-        formatter: {
-          self: defaultStackoverflowFormatter,
-        },
-      },
-      isContribution: STACKOVERFLOW_GRID[StackOverflowActivityType.ANSWER].isContribution,
-    },
-  },
+
   [PlatformType.DISCOURSE]: {
     [DiscourseActivityType.CREATE_TOPIC]: {
       display: {

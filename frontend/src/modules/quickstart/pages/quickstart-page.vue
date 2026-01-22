@@ -2,7 +2,7 @@
   <app-page-wrapper>
     <div class="pb-6">
       <h4 class="mb-1 mt-8">
-        Welcome to GitMesh !!<br></br>ദ്ദി (˵ •̀ ᴗ - ˵ ) ✧
+        Welcome to GitMesh !! ദ്ദി (˵ •̀ ᴗ - ˵ ) ✧
       </h4>
     </div>
     <div class="flex flex-wrap -mx-2.5">

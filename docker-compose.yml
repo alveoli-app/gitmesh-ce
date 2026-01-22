@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # Node.js Backend API
   backend:
@@ -5,17 +7,21 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8081:8081"
+      - "8080:8080"
+    env_file:
+      - ./backend/.env.dist.local
     environment:
       - NODE_ENV=development
-      - PORT=8081
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
+      - PORT=8080
+      - CUBEJS_URL=http://cubejs:4000
+      - CUBEJS_JWT_SECRET=137ea167812145c6d77452a58d7dd29b
+      - CUBEJS_JWT_EXPIRY=2h
     depends_on:
       - postgres
       - redis
+      - cubejs
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8081/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -35,6 +41,8 @@ services:
       - VUE_APP_BACKEND_URL=http://localhost:8080
       - BACKEND_URL=http://backend:8080
       - VITE_WS_URL=ws://localhost:8081
+      - VUE_APP_NANGO_PUBLIC_KEY=bd44889e-3c6d-48b9-9a32-75df76e561b6
+      - VUE_APP_CUBEJS_URL=http://localhost:4000
     depends_on:
       - backend
     networks:
@@ -45,10 +53,8 @@ services:
     image: postgres:15-alpine
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER:-devspace}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-devspace}
-      - POSTGRES_DB=${POSTGRES_DB:-devspace}
+    env_file:
+      - ./backend/.env.dist.local
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -70,6 +76,42 @@ services:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
+      retries: 5
+    networks:
+      - devspace-network
+
+  # CubeJS Analytics
+  cubejs:
+    image: cubejs/cube
+    restart: always
+    ports:
+      - "4000:4000"
+      - "3001:3000"
+    volumes:
+      - "./services/libs/cubejs:/cube/conf"
+    env_file:
+      - ./backend/.env.dist.local
+    environment:
+      - CUBEJS_DEV_MODE=true
+      - CUBEJS_DB_HOST=postgres
+      - CUBEJS_DB_PORT=5432
+      - CUBEJS_DB_TYPE=postgres
+      - CUBEJS_API_SECRET=137ea167812145c6d77452a58d7dd29b
+      - CUBEJS_EXTERNAL_DEFAULT=true
+      - CUBEJS_SCHEDULED_REFRESH_DEFAULT=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:4000/readyz', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
       retries: 5
     networks:
       - devspace-network

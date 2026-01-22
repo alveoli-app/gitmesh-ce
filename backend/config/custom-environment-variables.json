@@ -140,9 +140,7 @@
     "webhookSecret": "GITHUB_WEBHOOK_SECRET",
     "isCommitDataEnabled": "GITHUB_IS_COMMIT_DATA_ENABLED"
   },
-  "stackexchange": {
-    "key": "STACKEXCHANGE_KEY"
-  },
+
   "hubspot": {
     "appId": "HUBSPOT_APP_ID",
     "clientId": "HUBSPOT_CLIENT_ID",

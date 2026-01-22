@@ -48,6 +48,8 @@ export default (app) => {
   app.put(`/reddit-onboard/:tenantId`, safeWrap(require('./helpers/redditOnboard').default))
   app.put('/linkedin-connect/:tenantId', safeWrap(require('./helpers/linkedinConnect').default))
   app.post('/linkedin-onboard/:tenantId', safeWrap(require('./helpers/linkedinOnboard').default))
+  // TODO: Git integration endpoints are temporarily disabled from the UI
+  // Will be re-enabled in the future to support syncing with different Git platforms
   app.put(`/tenant/:tenantId/git-connect`, safeWrap(require('./helpers/gitAuthenticate').default))
   app.get('/tenant/:tenantId/git', safeWrap(require('./helpers/gitGetRemotes').default))
   app.get(
@@ -67,18 +69,8 @@ export default (app) => {
     safeWrap(require('./helpers/hackerNewsCreateOrUpdate').default),
   )
 
-  app.post(
-    '/tenant/:tenantId/stackoverflow-connect',
-    safeWrap(require('./helpers/stackOverflowCreateOrUpdate').default),
-  )
-  app.get(
-    '/tenant/:tenantId/stackoverflow-validate',
-    safeWrap(require('./helpers/stackOverflowValidator').default),
-  )
-  app.get(
-    '/tenant/:tenantId/stackoverflow-volume',
-    safeWrap(require('./helpers/stackOverflowVolume').default),
-  )
+
+
 
   app.post(
     '/tenant/:tenantId/discourse-connect',

@@ -8,7 +8,7 @@ class StargazersQuery extends BaseQuery {
   constructor(repo: Repo, githubToken: string, perPage = 100) {
     const stargazersQuery = `{
             repository(owner: "${repo.owner}", name: "${repo.name}") {
-              stargazers(last: ${perPage}, \${beforeCursor}) {
+              stargazers(last: ${perPage} \${beforeCursor}) {
                 pageInfo ${BaseQuery.PAGE_SELECT}
                 totalCount
                 edges {

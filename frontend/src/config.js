@@ -32,6 +32,7 @@ const defaultConfig = {
   env: import.meta.env.VUE_APP_ENV,
   hotjarKey: import.meta.env.VUE_APP_HOTJAR_KEY,
   nangoUrl: import.meta.env.VUE_APP_NANGO_URL,
+  nangoPublicKey: import.meta.env.VUE_APP_NANGO_PUBLIC_KEY,
   unleash: {
     apiKey: import.meta.env.VUE_APP_UNLEASH_API_KEY,
     url: import.meta.env.VUE_APP_UNLEASH_URL,
@@ -82,6 +83,7 @@ const composedConfig = {
   env: 'VUE_APP_ENV',
   hotjarKey: 'VUE_APP_HOTJAR_KEY',
   nangoUrl: 'VUE_APP_NANGO_URL',
+  nangoPublicKey: 'VUE_APP_NANGO_PUBLIC_KEY',
   typeformId: 'VUE_APP_TYPEFORM_ID',
   typeformTitle: 'VUE_APP_TYPEFORM_TITLE',
   unleash: {

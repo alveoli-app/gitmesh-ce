@@ -1,9 +1,12 @@
-import config from '@/config';
+// import config from '@/config';
 import GitConnect from './components/git-connect.vue';
 
 export default {
-  enabled: config.isGitEnabled,
-  hideAsIntegration: !config.isGitEnabled,
+  // TODO: Git integration is temporarily disabled from the UI
+  // Will be re-enabled in the future to support syncing with different Git platforms
+  // (GitLab, Bitbucket, self-hosted Git servers, etc.)
+  enabled: false, // config.isGitEnabled,
+  hideAsIntegration: true, // !config.isGitEnabled,
   name: 'Git',
   backgroundColor: '#FFFFFF',
   borderColor: '#FFFFFF',

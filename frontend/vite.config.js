@@ -7,6 +7,7 @@ import path from "path";
 import Components from "unplugin-vue-components/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import { visualizer } from "rollup-plugin-visualizer";
+// import viteCacheValidationPlugin from "./scripts/vite-cache-plugin.js";
 
 import dns from "dns";
 
@@ -48,9 +49,47 @@ export default defineConfig({
   build: {
     sourcemap: false,
   },
+
+  optimizeDeps: {
+    include: [
+      'vue',
+      'vue-router',
+      'pinia',
+      'vuex',
+      'element-plus',
+      '@element-plus/icons-vue',
+      'axios',
+      'lodash',
+      '@vueuse/core',
+      'chart.js',
+      'moment',
+      'socket.io-client',
+      'uuid',
+      'qs',
+      'marked',
+      'dompurify',
+      'file-saver',
+      'papaparse',
+      'date-fns',
+      '@cubejs-client/core',
+      '@cubejs-client/vue3',
+      '@tiptap/vue-3',
+      '@tiptap/starter-kit',
+      '@vuelidate/core',
+      '@vuelidate/validators'
+    ],
+    cacheDir: './node_modules/.vite-cache',
+    holdUntilCrawlEnd: true
+  },
   plugins: [
     vue(),
     splitVendorChunkPlugin(),
+    // viteCacheValidationPlugin({
+    //   validateOnStart: true,
+    //   rebuildCorrupted: true,
+    //   preventLoops: true,
+    //   logLevel: process.env.NODE_ENV === 'development' ? 'info' : 'silent'
+    // }),
     Components({
       extensions: ["vue"],
       include: [/\.vue$/, /\.vue\?vue/],

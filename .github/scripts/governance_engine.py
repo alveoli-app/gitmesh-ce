@@ -3,6 +3,7 @@ import yaml
 import requests
 import shutil
 import subprocess
+import re
 from datetime import datetime, timedelta, timezone
 
 # --- CONFIGURATION ---
@@ -14,8 +15,11 @@ REPO = os.getenv("GITHUB_REPOSITORY")  # Format: "owner/repo"
 CANONICAL_REPO = "LF-Decentralized-Trust-labs/gitmesh" # Fork protection target
 
 REGISTRY_PATH = "governance/contributors.yaml"
+BOTS_PATH = "governance/bots.yaml"
 HISTORY_DIR = "governance/history/users/"
+HISTORY_BOTS_DIR = "governance/history/bots/"
 LEDGER_PATH = "governance/history/ledger.yaml"
+BOT_LEDGER_PATH = "governance/history/bot_logs.yaml"
 CODEOWNERS_PATH = ".github/CODEOWNERS"
 
 # Hierarchy: Lower index = Lower role
@@ -168,11 +172,13 @@ def get_last_activity_date(username):
         print(f"Error fetching activity for {username}: {e}")
     return None
 
-def update_user_history(username, event_type, details):
+def update_user_history(username, event_type, details, is_bot=False):
     """Maintains an append-only audit log for each contributor."""
-    os.makedirs(HISTORY_DIR, exist_ok=True)
+    base_dir = HISTORY_BOTS_DIR if is_bot else HISTORY_DIR
+    os.makedirs(base_dir, exist_ok=True)
+    
     # Use lowercase filename to avoid case-sensitivity issues on some filesystems
-    path = os.path.join(HISTORY_DIR, f"{username.lower()}.yaml")
+    path = os.path.join(base_dir, f"{username.lower()}.yaml")
     
     data = {"username": username, "events": []}
     if os.path.exists(path):
@@ -181,7 +187,6 @@ def update_user_history(username, event_type, details):
             if existing_data:
                 data = existing_data
 
-    # Avoid duplicate events if possible (simple check)
     # Construct new event
     new_event = {
         "timestamp": get_now_ist_str(),
@@ -194,13 +199,14 @@ def update_user_history(username, event_type, details):
     with open(path, 'w') as f:
         yaml.dump(data, f, sort_keys=False, default_flow_style=False)
 
-def update_ledger(event_type, username, details):
+def update_ledger(event_type, username, details, is_bot=False):
     """Maintains a global ledger of all governance events."""
-    os.makedirs(os.path.dirname(LEDGER_PATH), exist_ok=True)
+    ledger_file = BOT_LEDGER_PATH if is_bot else LEDGER_PATH
+    os.makedirs(os.path.dirname(ledger_file), exist_ok=True)
     
     data = {"events": []}
-    if os.path.exists(LEDGER_PATH) and os.path.getsize(LEDGER_PATH) > 0:
-        with open(LEDGER_PATH, 'r') as f:
+    if os.path.exists(ledger_file) and os.path.getsize(ledger_file) > 0:
+        with open(ledger_file, 'r') as f:
             existing_data = yaml.safe_load(f)
             if existing_data and 'events' in existing_data:
                 data = existing_data
@@ -212,7 +218,7 @@ def update_ledger(event_type, username, details):
         "details": details
     })
     
-    with open(LEDGER_PATH, 'w') as f:
+    with open(ledger_file, 'w') as f:
         yaml.dump(data, f, sort_keys=False, default_flow_style=False)
 
 def post_comment(issue_number, body):
@@ -252,10 +258,183 @@ def git_commit_push_pr(pr_number, branch_name):
         print(f"Git Error: {e}")
         raise e
 
+def load_bots():
+    if not os.path.exists(BOTS_PATH):
+        return []
+    with open(BOTS_PATH, 'r') as f:
+        data = yaml.safe_load(f)
+        return data.get('bots', []) if data else []
+
+def save_bots(bots_list):
+    os.makedirs(os.path.dirname(BOTS_PATH), exist_ok=True)
+    data = {'bots': bots_list}
+    with open(BOTS_PATH, 'w') as f:
+        yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+
+def move_ledger_entries(username, source_path, dest_path):
+    """Moves ledger entries for a user from source to destination."""
+    if not os.path.exists(source_path):
+        return
+
+    # Load Source
+    try:
+        with open(source_path, 'r') as f:
+            src_data = yaml.safe_load(f) or {}
+    except Exception as e:
+        print(f"Error loading source ledger {source_path}: {e}")
+        return
+    
+    src_events = src_data.get('events', [])
+    if not src_events:
+        return
+
+    # Load Dest
+    dest_data = {'events': []}
+    if os.path.exists(dest_path):
+        try:
+            with open(dest_path, 'r') as f:
+                loaded = yaml.safe_load(f)
+                if loaded:
+                    dest_data = loaded
+        except Exception as e:
+             print(f"Error loading dest ledger {dest_path}: {e}")
+    
+    if 'events' not in dest_data:
+        dest_data['events'] = []
+
+    # Filter and Move
+    events_to_keep = []
+    events_to_move = []
+    
+    username_lower = username.lower()
+    
+    for event in src_events:
+        if event.get('username', '').lower() == username_lower:
+            events_to_move.append(event)
+        else:
+            events_to_keep.append(event)
+            
+    if not events_to_move:
+        return # Nothing to move
+
+    # Update Data
+    src_data['events'] = events_to_keep
+    
+    # Merge and Sort Destination Events
+    combined_events = dest_data['events'] + events_to_move
+    combined_events.sort(key=lambda x: x.get('timestamp', ''))
+    dest_data['events'] = combined_events
+    
+    # Write files
+    try:
+        with open(source_path, 'w') as f:
+            yaml.dump(src_data, f, sort_keys=False, default_flow_style=False)
+
+        with open(dest_path, 'w') as f:
+            yaml.dump(dest_data, f, sort_keys=False, default_flow_style=False)
+        print(f"Moved {len(events_to_move)} events from {source_path} to {dest_path}")
+    except Exception as e:
+        print(f"Error writing ledgers: {e}")
+
+def handle_bot_command(action, target_user, author, pr_number, branch_name):
+    print(f"Executing Bot Command: {action} {target_user} by {author}")
+    
+    # Load registries
+    with open(REGISTRY_PATH, 'r') as f:
+        registry = yaml.safe_load(f)
+    contributors = registry.get('contributors', [])
+    
+    bots = load_bots()
+    target_user_lower = target_user.lower()
+    
+    if action == "add":
+        # Check if already a bot
+        if any(b['username'].lower() == target_user_lower for b in bots):
+            post_comment(pr_number, f"⚠️ @{target_user} is already in the bot registry.")
+            return
+
+        # Check if in contributors (migrate)
+        user_entry = next((c for c in contributors if c['username'].lower() == target_user_lower), None)
+        if user_entry:
+            contributors.remove(user_entry)
+            # Update registry file immediately to reflect removal
+            with open(REGISTRY_PATH, 'w') as f:
+                yaml.dump(registry, f, sort_keys=False, default_flow_style=False)
+                
+            # Move history
+            src = os.path.join(HISTORY_DIR, f"{target_user_lower}.yaml")
+            dst = os.path.join(HISTORY_BOTS_DIR, f"{target_user_lower}.yaml")
+            if os.path.exists(src):
+                os.makedirs(HISTORY_BOTS_DIR, exist_ok=True)
+                shutil.move(src, dst)
+        
+        # Add to bots
+        new_bot = {
+            "username": target_user,
+            "added_at": get_now_ist_str(),
+            "added_by": author
+        }
+        bots.append(new_bot)
+        save_bots(bots)
+        
+        # Migrate Ledger History
+        move_ledger_entries(target_user, LEDGER_PATH, BOT_LEDGER_PATH)
+        
+        # Log this administrative action to the MAIN ledger (humans managing system)
+        log_msg = f"Added @{target_user} to bots (migrated from contributors if existed) by @{author}"
+        update_ledger("BOT_ADD", target_user, log_msg, is_bot=False) 
+        post_comment(pr_number, f"✅ Successfully added @{target_user} to bots registry.")
+
+    elif action == "remove":
+        # Check if is a bot
+        bot_entry = next((b for b in bots if b['username'].lower() == target_user_lower), None)
+        if not bot_entry:
+            post_comment(pr_number, f"⚠️ @{target_user} is not in the bot registry.")
+            return
+            
+        bots.remove(bot_entry)
+        save_bots(bots)
+        
+        # Move history back to users
+        src = os.path.join(HISTORY_BOTS_DIR, f"{target_user_lower}.yaml")
+        dst = os.path.join(HISTORY_DIR, f"{target_user_lower}.yaml")
+        if os.path.exists(src):
+            os.makedirs(HISTORY_DIR, exist_ok=True)
+            shutil.move(src, dst)
+
+        # Migrate Ledger History Back
+        move_ledger_entries(target_user, BOT_LEDGER_PATH, LEDGER_PATH)
+
+        # Restore to Contributors Registry
+        if not any(c['username'].lower() == target_user_lower for c in contributors):
+            new_contributor = {
+                "username": target_user,
+                "role": "Newbie Contributor", # Reset to default
+                "team": "CE",
+                "status": "active",
+                "assigned_by": author,
+                "assigned_at": get_now_ist_str(),
+                "last_activity": get_now_ist_str(), 
+                "notes": "Migrated back from bots."
+            }
+            contributors.append(new_contributor)
+            with open(REGISTRY_PATH, 'w') as f:
+                yaml.dump(registry, f, sort_keys=False, default_flow_style=False)
+
+        # Log to MAIN ledger
+        log_msg = f"Removed @{target_user} from bots by @{author}"
+        update_ledger("BOT_REMOVE", target_user, log_msg, is_bot=False)
+        post_comment(pr_number, f"✅ Successfully removed @{target_user} from bots registry.")
+        
+    # Commit changes
+    try:
+        git_commit_push_pr(pr_number, branch_name)
+    except Exception as e:
+        post_comment(pr_number, f"⚠️ Changes applied but failed to push: {str(e)}")
+
 def run_command_mode(event_path, event_name):
     """Main execution path for interactive commands."""
     import json
-    import re
     
     if not os.path.exists(event_path):
         print("Event path not found.")
@@ -274,19 +453,12 @@ def run_command_mode(event_path, event_name):
         print(f"Unsupported event for commands: {event_name}")
         return
 
-    # Pattern: /gov promote @user "Role Name"
-    pattern = r'^\s*\/gov\s+(promote|demote)\s+@([a-zA-Z0-9-]+)\s+"([^"]+)"'
-    match = re.search(pattern, body, re.MULTILINE)
-    
-    if not match:
-        return
-    
-    action, target_user, target_role = match.groups()
-    
-    # Authorization
+    # Check Authorization
     authorized_users = get_authorized_users()
     if author.lower() not in authorized_users:
-        post_comment(pr_number, f"⛔ **Permission Denied**: @{author} is not a registered code owner for governance.")
+        # We only complain if it LOOKS like a command
+        if "/gov" in body:
+             post_comment(pr_number, f"⛔ **Permission Denied**: @{author} is not a registered code owner for governance.")
         return
 
     # Determine Branch Name and Checkout
@@ -306,54 +478,74 @@ def run_command_mode(event_path, event_name):
         post_comment(pr_number, f"❌ Failed to resolve or checkout branch: {str(e)}")
         return
 
-    # Logic
-    with open(REGISTRY_PATH, 'r') as f:
-        registry = yaml.safe_load(f)
-    
-    contributors = registry.get('contributors', [])
-    target_entry = next((c for c in contributors if c['username'].lower() == target_user.lower()), None)
-    
-    if not target_entry:
-        post_comment(pr_number, f"❌ User @{target_user} not found in governance registry.")
+    # Regex Patterns
+    # 1. Role Change: /gov promote @user "Role Name"
+    pattern_role = r'^\s*\/gov\s+(promote|demote)\s+@([a-zA-Z0-9-]+)\s+"([^"]+)"'
+    # 2. Bot Mgmt: /gov bot add @user
+    pattern_bot = r'^\s*\/gov\s+bot\s+(add|remove)\s+@([a-zA-Z0-9\[\]-]+)'
+
+    match_role = re.search(pattern_role, body, re.MULTILINE)
+    match_bot = re.search(pattern_bot, body, re.MULTILINE)
+
+    if match_bot:
+        action, target_user = match_bot.groups()
+        handle_bot_command(action, target_user, author, pr_number, branch_name)
         return
 
-    current_role = target_entry.get('role', 'Newbie Contributor')
-    is_valid, err = validate_role_change(action, current_role, target_role)
-    
-    if not is_valid:
-        post_comment(pr_number, f"❌ {err}")
-        return
+    if match_role:
+        action, target_user, target_role = match_role.groups()
+        
+        # Check if bot
+        bots = load_bots()
+        if any(b['username'].lower() == target_user.lower() for b in bots):
+             post_comment(pr_number, f"⚠️ User @{target_user} is a bot and bots do not have roles.")
+             return
 
-    # Apply
-    target_entry['role'] = target_role
-    target_entry['assigned_at'] = get_now_ist_str()
-    target_entry['assigned_by'] = author
-    
-    with open(REGISTRY_PATH, 'w') as f:
-        yaml.dump(registry, f, sort_keys=False, default_flow_style=False)
-    
-    # History
-    log_msg = f"Role changed from '{current_role}' to '{target_role}' by @{author} via PR #{pr_number}"
-    update_user_history(target_user, "ROLE_CHANGE", log_msg)
-    update_ledger("ROLE_CHANGE", target_user, log_msg)
-    
-    # Commit and Push
-    try:
-        git_commit_push_pr(pr_number, branch_name)
-        post_comment(pr_number, f"✅ Successfully {action}d @{target_user} to **{target_role}**.")
-    except Exception as e:
-        post_comment(pr_number, f"⚠️ Governance updated but failed to push to branch: {str(e)}")
+        # Role logic
+        with open(REGISTRY_PATH, 'r') as f:
+            registry = yaml.safe_load(f)
+        
+        contributors = registry.get('contributors', [])
+        target_entry = next((c for c in contributors if c['username'].lower() == target_user.lower()), None)
+        
+        if not target_entry:
+            post_comment(pr_number, f"❌ User @{target_user} not found in governance registry.")
+            return
+
+        current_role = target_entry.get('role', 'Newbie Contributor')
+        is_valid, err = validate_role_change(action, current_role, target_role)
+        
+        if not is_valid:
+            post_comment(pr_number, f"❌ {err}")
+            return
+
+        # Apply
+        target_entry['role'] = target_role
+        target_entry['assigned_at'] = get_now_ist_str()
+        target_entry['assigned_by'] = author
+        
+        with open(REGISTRY_PATH, 'w') as f:
+            yaml.dump(registry, f, sort_keys=False, default_flow_style=False)
+        
+        # History
+        log_msg = f"Role changed from '{current_role}' to '{target_role}' by @{author} via PR #{pr_number}"
+        update_user_history(target_user, "ROLE_CHANGE", log_msg, is_bot=False)
+        update_ledger("ROLE_CHANGE", target_user, log_msg, is_bot=False)
+        
+        # Commit and Push
+        try:
+            git_commit_push_pr(pr_number, branch_name)
+            post_comment(pr_number, f"✅ Successfully {action}d @{target_user} to **{target_role}**.")
+        except Exception as e:
+            post_comment(pr_number, f"⚠️ Governance updated but failed to push to branch: {str(e)}")
 
 def main():
     event_name = os.getenv("GITHUB_EVENT_NAME")
     event_path = os.getenv("GITHUB_EVENT_PATH")
     
     if event_name == 'issue_comment':
-        # Only run command mode if it's not a closed PR (which is handled by sync)
-        # For simplicity, we can just check for command pattern in body inside run_command_mode
         run_command_mode(event_path, event_name)
         
-        # If it's a merged PR, we ALSO want to run sync
     elif event_name == 'pull_request':
         import json
         with open(event_path, 'r') as f:
@@ -380,6 +572,10 @@ def run_sync_mode():
     # Normalize usernames to lowercase for case-insensitive comparison
     existing_usernames = {c['username'].lower() for c in contributors}
     
+    # Load Bots
+    bots = load_bots()
+    bot_usernames = {b['username'].lower() for b in bots}
+    
     # Check Metadata for Last Sync
     if 'metadata' not in registry:
         registry['metadata'] = {}
@@ -401,9 +597,15 @@ def run_sync_mode():
         if os.path.exists(HISTORY_DIR):
             shutil.rmtree(HISTORY_DIR)
         os.makedirs(HISTORY_DIR, exist_ok=True)
+        # Clear bots history too for full rebuild (optional but cleaner)
+        if os.path.exists(HISTORY_BOTS_DIR):
+            shutil.rmtree(HISTORY_BOTS_DIR)
+        os.makedirs(HISTORY_BOTS_DIR, exist_ok=True)
         
         if os.path.exists(LEDGER_PATH):
             os.remove(LEDGER_PATH)
+        if os.path.exists(BOT_LEDGER_PATH):
+            os.remove(BOT_LEDGER_PATH)
             
         # Fetch ALL merged PRs
         prs_to_process = get_merged_prs(since_date=None)
@@ -414,13 +616,28 @@ def run_sync_mode():
             update_user_history(
                 username, 
                 "ROLE_ASSIGNMENT",
-                f"Assigned role: {contributor['role']} by {contributor.get('assigned_by', 'unknown')}"
+                f"Assigned role: {contributor['role']} by {contributor.get('assigned_by', 'unknown')}",
+                is_bot=False
             )
             update_ledger(
                 "ROLE_ASSIGNMENT",
                 username,
-                f"Role: {contributor['role']}, Assigned by: {contributor.get('assigned_by', 'unknown')}"
+                f"Role: {contributor['role']}, Assigned by: {contributor.get('assigned_by', 'unknown')}",
+                is_bot=False
             )
+        
+        # Re-initialize history for bots? (Minimal log)
+        for bot in bots:
+            username = bot['username']
+            update_user_history(
+                username,
+                "BOT_REGISTRATION",
+                f"Bot tracked in registry. Added by: {bot.get('added_by', 'unknown')}",
+                is_bot=True
+            )
+            # We don't add to bot_logs here unless we want an init event.
+            # But the 'Added by' event is already in the main ledger if added via command.
+            # If migrating, it's just state.
 
     else:
         print(f"Performing INCREMENTAL SYNC since {last_sync}")
@@ -435,6 +652,17 @@ def run_sync_mode():
         username = pr['username']
         merged_at = pr['merged_at']
         pr_url = pr['url']
+        
+        is_bot = username.lower() in bot_usernames
+        
+        if is_bot:
+            # Log bot activity to Bot Ledger/History only
+            update_user_history(username, "PR_MERGED", f"Merged PR #{pr['number']}: {pr['title']} ({pr['url']})", is_bot=True)
+            update_ledger("PR_MERGED", username, f"PR #{pr['number']}: {pr['title']}", is_bot=True)
+            # Do NOT add to contributors list
+            continue
+        
+        # HUMAN Processing
         
         # 1. New Contributor Detection
         if username.lower() not in existing_usernames:
@@ -452,17 +680,21 @@ def run_sync_mode():
             contributors.append(new_contributor)
             existing_usernames.add(username.lower())
             
-            update_user_history(username, "ONBOARDING", f"Achieved Newbie status via merged PR: {pr_url}")
-            update_ledger("ONBOARDING", username, f"First merged PR: {pr_url}")
+            update_user_history(username, "ONBOARDING", f"Achieved Newbie status via merged PR: {pr_url}", is_bot=False)
+            update_ledger("ONBOARDING", username, f"First merged PR: {pr_url}", is_bot=False)
         
         # 2. Log PR to History
-        update_user_history(username, "PR_MERGED", f"Merged PR #{pr['number']}: {pr['title']} ({pr['url']})")
-        update_ledger("PR_MERGED", username, f"PR #{pr['number']}: {pr['title']}")
+        update_user_history(username, "PR_MERGED", f"Merged PR #{pr['number']}: {pr['title']} ({pr['url']})", is_bot=False)
+        update_ledger("PR_MERGED", username, f"PR #{pr['number']}: {pr['title']}", is_bot=False)
 
     # 3. Update Activity Status (for all contributors)
     print("\nUpdating activity status...")
     for entry in contributors:
         username = entry['username']
+        # Double check if bot (in case they were added to bots but not removed from contributors manually)
+        if username.lower() in bot_usernames:
+             continue
+             
         last_act = get_last_activity_date(username)
         
         if last_act:
@@ -470,7 +702,7 @@ def run_sync_mode():
             entry['last_activity'] = last_act
             
             if old_activity != last_act:
-                update_user_history(username, "ACTIVITY_UPDATE", f"Last activity updated to {last_act}")
+                update_user_history(username, "ACTIVITY_UPDATE", f"Last activity updated to {last_act}", is_bot=False)
             
             # Inactivity Check (90 days)
             last_act_dt = datetime.strptime(last_act, "%Y-%m-%d")
@@ -480,13 +712,13 @@ def run_sync_mode():
             if diff > timedelta(days=90):
                 if entry.get('status') != "inactive":
                     entry['status'] = "inactive"
-                    update_user_history(username, "STATUS_CHANGE", "Flagged as inactive due to 90 days of no activity.")
-                    update_ledger("STATUS_CHANGE", username, "Marked as inactive (90+ days)")
+                    update_user_history(username, "STATUS_CHANGE", "Flagged as inactive due to 90 days of no activity.", is_bot=False)
+                    update_ledger("STATUS_CHANGE", username, "Marked as inactive (90+ days)", is_bot=False)
             else:
                 if entry.get('status') == "inactive":
                     entry['status'] = "active"
-                    update_user_history(username, "STATUS_CHANGE", "Reactivated status due to new activity.")
-                    update_ledger("STATUS_CHANGE", username, "Reactivated due to new activity")
+                    update_user_history(username, "STATUS_CHANGE", "Reactivated status due to new activity.", is_bot=False)
+                    update_ledger("STATUS_CHANGE", username, "Reactivated due to new activity", is_bot=False)
     
     # 4. Update Metadata
     registry['metadata']['last_sync'] = get_now_ist_str()

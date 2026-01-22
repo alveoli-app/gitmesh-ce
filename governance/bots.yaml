@@ -1,0 +1,7 @@
+bots:
+- username: copilot
+  added_at: '2026-01-22T16:46:18+05:30'
+  added_by: RAWx18
+- username: dependabot[bot]
+  added_at: '2026-01-22T16:48:49+05:30'
+  added_by: RAWx18

@@ -271,6 +271,71 @@ def save_bots(bots_list):
     with open(BOTS_PATH, 'w') as f:
         yaml.dump(data, f, sort_keys=False, default_flow_style=False)
 
+def move_ledger_entries(username, source_path, dest_path):
+    """Moves ledger entries for a user from source to destination."""
+    if not os.path.exists(source_path):
+        return
+
+    # Load Source
+    try:
+        with open(source_path, 'r') as f:
+            src_data = yaml.safe_load(f) or {}
+    except Exception as e:
+        print(f"Error loading source ledger {source_path}: {e}")
+        return
+    
+    src_events = src_data.get('events', [])
+    if not src_events:
+        return
+
+    # Load Dest
+    dest_data = {'events': []}
+    if os.path.exists(dest_path):
+        try:
+            with open(dest_path, 'r') as f:
+                loaded = yaml.safe_load(f)
+                if loaded:
+                    dest_data = loaded
+        except Exception as e:
+             print(f"Error loading dest ledger {dest_path}: {e}")
+    
+    if 'events' not in dest_data:
+        dest_data['events'] = []
+
+    # Filter and Move
+    events_to_keep = []
+    events_to_move = []
+    
+    username_lower = username.lower()
+    
+    for event in src_events:
+        if event.get('username', '').lower() == username_lower:
+            events_to_move.append(event)
+        else:
+            events_to_keep.append(event)
+            
+    if not events_to_move:
+        return # Nothing to move
+
+    # Update Data
+    src_data['events'] = events_to_keep
+    
+    # Merge and Sort Destination Events
+    combined_events = dest_data['events'] + events_to_move
+    combined_events.sort(key=lambda x: x.get('timestamp', ''))
+    dest_data['events'] = combined_events
+    
+    # Write files
+    try:
+        with open(source_path, 'w') as f:
+            yaml.dump(src_data, f, sort_keys=False, default_flow_style=False)
+
+        with open(dest_path, 'w') as f:
+            yaml.dump(dest_data, f, sort_keys=False, default_flow_style=False)
+        print(f"Moved {len(events_to_move)} events from {source_path} to {dest_path}")
+    except Exception as e:
+        print(f"Error writing ledgers: {e}")
+
 def handle_bot_command(action, target_user, author, pr_number, branch_name):
     print(f"Executing Bot Command: {action} {target_user} by {author}")
     
@@ -312,6 +377,9 @@ def handle_bot_command(action, target_user, author, pr_number, branch_name):
         bots.append(new_bot)
         save_bots(bots)
         
+        # Migrate Ledger History
+        move_ledger_entries(target_user, LEDGER_PATH, BOT_LEDGER_PATH)
+        
         # Log this administrative action to the MAIN ledger (humans managing system)
         log_msg = f"Added @{target_user} to bots (migrated from contributors if existed) by @{author}"
         update_ledger("BOT_ADD", target_user, log_msg, is_bot=False) 
@@ -333,6 +401,25 @@ def handle_bot_command(action, target_user, author, pr_number, branch_name):
         if os.path.exists(src):
             os.makedirs(HISTORY_DIR, exist_ok=True)
             shutil.move(src, dst)
+
+        # Migrate Ledger History Back
+        move_ledger_entries(target_user, BOT_LEDGER_PATH, LEDGER_PATH)
+
+        # Restore to Contributors Registry
+        if not any(c['username'].lower() == target_user_lower for c in contributors):
+            new_contributor = {
+                "username": target_user,
+                "role": "Newbie Contributor", # Reset to default
+                "team": "CE",
+                "status": "active",
+                "assigned_by": author,
+                "assigned_at": get_now_ist_str(),
+                "last_activity": get_now_ist_str(), 
+                "notes": "Migrated back from bots."
+            }
+            contributors.append(new_contributor)
+            with open(REGISTRY_PATH, 'w') as f:
+                yaml.dump(registry, f, sort_keys=False, default_flow_style=False)
 
         # Log to MAIN ledger
         log_msg = f"Removed @{target_user} from bots by @{author}"
@@ -395,7 +482,7 @@ def run_command_mode(event_path, event_name):
     # 1. Role Change: /gov promote @user "Role Name"
     pattern_role = r'^\s*\/gov\s+(promote|demote)\s+@([a-zA-Z0-9-]+)\s+"([^"]+)"'
     # 2. Bot Mgmt: /gov bot add @user
-    pattern_bot = r'^\s*\/gov\s+bot\s+(add|remove)\s+@([a-zA-Z0-9-]+)'
+    pattern_bot = r'^\s*\/gov\s+bot\s+(add|remove)\s+@([a-zA-Z0-9\[\]-]+)'
 
     match_role = re.search(pattern_role, body, re.MULTILINE)
     match_bot = re.search(pattern_bot, body, re.MULTILINE)
@@ -408,6 +495,12 @@ def run_command_mode(event_path, event_name):
     if match_role:
         action, target_user, target_role = match_role.groups()
         
+        # Check if bot
+        bots = load_bots()
+        if any(b['username'].lower() == target_user.lower() for b in bots):
+             post_comment(pr_number, f"⚠️ User @{target_user} is a bot and bots do not have roles.")
+             return
+
         # Role logic
         with open(REGISTRY_PATH, 'r') as f:
             registry = yaml.safe_load(f)

@@ -36,7 +36,9 @@ import {
   WeeklyEmailsConfiguration,
   GitmeshAnalyticsConfiguration,
   IBackendTemporalConfig,
+  SignalIntelligenceConfiguration,
 } from './configTypes'
+import { validateSignalIntelligenceConfig } from './signalIntelligenceConfigValidator'
 
 // TODO-kube
 
@@ -139,3 +141,14 @@ export const TEMPORAL_CONFIG: IBackendTemporalConfig =
 
 export const SEARCH_SYNC_API_CONFIG: ISearchSyncApiConfig =
   config.get<ISearchSyncApiConfig>('searchSyncApi')
+
+export const SIGNAL_INTELLIGENCE_CONFIG: SignalIntelligenceConfiguration =
+  config.get<SignalIntelligenceConfiguration>('signalIntelligence')
+
+// Validate Signal Intelligence configuration on startup
+try {
+  validateSignalIntelligenceConfig(SIGNAL_INTELLIGENCE_CONFIG)
+} catch (error) {
+  console.error('Signal Intelligence configuration validation failed:', error.message)
+  process.exit(1)
+}

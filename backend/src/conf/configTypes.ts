@@ -243,3 +243,86 @@ export interface GitmeshAnalyticsConfiguration {
 export interface IBackendTemporalConfig extends ITemporalConfig {
   automationsTaskQueue: string
 }
+
+export interface SignalIntelligenceConfiguration {
+  processing: {
+    batchSize: number
+    intervalMinutes: number
+    maxRetries: number
+    retryBackoffMs: number
+    deadLetterQueueEnabled: boolean
+  }
+  identityResolution?: {
+    fuzzyMatchingThreshold: number
+    enableFuzzyMatching: boolean
+  }
+  batchProcessing?: {
+    batchSize: number
+    processingInterval: number
+  }
+  retry?: {
+    maxRetries: number
+    backoffMultiplier: number
+    initialDelay: number
+  }
+  embedding: {
+    model: string
+    dimensions: number
+    quantizedDimensions: number
+    cacheTtlDays: number
+    pythonWorkerUrl?: string
+  }
+  deduplication: {
+    hammingThreshold: number
+    signatureBits: number
+    shingleSize: number
+    cacheTtlDays: number
+  }
+  classification: {
+    confidenceThreshold: number
+    modelUpdateIntervalDays: number
+    productAreaModel: string
+    intentModel: string
+    urgencyModel: string
+  }
+  scoring: {
+    velocityTimeWindowHours: number
+    decayFactor: number
+    normalizationRange: {
+      min: number
+      max: number
+    }
+  }
+  clustering: {
+    algorithm: string
+    minClusterSize: number
+    updateIntervalHours: number
+    outlierClusterId: number
+  }
+  opensearch: {
+    indexPrefix: string
+    vectorAlgorithm: string
+    vectorParams: {
+      m: number
+      efConstruction: number
+      efSearch: number
+    }
+  }
+  api: {
+    defaultPageSize: number
+    maxPageSize: number
+    rateLimitPerHour: number
+    cacheTtlMinutes: number
+  }
+  temporal: {
+    workflowId: string
+    taskQueue: string
+    cronSchedule: string
+    workflowTimeout?: string
+  }
+  sqs: {
+    enrichmentQueue: string
+    retryQueue: string
+    deadLetterQueue: string
+  }
+}

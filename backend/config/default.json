@@ -63,5 +63,86 @@
   "temporal": {
     "automationsTaskQueue": "automations"
   },
-  "searchSyncApi": {}
+  "searchSyncApi": {},
+  "signalIntelligence": {
+    "processing": {
+      "batchSize": 1000,
+      "intervalMinutes": 15,
+      "maxRetries": 3,
+      "retryBackoffMs": 1000,
+      "deadLetterQueueEnabled": true
+    },
+    "identityResolution": {
+      "fuzzyMatchingThreshold": 0.85,
+      "enableFuzzyMatching": true
+    },
+    "batchProcessing": {
+      "batchSize": 1000,
+      "processingInterval": 900000
+    },
+    "retry": {
+      "maxRetries": 3,
+      "backoffMultiplier": 2,
+      "initialDelay": 1000
+    },
+    "embedding": {
+      "model": "all-MiniLM-L6-v2",
+      "dimensions": 384,
+      "quantizedDimensions": 96,
+      "cacheTtlDays": 7
+    },
+    "deduplication": {
+      "hammingThreshold": 3,
+      "signatureBits": 64,
+      "shingleSize": 3,
+      "cacheTtlDays": 30
+    },
+    "classification": {
+      "confidenceThreshold": 0.6,
+      "modelUpdateIntervalDays": 7,
+      "productAreaModel": "models/product-area-classifier.pkl",
+      "intentModel": "models/intent-classifier.pkl",
+      "urgencyModel": "models/urgency-classifier.pkl"
+    },
+    "scoring": {
+      "velocityTimeWindowHours": 24,
+      "decayFactor": 0.8,
+      "normalizationRange": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    "clustering": {
+      "algorithm": "hdbscan",
+      "minClusterSize": 5,
+      "updateIntervalHours": 24,
+      "outlierClusterId": -1
+    },
+    "opensearch": {
+      "indexPrefix": "gitmesh-signals",
+      "vectorAlgorithm": "hnsw",
+      "vectorParams": {
+        "m": 16,
+        "efConstruction": 100,
+        "efSearch": 100
+      }
+    },
+    "api": {
+      "defaultPageSize": 50,
+      "maxPageSize": 1000,
+      "rateLimitPerHour": 1000,
+      "cacheTtlMinutes": 5
+    },
+    "temporal": {
+      "workflowId": "signal-enrichment-workflow",
+      "taskQueue": "signal-enrichment",
+      "cronSchedule": "*/15 * * * *",
+      "workflowTimeout": "10m"
+    },
+    "sqs": {
+      "enrichmentQueue": "signal-enrichment-queue",
+      "retryQueue": "signal-retry-queue",
+      "deadLetterQueue": "signal-dlq"
+    }
+  }
 }

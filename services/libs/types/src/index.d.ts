@@ -38,3 +38,4 @@ export * from './signals';
 export * from './segments';
 export * from './enums/tenants';
 export * from './service';
+//# sourceMappingURL=index.d.ts.map

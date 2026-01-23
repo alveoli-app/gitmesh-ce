@@ -19,3 +19,4 @@ export interface IIntegration {
     token: string | null;
     refreshToken: string | null;
 }
+//# sourceMappingURL=integrations.d.ts.map

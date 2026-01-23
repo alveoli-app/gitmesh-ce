@@ -3,3 +3,4 @@ export type GraphQlQueryResponse = {
     startCursor: string;
     data: any[];
 };
+//# sourceMappingURL=graphql.d.ts.map

@@ -62,3 +62,4 @@ export interface IMemberSyncRemoteData {
     metaData: string;
     lastSyncedAt?: string;
 }
+//# sourceMappingURL=members.d.ts.map

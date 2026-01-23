@@ -9,3 +9,4 @@ export declare class RateLimitError extends BaseError {
     rateLimitResetSeconds: number;
     constructor(rateLimitResetSeconds: number, endpoint: string, origError?: unknown);
 }
+//# sourceMappingURL=errors.d.ts.map

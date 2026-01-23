@@ -49,3 +49,4 @@ export interface IOpenSearchConfig {
     accessKeyId?: string;
     secretAccessKey?: string;
 }
+//# sourceMappingURL=opensearch.d.ts.map

@@ -8,3 +8,4 @@ export declare const IS_CLOUD_ENV: boolean;
 export declare const SERVICE: string;
 export declare const EDITION: Edition;
 export declare function getEnv(): "staging" | "prod" | "local";
+//# sourceMappingURL=env.d.ts.map

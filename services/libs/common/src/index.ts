@@ -4,6 +4,7 @@ import Error403 from './errors/Error403'
 import Error404 from './errors/Error404'
 import Error405 from './errors/Error405'
 import Error409 from './errors/Error409'
+import Error429 from './errors/Error429'
 import Error500 from './errors/Error500'
 import Error542 from './errors/Error542'
 
@@ -25,4 +26,4 @@ export * from './emailDomainValidator'
 
 export * from './i18n'
 
-export { Error400, Error401, Error403, Error404, Error405, Error409, Error500, Error542 }
+export { Error400, Error401, Error403, Error404, Error405, Error409, Error429, Error500, Error542 }

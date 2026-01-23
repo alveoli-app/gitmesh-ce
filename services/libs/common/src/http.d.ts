@@ -14,3 +14,4 @@ export declare class Error404NotFound extends HttpStatusError {
 export declare class Error500InternalServerError extends HttpStatusError {
     constructor(message: string);
 }
+//# sourceMappingURL=http.d.ts.map

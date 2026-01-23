@@ -14,3 +14,4 @@ export declare class RequestThrottler {
     private advanceBackoff;
     throttle<T>(func: () => Promise<T>): Promise<T>;
 }
+//# sourceMappingURL=requestThrottler.d.ts.map

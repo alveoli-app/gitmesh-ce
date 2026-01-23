@@ -73,6 +73,11 @@ export default (sequelize) => {
         type: DataTypes.JSONB,
         defaultValue: {},
       },
+      signal_metadata: {
+        type: DataTypes.JSONB,
+        defaultValue: {},
+        comment: 'Signal intelligence metadata including embeddings, classification, scores, and clustering data',
+      },
       importHash: {
         type: DataTypes.STRING(255),
         allowNull: true,

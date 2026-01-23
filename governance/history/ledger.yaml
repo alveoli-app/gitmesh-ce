@@ -441,3 +441,21 @@ events:
   username: dependabot[bot]
   details: Added @dependabot[bot] to bots (migrated from contributors if existed)
     by @RAWx18
+- timestamp: '2026-01-23T07:43:57+05:30'
+  type: PR_MERGED
+  username: RAWx18
+  details: 'PR #353: chore(gov): automated governance registry & history sync'
+- timestamp: '2026-01-23T07:43:58+05:30'
+  type: PR_MERGED
+  username: RAWx18
+  details: 'PR #358: fix updates'
+- timestamp: '2026-01-23T12:11:38+05:30'
+  type: ROLE_CHANGE
+  username: focuzd
+  details: 'Role changed from ''Active Contributor'' to ''Core Contributor'' by @RAWx18
+    via PR #359'
+- timestamp: '2026-01-23T12:14:31+05:30'
+  type: ROLE_CHANGE
+  username: Sharkyii
+  details: 'Role changed from ''Newbie Contributor'' to ''Active Contributor'' by
+    @RAWx18 via PR #359'

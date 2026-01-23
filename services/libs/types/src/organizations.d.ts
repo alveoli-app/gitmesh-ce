@@ -158,3 +158,4 @@ export interface IOrganizationIdSource {
     id: string;
     source: string;
 }
+//# sourceMappingURL=organizations.d.ts.map

@@ -8,3 +8,4 @@ export declare enum CustomViewPlacement {
     ACTIVITY = "activity",
     CONVERSATION = "conversation"
 }
+//# sourceMappingURL=customViews.d.ts.map

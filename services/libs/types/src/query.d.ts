@@ -36,3 +36,4 @@ export interface AttributeInfo {
     name: string;
     type: MemberAttributeType;
 }
+//# sourceMappingURL=query.d.ts.map

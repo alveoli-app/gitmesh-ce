@@ -73,3 +73,4 @@ export interface SegmentCriteria extends SearchCriteria {
     name?: string;
     status?: SegmentStatus;
 }
+//# sourceMappingURL=segments.d.ts.map

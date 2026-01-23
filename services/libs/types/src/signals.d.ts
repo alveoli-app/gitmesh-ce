@@ -53,7 +53,6 @@ export declare enum SignalsPlatforms {
     DEVTO = "devto",
     REDDIT = "reddit",
     MEDIUM = "medium",
-    STACKOVERFLOW = "stackoverflow",
     TWITTER = "twitter",
     YOUTUBE = "youtube",
     PRODUCTHUNT = "producthunt",
@@ -87,3 +86,4 @@ export interface SignalsPostWithActions {
     postedAt: string;
     actions: SignalsAction[];
 }
+//# sourceMappingURL=signals.d.ts.map

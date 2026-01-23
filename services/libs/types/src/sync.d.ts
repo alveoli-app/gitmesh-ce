@@ -12,3 +12,4 @@ export declare enum SyncStatus {
     ACTIVE = "active",
     STOPPED = "stopped"
 }
+//# sourceMappingURL=sync.d.ts.map

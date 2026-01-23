@@ -14,3 +14,4 @@ export interface ITriggerMemberAutomationArgs {
     automationId: string;
     memberId: string;
 }
+//# sourceMappingURL=automations.d.ts.map

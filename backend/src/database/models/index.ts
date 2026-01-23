@@ -6,6 +6,7 @@ import Sequelize, { DataTypes } from 'sequelize'
 import { getServiceChildLogger } from '@gitmesh/logging'
 import { DB_CONFIG, SERVICE } from '../../conf'
 import * as configTypes from '../../conf/configTypes'
+import { registerSignalsCacheHooks } from '../hooks/signalsCacheHooks'
 
 const { highlight } = require('cli-highlight')
 
@@ -145,6 +146,23 @@ function models(queryTimeoutMilliseconds: number) {
       database[modelName].associate(database)
     }
   })
+
+  // Register signals cache hooks for activity model
+  if (database.activity) {
+    try {
+      const options = {
+        log,
+        redis: null, // Will be set when Redis is available
+        config: null, // Will be set when config is available
+      }
+      
+      // Note: Cache hooks will be registered when Redis connection is available
+      // This is handled in the middleware setup
+      log.debug('Activity model ready for signals cache hooks')
+    } catch (error) {
+      log.warn('Failed to register signals cache hooks', { error: error.message })
+    }
+  }
 
   database.sequelize = sequelize
   database.Sequelize = Sequelize

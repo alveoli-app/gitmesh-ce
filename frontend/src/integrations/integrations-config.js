@@ -10,6 +10,10 @@ import reddit from './reddit';
 import linkedin from './linkedin';
 import zapier from './zapier';
 import crunchbase from './crunchbase';
+import hashnode from './hashnode';
+import medium from './medium';
+import producthunt from './producthunt';
+import kaggle from './kaggle';
 // import make from './make';
 import git from './git';
 import facebook from './facebook';
@@ -36,6 +40,11 @@ class IntegrationsConfig {
       hubspot,
       // make,
       facebook,
+      // Newly added integrations
+      hashnode,
+      medium,
+      kaggle,
+      producthunt,
     };
   }
 

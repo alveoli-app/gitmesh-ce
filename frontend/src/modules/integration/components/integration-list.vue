@@ -110,8 +110,14 @@ const allIntegrations = computed(() => {
   const list = props.onboard
     ? GitmeshIntegrations.mappedEnabledConfigs(store)
     : GitmeshIntegrations.mappedConfigs(store);
-  
-  return [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+  // Ensure integrations explicitly marked to be hidden are filtered out
+  const visible = list.filter((i) => {
+    const cfg = GitmeshIntegrations.getConfig(i.platform);
+    return !(cfg && cfg.hideAsIntegration === true);
+  });
+
+  return [...visible].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 });
 
 const filteredIntegrations = computed(() => {

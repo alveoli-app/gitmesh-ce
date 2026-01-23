@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+# Install bash and build dependencies
+RUN apk add --update --no-cache bash python3 build-base
+
+WORKDIR /usr/gitmesh/app
+
+RUN npm install -g pnpm
+
+COPY ./services/scripts ./services/scripts
+COPY ./services/libs/ ./services/libs/
+RUN cd services/scripts && ./install_lib_packages.sh
+
+COPY ./services/apps/signal_enrichment_worker/package.json ./services/apps/signal_enrichment_worker/pnpm-lock.yaml ./services/apps/signal_enrichment_worker/tsconfig.json  ./services/apps/signal_enrichment_worker/
+COPY ./services/apps/signal_enrichment_worker/config ./services/apps/signal_enrichment_worker/config
+COPY ./services/apps/signal_enrichment_worker/src ./services/apps/signal_enrichment_worker/src
+
+RUN cd services/apps/signal_enrichment_worker && pnpm install --frozen-lockfile

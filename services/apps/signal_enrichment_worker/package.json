@@ -1,0 +1,66 @@
+{
+  "name": "@gitmesh/signal-enrichment-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Signal enrichment worker for processing activities with identity resolution, embedding generation, deduplication, and classification",
+  "pnpm": {
+    "overrides": {
+      "semver": ">=7.5.2"
+    }
+  },
+  "scripts": {
+    "start": "SERVICE=signal-enrichment-worker TS_NODE_TRANSPILE_ONLY=true node -r tsconfig-paths/register -r ts-node/register src/main.ts",
+    "start:debug:local": "set -a && . ../../../backend/.env.dist.local && . ../../../backend/.env.override.local && set +a && SERVICE=signal-enrichment-worker TS_NODE_TRANSPILE_ONLY=true LOG_LEVEL=trace node --inspect=0.0.0.0:9231 -r tsconfig-paths/register -r ts-node/register src/main.ts",
+    "start:debug": "SERVICE=signal-enrichment-worker TS_NODE_TRANSPILE_ONLY=true LOG_LEVEL=trace node --inspect=0.0.0.0:9231 -r tsconfig-paths/register -r ts-node/register src/main.ts",
+    "start:temporal-worker": "SERVICE=temporal-worker TS_NODE_TRANSPILE_ONLY=true node -r tsconfig-paths/register -r ts-node/register src/bin/temporalWorker.ts",
+    "dev:local": "./node_modules/.bin/nodemon --watch src --watch ../../libs --ext ts --exec npm run start:debug:local",
+    "dev": "./node_modules/.bin/nodemon --watch src --watch ../../libs --ext ts --exec npm run start:debug",
+    "dev:temporal-worker": "./node_modules/.bin/nodemon --watch src --watch ../../libs --ext ts --exec npm run start:temporal-worker",
+    "lint": "./node_modules/.bin/eslint --ext .ts src --max-warnings=0",
+    "format": "./node_modules/.bin/prettier --write \"src/**/*.ts\"",
+    "format-check": "./node_modules/.bin/prettier --check .",
+    "tsc-check": "./node_modules/.bin/tsc --noEmit",
+    "test": "jest --runInBand --verbose",
+    "test:watch": "jest --watch",
+    "script:enrich-batch": "SERVICE=script TS_NODE_TRANSPILE_ONLY=true node -r tsconfig-paths/register -r ts-node/register src/bin/enrichBatch.ts",
+    "script:run-clustering": "SERVICE=script TS_NODE_TRANSPILE_ONLY=true node -r tsconfig-paths/register -r ts-node/register src/bin/runClustering.ts",
+    "script:trigger-workflow": "SERVICE=script TS_NODE_TRANSPILE_ONLY=true node -r tsconfig-paths/register -r ts-node/register src/bin/triggerWorkflow.ts",
+    "script:validate-implementation": "SERVICE=script TS_NODE_TRANSPILE_ONLY=true node -r tsconfig-paths/register -r ts-node/register src/bin/validateImplementation.ts",
+    "script:observability-demo": "SERVICE=script TS_NODE_TRANSPILE_ONLY=true node -r tsconfig-paths/register -r ts-node/register src/bin/observabilityDemo.ts"
+  },
+  "dependencies": {
+    "@gitmesh/common": "file:../../libs/common",
+    "@gitmesh/database": "file:../../libs/database",
+    "@gitmesh/logging": "file:../../libs/logging",
+    "@gitmesh/opensearch": "file:../../libs/opensearch",
+    "@gitmesh/redis": "file:../../libs/redis",
+    "@gitmesh/sqs": "file:../../libs/sqs",
+    "@gitmesh/temporal": "file:../../libs/temporal",
+    "@gitmesh/tracing": "file:../../libs/tracing",
+    "@gitmesh/types": "file:../../libs/types",
+    "@opensearch-project/opensearch": "^3.5.1",
+    "@temporalio/worker": "~1.8.6",
+    "@types/config": "^3.3.0",
+    "@types/node": "^18.16.3",
+    "config": "^3.3.9",
+    "prom-client": "^15.1.0",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.0.4",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.59.2",
+    "@typescript-eslint/parser": "^5.59.2",
+    "@types/jest": "^29.5.1",
+    "@types/uuid": "^9.0.0",
+    "concurrently": "^8.0.1",
+    "eslint": "^8.39.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "jest": "^29.5.0",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.8",
+    "ts-jest": "^29.1.0"
+  }
+}

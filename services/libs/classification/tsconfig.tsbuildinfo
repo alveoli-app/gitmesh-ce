@@ -1,0 +1,1 @@
+{"root":["./src/classificationService.ts","./src/index.ts","./src/intentClassifier.ts","./src/modernSentimentAnalyzer.ts","./src/productAreaClassifier.ts","./src/types.ts","./src/urgencyClassifier.ts","./src/__tests__/realDataTest.ts"],"errors":true,"version":"5.9.3"}

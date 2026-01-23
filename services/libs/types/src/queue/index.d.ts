@@ -10,3 +10,4 @@ export interface ISqsQueueEmitter {
     init(): Promise<void>;
     sendMessage(groupId: string, message: IQueueMessage, deduplicationId?: string): Promise<void>;
 }
+//# sourceMappingURL=index.d.ts.map

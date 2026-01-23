@@ -14,7 +14,6 @@ export declare enum PlatformType {
     MEDIUM = "medium",
     PRODUCTHUNT = "producthunt",
     YOUTUBE = "youtube",
-    STACKOVERFLOW = "stackoverflow",
     DISCOURSE = "discourse",
     GIT = "git",
     CRUNCHBASE = "crunchbase",
@@ -34,10 +33,10 @@ export declare enum IntegrationType {
     HACKER_NEWS = "hackernews",
     LINKEDIN = "linkedin",
     GITMESH = "gitmesh",
-    STACKOVERFLOW = "stackoverflow",
     DISCOURSE = "discourse",
     GIT = "git",
     HUBSPOT = "hubspot"
 }
 export declare const integrationLabel: Record<IntegrationType, string>;
 export declare const integrationProfileUrl: Record<IntegrationType, (username: string) => string | null>;
+//# sourceMappingURL=platforms.d.ts.map

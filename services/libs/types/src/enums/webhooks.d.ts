@@ -20,3 +20,4 @@ export interface DiscordWebsocketPayload {
     event: DiscordWebsocketEvent;
     data: any;
 }
+//# sourceMappingURL=webhooks.d.ts.map

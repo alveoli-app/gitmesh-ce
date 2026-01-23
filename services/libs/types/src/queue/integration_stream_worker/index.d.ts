@@ -23,3 +23,4 @@ export declare class ProcessWebhookStreamQueueMessage implements IQueueMessage {
     readonly type: string;
     constructor(webhookId: string);
 }
+//# sourceMappingURL=index.d.ts.map

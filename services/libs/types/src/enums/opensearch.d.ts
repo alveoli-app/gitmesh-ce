@@ -15,3 +15,4 @@ export declare enum OpenSearchIndex {
     ACTIVITIES = "activities",
     ORGANIZATIONS = "organizations"
 }
+//# sourceMappingURL=opensearch.d.ts.map

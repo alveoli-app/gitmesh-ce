@@ -1,5 +1,5 @@
 export declare enum Edition {
-    COMMUNITY = "community",
-    HOSTED = "gitmesh-hosted",
-    LFX = "lfx"
+    COMMUNITY = "gitmesh-ce",
+    HOSTED = "gitmesh-ee"
 }
+//# sourceMappingURL=edition.d.ts.map

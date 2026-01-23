@@ -27,3 +27,4 @@ export declare class CreateAndProcessActivityResultQueueMessage implements IQueu
 export declare class CheckResultsQueueMessage implements IQueueMessage {
     readonly type: string;
 }
+//# sourceMappingURL=index.d.ts.map

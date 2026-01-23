@@ -11,20 +11,21 @@ export declare class CheckRunsQueueMessage implements IQueueMessage {
 export declare class StartIntegrationRunQueueMessage implements IQueueMessage {
     readonly integrationId: string;
     readonly onboarding: boolean;
-    readonly isManualRun?: boolean;
-    readonly manualSettings?: unknown;
+    readonly isManualRun?: boolean | undefined;
+    readonly manualSettings?: unknown | undefined;
     readonly type: string;
-    constructor(integrationId: string, onboarding: boolean, isManualRun?: boolean, manualSettings?: unknown);
+    constructor(integrationId: string, onboarding: boolean, isManualRun?: boolean | undefined, manualSettings?: unknown | undefined);
 }
 export declare class GenerateRunStreamsQueueMessage implements IQueueMessage {
     readonly runId: string;
-    readonly isManualRun?: boolean;
-    readonly manualSettings?: unknown;
+    readonly isManualRun?: boolean | undefined;
+    readonly manualSettings?: unknown | undefined;
     readonly type: string;
-    constructor(runId: string, isManualRun?: boolean, manualSettings?: unknown);
+    constructor(runId: string, isManualRun?: boolean | undefined, manualSettings?: unknown | undefined);
 }
 export declare class StreamProcessedQueueMessage implements IQueueMessage {
     readonly runId: string;
     readonly type: string;
     constructor(runId: string);
 }
+//# sourceMappingURL=index.d.ts.map

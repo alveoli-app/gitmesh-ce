@@ -14,3 +14,4 @@ export declare enum OrganizationSource {
 export declare enum OrganizationMergeSuggestionType {
     BY_IDENTITY = "by_identity"
 }
+//# sourceMappingURL=organizations.d.ts.map

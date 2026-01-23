@@ -1,7 +1,6 @@
 export declare enum TenantPlans {
-    Essential = "Essential",
-    Growth = "Growth",
-    Signals = "Signals",
-    Scale = "Scale",
-    Enterprise = "enterprise"
+    Pro = "Pro",
+    TeamsPlus = "Teams+",
+    Enterprise = "Enterprise"
 }
+//# sourceMappingURL=tenants.d.ts.map

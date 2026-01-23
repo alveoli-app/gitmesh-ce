@@ -44,3 +44,4 @@ export declare enum IntegrationResultType {
     ORGANIZATION_ENRICH = "organization_enrich",
     TWITTER_MEMBER_REACH = "twitter_member_reach"
 }
+//# sourceMappingURL=integrations.d.ts.map

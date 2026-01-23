@@ -8,7 +8,8 @@ export declare class ApiMessageBase {
 export declare class ApiWebsocketMessage extends ApiMessageBase {
     readonly event: string;
     readonly data: string;
-    readonly userId?: string;
-    readonly tenantId?: string;
-    constructor(event: string, data: string, userId?: string, tenantId?: string);
+    readonly userId?: string | undefined;
+    readonly tenantId?: string | undefined;
+    constructor(event: string, data: string, userId?: string | undefined, tenantId?: string | undefined);
 }
+//# sourceMappingURL=index.d.ts.map

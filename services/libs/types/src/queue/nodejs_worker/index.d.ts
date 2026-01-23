@@ -19,3 +19,4 @@ export declare class NewMemberAutomationQueueMessage implements IQueueMessage {
     readonly service = "automation";
     constructor(tenant: string, memberId: string);
 }
+//# sourceMappingURL=index.d.ts.map

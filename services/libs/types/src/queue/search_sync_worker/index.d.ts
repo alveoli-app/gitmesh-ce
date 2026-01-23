@@ -14,3 +14,4 @@ export declare enum SearchSyncWorkerQueueMessageType {
     REMOVE_ORGANIZATION = "remove_organization",
     CLEANUP_TENANT_ORGANIZATIONS = "cleanup_tenant_organizations"
 }
+//# sourceMappingURL=index.d.ts.map

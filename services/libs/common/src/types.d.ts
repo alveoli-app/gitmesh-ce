@@ -9,3 +9,4 @@ export declare class TimeoutError extends Error {
     readonly unit: string;
     constructor(timeout: number, unit: string);
 }
+//# sourceMappingURL=types.d.ts.map

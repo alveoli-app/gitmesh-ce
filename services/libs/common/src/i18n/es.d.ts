@@ -102,3 +102,4 @@ declare const es: {
     };
 };
 export default es;
+//# sourceMappingURL=es.d.ts.map

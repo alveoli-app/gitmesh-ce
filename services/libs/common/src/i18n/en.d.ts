@@ -194,7 +194,6 @@ declare const en: {
                 linkedin: string;
                 twitter: string;
                 devto: string;
-                stackoverflow: string;
                 reddit: string;
                 discord: string;
                 slack: string;
@@ -229,3 +228,4 @@ declare const en: {
     };
 };
 export default en;
+//# sourceMappingURL=en.d.ts.map

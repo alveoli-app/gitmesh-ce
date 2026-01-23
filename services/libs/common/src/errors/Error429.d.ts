@@ -1,5 +1,5 @@
-export default class Error400 extends Error {
+export default class Error429 extends Error {
+    message: string;
     code: number;
     constructor(language?: any, messageCode?: any, ...args: any[]);
 }
-//# sourceMappingURL=Error400.d.ts.map

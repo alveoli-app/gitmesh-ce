@@ -12,3 +12,4 @@ export declare class BatchProcessor<T> {
     private processBatch;
 }
 export declare const escapeNullByte: (str: string | null | undefined) => string;
+//# sourceMappingURL=utils.d.ts.map

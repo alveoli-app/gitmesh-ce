@@ -1,0 +1,183 @@
+{
+  "service": {
+    "edition": "EDITION"
+  },
+  "db": {
+    "host": "DB_WRITE_HOST",
+    "port": "DB_PORT",
+    "database": "DB_DATABASE",
+    "user": "DB_USERNAME",
+    "password": "DB_PASSWORD"
+  },
+  "sqs": {
+    "region": "SQS_AWS_REGION",
+    "host": "SQS_HOST",
+    "port": "SQS_PORT",
+    "accessKeyId": "SQS_AWS_ACCESS_KEY_ID",
+    "secretAccessKey": "SQS_AWS_SECRET_ACCESS_KEY"
+  },
+  "redis": {
+    "username": "REDIS_USERNAME",
+    "password": "REDIS_PASSWORD",
+    "host": "REDIS_HOST",
+    "port": "REDIS_PORT"
+  },
+  "opensearch": {
+    "node": "OPENSEARCH_NODE",
+    "region": "OPENSEARCH_AWS_REGION",
+    "accessKeyId": "OPENSEARCH_AWS_ACCESS_KEY_ID",
+    "secretAccessKey": "OPENSEARCH_AWS_SECRET_ACCESS_KEY"
+  },
+  "signalIntelligence": {
+    "processing": {
+      "batchSize": {
+        "__name": "SIGNAL_INTELLIGENCE_BATCH_SIZE",
+        "__format": "number"
+      },
+      "intervalMinutes": {
+        "__name": "SIGNAL_INTELLIGENCE_INTERVAL_MINUTES",
+        "__format": "number"
+      },
+      "maxRetries": {
+        "__name": "SIGNAL_INTELLIGENCE_MAX_RETRIES",
+        "__format": "number"
+      },
+      "retryBackoffMs": {
+        "__name": "SIGNAL_INTELLIGENCE_RETRY_BACKOFF_MS",
+        "__format": "number"
+      },
+      "deadLetterQueueEnabled": {
+        "__name": "SIGNAL_INTELLIGENCE_DLQ_ENABLED",
+        "__format": "boolean"
+      }
+    },
+    "embedding": {
+      "model": "SIGNAL_INTELLIGENCE_EMBEDDING_MODEL",
+      "dimensions": {
+        "__name": "SIGNAL_INTELLIGENCE_EMBEDDING_DIMENSIONS",
+        "__format": "number"
+      },
+      "quantizedDimensions": {
+        "__name": "SIGNAL_INTELLIGENCE_EMBEDDING_QUANTIZED_DIMENSIONS",
+        "__format": "number"
+      },
+      "cacheTtlDays": {
+        "__name": "SIGNAL_INTELLIGENCE_EMBEDDING_CACHE_TTL_DAYS",
+        "__format": "number"
+      },
+      "pythonWorkerUrl": "SIGNAL_INTELLIGENCE_PYTHON_WORKER_URL"
+    },
+    "deduplication": {
+      "hammingThreshold": {
+        "__name": "SIGNAL_INTELLIGENCE_DEDUP_HAMMING_THRESHOLD",
+        "__format": "number"
+      },
+      "signatureBits": {
+        "__name": "SIGNAL_INTELLIGENCE_DEDUP_SIGNATURE_BITS",
+        "__format": "number"
+      },
+      "shingleSize": {
+        "__name": "SIGNAL_INTELLIGENCE_DEDUP_SHINGLE_SIZE",
+        "__format": "number"
+      },
+      "cacheTtlDays": {
+        "__name": "SIGNAL_INTELLIGENCE_DEDUP_CACHE_TTL_DAYS",
+        "__format": "number"
+      }
+    },
+    "classification": {
+      "confidenceThreshold": {
+        "__name": "SIGNAL_INTELLIGENCE_CLASSIFICATION_CONFIDENCE_THRESHOLD",
+        "__format": "number"
+      },
+      "modelUpdateIntervalDays": {
+        "__name": "SIGNAL_INTELLIGENCE_CLASSIFICATION_MODEL_UPDATE_INTERVAL_DAYS",
+        "__format": "number"
+      },
+      "productAreaModel": "SIGNAL_INTELLIGENCE_CLASSIFICATION_PRODUCT_AREA_MODEL",
+      "intentModel": "SIGNAL_INTELLIGENCE_CLASSIFICATION_INTENT_MODEL",
+      "urgencyModel": "SIGNAL_INTELLIGENCE_CLASSIFICATION_URGENCY_MODEL"
+    },
+    "scoring": {
+      "velocityTimeWindowHours": {
+        "__name": "SIGNAL_INTELLIGENCE_SCORING_VELOCITY_TIME_WINDOW_HOURS",
+        "__format": "number"
+      },
+      "decayFactor": {
+        "__name": "SIGNAL_INTELLIGENCE_SCORING_DECAY_FACTOR",
+        "__format": "number"
+      },
+      "normalizationRange": {
+        "min": {
+          "__name": "SIGNAL_INTELLIGENCE_SCORING_NORMALIZATION_MIN",
+          "__format": "number"
+        },
+        "max": {
+          "__name": "SIGNAL_INTELLIGENCE_SCORING_NORMALIZATION_MAX",
+          "__format": "number"
+        }
+      }
+    },
+    "clustering": {
+      "algorithm": "SIGNAL_INTELLIGENCE_CLUSTERING_ALGORITHM",
+      "minClusterSize": {
+        "__name": "SIGNAL_INTELLIGENCE_CLUSTERING_MIN_CLUSTER_SIZE",
+        "__format": "number"
+      },
+      "updateIntervalHours": {
+        "__name": "SIGNAL_INTELLIGENCE_CLUSTERING_UPDATE_INTERVAL_HOURS",
+        "__format": "number"
+      },
+      "outlierClusterId": {
+        "__name": "SIGNAL_INTELLIGENCE_CLUSTERING_OUTLIER_CLUSTER_ID",
+        "__format": "number"
+      }
+    },
+    "opensearch": {
+      "indexPrefix": "SIGNAL_INTELLIGENCE_OPENSEARCH_INDEX_PREFIX",
+      "vectorAlgorithm": "SIGNAL_INTELLIGENCE_OPENSEARCH_VECTOR_ALGORITHM",
+      "vectorParams": {
+        "m": {
+          "__name": "SIGNAL_INTELLIGENCE_OPENSEARCH_VECTOR_M",
+          "__format": "number"
+        },
+        "efConstruction": {
+          "__name": "SIGNAL_INTELLIGENCE_OPENSEARCH_VECTOR_EF_CONSTRUCTION",
+          "__format": "number"
+        },
+        "efSearch": {
+          "__name": "SIGNAL_INTELLIGENCE_OPENSEARCH_VECTOR_EF_SEARCH",
+          "__format": "number"
+        }
+      }
+    },
+    "api": {
+      "defaultPageSize": {
+        "__name": "SIGNAL_INTELLIGENCE_API_DEFAULT_PAGE_SIZE",
+        "__format": "number"
+      },
+      "maxPageSize": {
+        "__name": "SIGNAL_INTELLIGENCE_API_MAX_PAGE_SIZE",
+        "__format": "number"
+      },
+      "rateLimitPerHour": {
+        "__name": "SIGNAL_INTELLIGENCE_API_RATE_LIMIT_PER_HOUR",
+        "__format": "number"
+      },
+      "cacheTtlMinutes": {
+        "__name": "SIGNAL_INTELLIGENCE_API_CACHE_TTL_MINUTES",
+        "__format": "number"
+      }
+    },
+    "temporal": {
+      "workflowId": "SIGNAL_INTELLIGENCE_TEMPORAL_WORKFLOW_ID",
+      "taskQueue": "SIGNAL_INTELLIGENCE_TEMPORAL_TASK_QUEUE",
+      "cronSchedule": "SIGNAL_INTELLIGENCE_TEMPORAL_CRON_SCHEDULE"
+    },
+    "sqs": {
+      "enrichmentQueue": "SIGNAL_INTELLIGENCE_SQS_ENRICHMENT_QUEUE",
+      "retryQueue": "SIGNAL_INTELLIGENCE_SQS_RETRY_QUEUE",
+      "deadLetterQueue": "SIGNAL_INTELLIGENCE_SQS_DEAD_LETTER_QUEUE"
+    }
+  }
+}

@@ -40,6 +40,9 @@ setImmediate(async () => {
   app.use(memberRoutes)
   app.use(activityRoutes)
   app.use(organizationRoutes)
+  app.get('/health', (req, res) => {
+    res.status(200).send('OK')
+  })
 
   app.use(errorMiddleware())
 

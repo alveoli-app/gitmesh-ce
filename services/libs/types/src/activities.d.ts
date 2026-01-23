@@ -109,3 +109,4 @@ export type ActivityTypeDisplayProperties = {
         [key: string]: (input: any) => string;
     };
 };
+//# sourceMappingURL=activities.d.ts.map

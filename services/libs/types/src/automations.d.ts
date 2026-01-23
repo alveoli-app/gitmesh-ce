@@ -85,3 +85,4 @@ export interface IAutomationExecution {
     eventId?: string;
     payload: any;
 }
+//# sourceMappingURL=automations.d.ts.map

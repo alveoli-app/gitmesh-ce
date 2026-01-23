@@ -20,3 +20,4 @@ export interface IConcurrentRequestLimiter {
     decrementConcurrentRequest(integrationId: string): Promise<void>;
     processWithLimit<T>(integrationId: string, func: () => Promise<T>): Promise<T>;
 }
+//# sourceMappingURL=caching.d.ts.map

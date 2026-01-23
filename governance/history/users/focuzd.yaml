@@ -47,3 +47,7 @@ events:
 - timestamp: '2026-01-22T15:12:48+05:30'
   type: ACTIVITY_UPDATE
   details: Last activity updated to 2026-01-22
+- timestamp: '2026-01-23T12:11:38+05:30'
+  type: ROLE_CHANGE
+  details: 'Role changed from ''Active Contributor'' to ''Core Contributor'' by @RAWx18
+    via PR #359'

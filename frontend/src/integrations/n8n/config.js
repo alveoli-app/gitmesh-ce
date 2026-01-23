@@ -1,13 +1,14 @@
 import N8nConnect from './components/n8n-connect.vue';
 
 export default {
-  enabled: true,
+  enabled: false, // will be added later
+  hideAsIntegration: true,
   name: 'n8n',
   backgroundColor: '#FFFFFF',
   borderColor: '#FFFFFF',
-  description: 'Use n8n to connect gitmesh.dev with 250+ apps and services.',
+  description: 'Will be added later. Use n8n to connect gitmesh.dev with 250+ apps and services.',
   onboard: {
-    description: 'Connect gitmesh.dev with 250+ apps and services.',
+    description: 'Will be added later.',
   },
   image:
     'https://asset.brandfetch.io/idO6_6uqJ9/id9y5Acqtx.svg',

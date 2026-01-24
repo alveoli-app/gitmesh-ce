@@ -20,9 +20,11 @@ jobs:
     # Run on schedule, manual trigger, or issue comment (commands)
     # IMPORTANT: Skip if triggered by the bot's own commits or PRs to prevent infinite loops
     if: |
-      (github.event_name == 'schedule' || 
-       github.event_name == 'workflow_dispatch' ||
-       github.event_name == 'issue_comment') &&
+      (
+        github.event_name == 'schedule' || 
+        github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/gov') && github.event.sender.type != 'Bot')
+      ) &&
       (github.event.head_commit.author.email != '41898282+github-actions[bot]@users.noreply.github.com' || 
        github.event.head_commit.author.email == null) &&
       (github.event.pull_request.title != 'chore(gov): automated governance registry & history sync' ||
